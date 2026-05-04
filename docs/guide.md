@@ -155,13 +155,13 @@ Frontend:    Next.js 14 (App Router), TypeScript, Tailwind CSS,
 Backend:     Fastify, TypeScript, Node.js 20 LTS
 Database:    MySQL 8.0 (mysql2 — no ORM)
 Cache:       Redis 7 (ioredis)
-Realtime:    Socket.io
+Realtime:    Socket.io + @socket.io/redis-adapter (required for PM2 cluster)
 Queue:       BullMQ (Redis-backed, 2 queues only)
-Auth:        JWT (RS256, 15min access + 7d refresh)
+Auth:        JWT (HS256, 15min access + 7d refresh)
 Captcha:     Cloudflare Turnstile + honeypot field
-Bencode:     bencode (npm)
-Torrent:     parse-torrent (npm)
-MediaInfo:   mediainfo-client (npm) — wraps mediainfo CLI
+Bencode:     bencodec (npm) — bencode is 3+ years unmaintained
+Torrent:     parse-torrent (npm) — verify ESM compatibility before use
+MediaInfo:   mediainfo.js (npm, WebAssembly) or shell to mediainfo CLI
 Metadata:    TMDB API + MusicBrainz API
 Images:      sharp (resize covers + screenshots)
 Email:       Nodemailer (SMTP)
@@ -174,10 +174,14 @@ Process:     PM2 (cluster mode)
 
 PACKAGES — no more, no less:
   mysql2, ioredis, bullmq, fastify, socket.io,
+  @socket.io/redis-adapter,
   next, next-intl, next-themes, tailwindcss,
-  @shadcn/ui, zod, bcrypt, jsonwebtoken,
-  bencode, parse-torrent, mediainfo-client,
-  nodemailer, sharp, crypto (built-in)
+  zod, bcrypt, jsonwebtoken,
+  bencodec, parse-torrent, mediainfo.js,
+  otplib, qrcode,
+  nodemailer, sharp
+  (shadcn/ui is a CLI, not an npm package — run: npx shadcn@latest init)
+  (crypto is built-in Node.js — do not list as a dependency)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SECTION 4 — MONOREPO STRUCTURE
@@ -330,6 +334,8 @@ CREATE TABLE users (
   flux                  DECIMAL(10,2) DEFAULT 0,
   is_banned             BOOLEAN      DEFAULT FALSE,
   ban_reason            TEXT         NULL,
+  is_deleted            BOOLEAN      DEFAULT FALSE,
+  deleted_at            TIMESTAMP    NULL,
   warned                BOOLEAN      DEFAULT FALSE,
   warning_expires_at    TIMESTAMP    NULL,
   failed_login_count    INT          DEFAULT 0,
@@ -482,7 +488,7 @@ CREATE TABLE torrents (
   id            INT PRIMARY KEY AUTO_INCREMENT,
   info_hash     VARCHAR(40)  NOT NULL UNIQUE,
   name          VARCHAR(500) NOT NULL,
-  slug          VARCHAR(600) NOT NULL,
+  slug          VARCHAR(600) NOT NULL UNIQUE,
   description   TEXT         NULL,
   category_id   INT          NOT NULL,
   uploader_id   INT          NOT NULL,
@@ -491,7 +497,9 @@ CREATE TABLE torrents (
   is_freeleech  BOOLEAN      DEFAULT FALSE,
   is_featured   BOOLEAN      DEFAULT FALSE,
   featured_by   INT          NULL,
-  is_approved   BOOLEAN      DEFAULT FALSE,
+  status        ENUM('pending','approved','rejected',
+                     'takedown','dmca_pending')
+                             DEFAULT 'pending',
   approved_by   INT          NULL,
   approved_at   TIMESTAMP    NULL,
   is_internal   BOOLEAN      DEFAULT FALSE,
@@ -515,7 +523,7 @@ CREATE TABLE torrents (
   INDEX idx_info_hash   (info_hash),
   INDEX idx_category    (category_id),
   INDEX idx_uploader    (uploader_id),
-  INDEX idx_approved    (is_approved),
+  INDEX idx_status      (status),
   INDEX idx_created     (created_at),
   INDEX idx_freeleech   (is_freeleech),
   FULLTEXT INDEX ft_name (name)
@@ -640,6 +648,27 @@ CREATE TABLE banned_clients (
   FOREIGN KEY (added_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE cheat_signals (
+  id            BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id       INT          NOT NULL,
+  torrent_id    INT          NOT NULL,
+  signal_type   ENUM('speed_spike','ratio_anomaly',
+                     'ip_mismatch','missing_peers')
+                             NOT NULL,
+  evidence      JSON         NOT NULL,
+  peer_id       VARCHAR(40)  NULL,
+  ip_address    VARCHAR(45)  NULL,
+  reviewed      BOOLEAN      DEFAULT FALSE,
+  reviewed_by   INT          NULL,
+  created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)     REFERENCES users(id)    ON DELETE CASCADE,
+  FOREIGN KEY (torrent_id)  REFERENCES torrents(id) ON DELETE CASCADE,
+  FOREIGN KEY (reviewed_by) REFERENCES users(id)    ON DELETE SET NULL,
+  INDEX idx_user     (user_id),
+  INDEX idx_reviewed (reviewed),
+  INDEX idx_created  (created_at)
+);
+
 -- 005_hnr.sql
 CREATE TABLE hit_and_runs (
   id                INT PRIMARY KEY AUTO_INCREMENT,
@@ -705,7 +734,8 @@ CREATE TABLE personal_freeleech (
   created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id)    REFERENCES users(id)    ON DELETE CASCADE,
   FOREIGN KEY (torrent_id) REFERENCES torrents(id) ON DELETE SET NULL,
-  INDEX idx_user (user_id)
+  INDEX idx_user    (user_id),
+  INDEX idx_expires (expires_at)
 );
 
 -- 007_requests.sql
@@ -784,7 +814,7 @@ CREATE TABLE forum_topics (
   category_id   INT          NOT NULL,
   user_id       INT          NOT NULL,
   title         VARCHAR(500) NOT NULL,
-  slug          VARCHAR(600) NOT NULL,
+  slug          VARCHAR(600) NOT NULL UNIQUE,
   is_pinned     BOOLEAN      DEFAULT FALSE,
   is_locked     BOOLEAN      DEFAULT FALSE,
   views         INT          DEFAULT 0,
@@ -1279,6 +1309,74 @@ After each batch, list what was built and confirm ready
 to proceed. Do not mix batches.
 
 ═══════════════════════════════════════════════════════
+BATCH 0 — FOUNDATION TOOLING
+═══════════════════════════════════════════════════════
+
+Must complete before any feature batch. This batch has
+no user-visible output — it only establishes the floor
+that every subsequent batch builds on.
+
+0a. Migration runner /backend/src/lib/migrate.ts:
+    Create schema_migrations table if not exists:
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        filename   VARCHAR(255) PRIMARY KEY,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    Read all *.sql files from /backend/migrations/ in
+    lexicographic order. For each, check if filename
+    already in schema_migrations — skip if so. Otherwise
+    execute the SQL and INSERT filename into
+    schema_migrations. Log each migration applied.
+    Expose as: npm run migrate
+
+0b. Structured logger /backend/src/lib/logger.ts:
+    Use pino (ships with Fastify — no extra install).
+    Export a single logger instance:
+      import pino from 'pino';
+      export const logger = pino({
+        level: process.env.LOG_LEVEL ?? 'info',
+        transport: process.env.NODE_ENV !== 'production'
+          ? { target: 'pino-pretty' } : undefined
+      });
+    Register with Fastify via loggerInstance option.
+    Fastify automatically includes reqId in every log line —
+    no extra request ID wiring needed.
+    Never use console.log anywhere in the codebase.
+
+0c. Healthcheck routes GET /health and GET /ready:
+    /health — always 200 { status: 'ok', pid }
+              (process is alive — no DB check)
+    /ready  — checks DB pool (SELECT 1) and Redis (PING)
+              200 if both respond, 503 otherwise
+              { status: 'ready'|'unavailable',
+                db: bool, redis: bool }
+    Register before all other routes. PM2 uses /health,
+    Nginx upstream checks use /ready.
+
+0d. Test runner (Vitest):
+    Install devDependencies: vitest, @vitest/coverage-v8,
+    supertest, @types/supertest
+    /backend/vitest.config.ts:
+      export default { test: { environment: 'node',
+        coverage: { provider: 'v8' } } }
+    npm scripts:
+      "test":         "vitest run"
+      "test:watch":   "vitest"
+      "test:coverage":"vitest run --coverage"
+    First test file: /backend/src/announce/__tests__/
+    announce.test.ts — characterization tests for the
+    announce handler (write these in Batch 3 alongside
+    the handler — not before, not after).
+
+BATCH 0 COMPLETE WHEN:
+  ✓ npm run migrate applies all SQL files idempotently
+  ✓ GET /health returns 200 in < 5ms
+  ✓ GET /ready returns 200 when DB + Redis are up
+  ✓ GET /ready returns 503 when DB or Redis is down
+  ✓ npm test runs (0 tests passing is OK at this stage)
+  ✓ All backend logs are pino JSON (no console.log)
+
+═══════════════════════════════════════════════════════
 BATCH 1 — PROJECT FOUNDATION
 ═══════════════════════════════════════════════════════
 
@@ -1333,7 +1431,7 @@ BATCH 1 — PROJECT FOUNDATION
     Cache settings in memory Map with 60s TTL.
 
 1l. Create /backend/middleware/rateLimiter.ts:
-    Using Fastify rate limit plugin or manual Redis
+    Using @fastify/rate-limit or manual Redis
     counter. Three zones: general (100/min),
     auth (10/min), announce (10/min per IP).
 
@@ -1342,6 +1440,7 @@ BATCH 1 — PROJECT FOUNDATION
     Global error handler uses AppError hierarchy.
 
 1n. Create /frontend basic Next.js 14 App Router setup.
+    Run: npx shadcn@latest init (shadcn/ui is a CLI, not an npm package).
     Configure next-intl middleware.
     Configure next-themes provider.
     Add all 7 themes to /frontend/styles/themes.css.
@@ -1405,7 +1504,7 @@ BATCH 2 — AUTHENTICATION
       if exceeded: set locked_until = NOW + lockout_minutes,
       log to login_attempts table
     - On success: clear failed_login_count,
-      generate JWT access token (15min, RS256),
+      generate JWT access token (15min, HS256),
       generate refresh token (7d), store hash in DB,
       set NEXT_LOCALE cookie from user.locale,
       return tokens + user object
@@ -1441,17 +1540,20 @@ BATCH 2 — AUTHENTICATION
     - Return new passkey
 
 2h. 2FA setup (if two_factor_available=true):
+    Use otplib (NOT speakeasy — speakeasy is explicitly "NOT MAINTAINED", last
+    release 7 years ago). Use qrcode package for QR code generation.
     POST /api/auth/2fa/setup:
-      - Generate TOTP secret (speakeasy)
-      - Return QR code URI + backup codes
-      - Store secret temporarily (not saved until verified)
+      - Require recent password re-entry before proceeding
+      - Generate TOTP secret (otplib authenticator.generateSecret())
+      - Generate QR code URI (otplib authenticator.keyuri()) + backup codes
+      - Store secret temporarily in Redis (not saved until verified)
     POST /api/auth/2fa/verify:
-      - Verify TOTP code
+      - Verify TOTP code (otplib authenticator.verify())
       - Save secret to users.two_factor_secret
       - Set two_factor_enabled=true
       - Return hashed backup codes
     POST /api/auth/2fa/disable:
-      - Verify current TOTP code
+      - Accept EITHER current TOTP code OR a valid backup code
       - Clear secret, set two_factor_enabled=false
 
 2i. Invite token management:
@@ -1524,26 +1626,25 @@ Keep it flat. Keep it fast. No abstraction layers.
     6. isClientBanned(peer_id.slice(0,8)) from Redis
        cached blacklist
        → if banned: bencode failure
-    7. Speed sanity check:
-       delta_up = uploaded - last_uploaded (from Redis)
-       time_since = seconds since last announce
-       speed_bps = delta_up / time_since
-       if speed_bps > 1_000_000_000 (1Gbps):
-         queue job 'flag-cheat' with evidence
-         (do NOT block announce — just flag)
+    7. Anti-cheat signals (never block announce — queue
+       all signals; admin reviews via cheat_signals table):
+       a. Speed spike: delta_up / time_since > 1_000_000_000 bps
+          → queue signal { type: 'speed_spike', speed_bps, ... }
+       Worker job 'flag-cheat' inserts into cheat_signals
+       with full evidence JSON. Does NOT auto-ban.
     8. Determine effective download credit:
        if global_freeleech=true OR torrent.is_freeleech=true
        OR personal freeleech active for this user+torrent:
          effective_download = 0
        else:
          effective_download = downloaded delta
-    9. Update peer in Redis:
-       key: peers:{info_hash}:{peer_id}
-       value: JSON { ip, port, uploaded, downloaded,
-                    left, seeder: left==='0',
-                    user_id, updated_at }
-       TTL: 2700 seconds (45 min)
-    10. Handle event='stopped': remove peer from Redis
+    9. Update peer in Redis using HSET (NOT individual keys per peer —
+       redis.keys() on a per-peer key pattern blocks Redis in production):
+       HSET peers:{info_hash} {peer_id} JSON.stringify({ ip, port,
+            uploaded, downloaded, left, seeder: left==='0',
+            user_id, updated_at })
+       EXPIRE peers:{info_hash} 2700  (45 min, reset on each announce)
+    10. Handle event='stopped': HDEL peers:{info_hash} {peer_id}
     11. Queue stats write (never await):
         statsQueue.add('write-stats', {
           user_id, torrent_id,
@@ -1556,8 +1657,9 @@ Keep it flat. Keep it fast. No abstraction layers.
           { user_id, torrent_id })
         Upsert torrent_snatches
     13. Get peers from Redis:
-        keys = await redis.keys('peers:{info_hash}:*')
-        filter out stopped peers, return up to numwant
+        raw = await redis.hgetall('peers:{info_hash}')
+        peers = Object.values(raw).map(v => JSON.parse(v))
+        filter out stale/stopped peers, return up to numwant
     14. Count seeders/leechers from peer data
     15. Return bencode({
           interval: announce_interval setting,
@@ -1623,13 +1725,13 @@ BATCH 4 — TORRENT SYSTEM
       name, description, category_id, tags[]
       optional: tmdb_id, imdb_id, nfo_content
     - Save .torrent file to /uploads/torrents/
-    - Insert torrent record (is_approved=false initially
-      unless uploader is Uploader/Staff group)
+    - Insert torrent record (status='pending' initially;
+      status='approved' if uploader is Uploader/Staff group)
     - Insert torrent_files records
     - If nfo_content provided: save in torrent record
     - Queue job 'parse-mediainfo' if video category
     - Award flux_per_upload if auto-approved
-    - If is_approved=true: queue shoutbox announce
+    - If status='approved': queue shoutbox announce
     - Return: torrent id + approval status
 
 4b. MediaInfo parser job:
@@ -1780,7 +1882,29 @@ BATCH 5 — USER SYSTEM
       for Power User group — auto-promote if met
     Log promotions, send notification to user
 
-5g. OpenSubtitles integration:
+5g. GDPR data-subject endpoints:
+    GET /api/users/me/export:
+      Returns JSON directly with
+      Content-Disposition: attachment; filename="export.json".
+      Includes: profile, uploads list, snatches, comments,
+      forum posts, flux history.
+      Synchronous — no job queue, no polling, no expiry URL.
+    DELETE /api/users/me/account:
+      Requires current password confirmation.
+      Soft delete: set users.is_deleted=true,
+      users.deleted_at=NOW(), scramble email/username
+      to prevent re-registration block.
+      Hard delete personal data: avatar, about_me,
+      user_preferences rows.
+      Anonymize (SET user_id=NULL) rather than cascade-
+      delete: forum posts, shoutbox entries, audit_logs.
+      Cascade-delete: sessions, refresh_tokens,
+      notifications, bookmarks, 2FA secret.
+      Torrents uploaded by user: status unchanged —
+      staff decides per-torrent, not auto-deleted.
+      Usernames freed after deletion (allow re-registration).
+
+5h. OpenSubtitles integration:
     POST /api/users/me/integrations/opensubtitles/verify:
       Verify API key against OS API
       Save encrypted key to user_preferences.os_api_key_enc
@@ -1790,7 +1914,7 @@ BATCH 5 — USER SYSTEM
     DELETE /api/users/me/integrations/opensubtitles:
       Clear all OS fields
 
-5h. Frontend pages:
+5i. Frontend pages:
     /[locale]/user/[username]    — public profile
     /[locale]/settings           — tabs:
       Appearance (theme, language, browse view)
@@ -1798,7 +1922,8 @@ BATCH 5 — USER SYSTEM
       Notifications (per-event toggles, email toggles)
       Security (2FA setup, passkey rotation, API key)
       Integrations (OpenSubtitles)
-      Danger Zone (username change)
+      Danger Zone (account export, account deletion,
+                   username change)
 
 BATCH 5 COMPLETE WHEN:
   ✓ Profile page shows correct stats + ratio
@@ -1807,6 +1932,8 @@ BATCH 5 COMPLETE WHEN:
   ✓ Language switch works correctly including RTL Arabic
   ✓ Username change costs FLX, enforces 90 day limit
   ✓ OS API key saves encrypted, verifies correctly
+  ✓ Account export returns JSON file download directly (sync)
+  ✓ Account deletion anonymizes posts, hard-deletes PII
 
 ═══════════════════════════════════════════════════════
 BATCH 6 — FLUX ECONOMY
@@ -1825,10 +1952,11 @@ BATCH 6 — FLUX ECONOMY
 
 6c. Purchase endpoint POST /api/flux/purchase/:itemId:
     Requires authenticate
-    Check user.flux >= item.cost
-    Deduct flux from user
-    Record flux_transaction (spend)
-    Execute item effect:
+    Use a transaction (see ERRATA E5, E6 — atomic SQL only):
+      UPDATE users SET flux = flux - ? WHERE id = ? AND flux >= ?
+      Check affected rows === 1; if 0 → 402 Insufficient Flux (abort tx)
+      INSERT flux_transaction (spend)
+    Execute item effect inside the same transaction:
       invite_token:    users.invite_tokens += 1
       freeleech_token: insert personal_freeleech
                        (24h, torrent_id=null — applies
@@ -2121,7 +2249,7 @@ BATCH 10 — STAFF & ADMIN PANELS
      GET /api/staff/torrents/pending
      List unapproved torrents with uploader, size, date
      POST /api/staff/torrents/:id/approve:
-       Set is_approved=true, approved_by, approved_at
+       Set status='approved', approved_by, approved_at
        Award flux_per_upload to uploader
        Queue shoutbox announce
        Send notification to uploader
@@ -2312,8 +2440,11 @@ BATCH 12 — TORRENT REQUESTS & INACTIVITY
      POST /api/requests (create, Zod validate)
      POST /api/requests/:id/fill:
        body: { torrent_id }
-       Mark request as filled
-       Transfer bounty_flux from requester to filler
+       Use a DB transaction (see ERRATA E5, E6):
+         Mark request as filled
+         UPDATE users SET flux = flux - bounty WHERE id = requester AND flux >= bounty
+         Check affected rows === 1; if 0 abort
+         UPDATE users SET flux = flux + bounty WHERE id = filler
        Send notification to requester
      GET  /api/requests/my — my requests
 
@@ -2521,6 +2652,125 @@ BATCH 15 — FINAL POLISH & DEPLOYMENT
      All 6 languages switch correctly
 
 BATCH 15 COMPLETE = PROJECT COMPLETE ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ERRATA & CONSTRAINTS (verified 2026-05-04)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+E1. REDIS PEER STORAGE — use HSET per torrent, not one key per peer
+    WRONG: SET peers:{hash}:{peer_id} → requires redis.keys() which is O(N)
+           and blocks Redis in production under load.
+    RIGHT: HSET peers:{info_hash} {peer_id} <json>
+           EXPIRE peers:{info_hash} 2700
+           HDEL peers:{info_hash} {peer_id}   ← on stopped
+           HGETALL peers:{info_hash}           ← to list peers
+    This is already corrected in the Announce handler steps above.
+
+E2. JWT ALGORITHM — use HS256, not RS256
+    RS256 requires an RSA PEM key pair; the env vars defined in this guide
+    (JWT_SECRET, JWT_REFRESH_SECRET) are plain strings. Use HS256.
+    Only switch to RS256 if you introduce a separate key-generation step
+    and store PEM files (overkill for a single-service deployment).
+
+E3. 2FA LIBRARY — use otplib, not speakeasy
+    speakeasy's own README declares "NOT MAINTAINED" (last release 2018).
+    Use: otplib (authenticator.generateSecret / authenticator.verify)
+         qrcode (to render the QR URI as an image/data-URL)
+    Both are actively maintained and TypeScript-native.
+
+E4. MYSQL FULLTEXT + PARTITIONING ARE MUTUALLY EXCLUSIVE (per table)
+    MySQL 8 cannot have a FULLTEXT index on a partitioned table.
+    - torrents table: has FULLTEXT ft_name → CANNOT be partitioned.
+      For search scale, use application-level sharding or a search service.
+    - announce_stats: no FULLTEXT → CAN be range-partitioned by month
+      for retention/pruning. Partition by RANGE(YEAR*100+MONTH) on
+      created_at and DROP old partitions via cron.
+
+E5. FLUX BALANCE — atomic SQL only, never read-then-write
+    WRONG: SELECT flux FROM users WHERE id=? → check → UPDATE users SET flux=?
+           This is a TOCTOU race and allows double-spend.
+    RIGHT: UPDATE users SET flux = flux - ? WHERE id = ? AND flux >= ?
+           Check affected rows === 1; if 0, return 402 Insufficient Flux.
+    Apply the same pattern for any balance/quota column.
+
+E6. MULTI-STEP STATE CHANGES REQUIRE TRANSACTIONS
+    Any operation that modifies >1 table atomically (e.g., purchase flux
+    item: deduct flux + insert purchase record + grant benefit) MUST run
+    inside a single mysql2 transaction. Never rely on sequential awaits.
+
+E7. info_hash VARCHAR(40) — BitTorrent v1 only by design
+    SHA-1 hex = 40 chars. BitTorrent v2 uses 64-char SHA-256.
+    This is a conscious scope decision: NGTT is v1-only at launch.
+    Document this in user-facing help ("v2 torrents not supported").
+
+E8. TIMESTAMP YEAR-2038 RISK
+    MySQL TIMESTAMP stores seconds since epoch as 32-bit int; overflows
+    2038-01-19. For a long-running platform, prefer DATETIME for all
+    timestamp columns (no TZ conversion, no 2038 ceiling).
+    The schema uses TIMESTAMP throughout — acknowledged risk. Migrate to
+    DATETIME if the platform is expected to run past ~2035.
+
+E9. BCRYPT COST FACTOR 12 — correct for 2026, review annually
+    PHP 8.4 (released 2024) raised its bcrypt default from 10 → 12.
+    Cost 12 is the current industry baseline. Re-evaluate in ~2027.
+
+E10. parse-torrent — verify ESM before use
+     parse-torrent v11 may be ESM-only (webtorrent ecosystem trend).
+     Test import with your tsconfig before committing. If ESM-only, either
+     use dynamic import() or set "module": "NodeNext" in tsconfig.
+
+E11. SOCKET.IO + PM2 CLUSTER — sticky sessions + Redis adapter required
+     Without @socket.io/redis-adapter: io.emit() only reaches clients on
+     the same PM2 worker process. Add the adapter AND configure Nginx with
+     ip_hash (or consistent hashing) for sticky sessions so WebSocket
+     upgrade requests always hit the same process.
+
+E12. SECURITY CHECKLIST
+     - Refresh token cookie: SameSite=Strict; HttpOnly; Secure
+     - CORS: pin to FRONTEND_URL env var, never wildcard in production
+     - CSRF: SameSite=Strict on the refresh cookie is sufficient for
+       cookie-based auth; document this assumption
+     - group-change endpoint: guard against self-demotion
+       (admin cannot demote themselves)
+     - TMDB responses: cache in Redis by tmdb_id to avoid rate limits
+     - 2FA enable: require recent password re-entry (not just session auth)
+     - 2FA disable: accept TOTP code OR a valid backup code
+
+E13. DATA RETENTION — prune cron jobs needed
+     audit_logs: grow unbounded → add cron to DELETE WHERE created_at <
+       NOW() - INTERVAL 90 DAY (or archive to cold storage)
+     login_attempts: DELETE WHERE created_at < NOW() - INTERVAL 30 DAY
+     announce_stats: partition by month (see E4), DROP old partitions
+
+E14. TORRENT STATUS — use status ENUM, not is_approved boolean
+     The torrents table uses status ENUM('pending','approved','rejected',
+     'takedown','dmca_pending') DEFAULT 'pending'.
+     Any code that previously checked is_approved=true should check
+     status='approved'. Any code that previously set is_approved=true
+     should set status='approved'. The dmca_notices table handles DMCA
+     evidence; setting status='dmca_pending' hides the torrent from
+     public browse while the notice is reviewed.
+
+E15. GDPR / ACCOUNT DELETION — cascade rules
+     On DELETE /api/users/me/account (requires password confirmation):
+     ANONYMIZE (SET user_id=NULL, username='[deleted]'):
+       forum_posts, forum_replies, shoutbox_archive,
+       audit_logs, peer_messages (sender side)
+     HARD DELETE personal data:
+       user_preferences, avatar file, about_me field,
+       refresh_tokens, notifications, bookmarks,
+       two_factor_secret, os_api_key_enc
+     SET users.is_deleted=TRUE, scramble email/username
+     DO NOT auto-delete torrents — staff reviews per torrent
+     Usernames are freed immediately (allow future re-registration)
+     Data export (GET /api/users/me/export) is synchronous —
+     returns JSON directly with Content-Disposition: attachment.
+
+E16. TOOLING — migration runner + pino required before Batch 1
+     npm run migrate must be idempotent (schema_migrations table tracks
+     applied files). Never re-run an already-applied migration.
+     All backend log output must be pino JSON. No console.log anywhere.
+     /health and /ready endpoints must exist before deploying to any env.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL NOTES FOR CLAUDE CODE
