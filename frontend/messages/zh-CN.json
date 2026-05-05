@@ -1,0 +1,12 @@
+{
+  "site": {
+    "name": "NGTT",
+    "description": "下一代种子站"
+  },
+  "nav": {
+    "browse": "浏览",
+    "forum": "论坛",
+    "login": "登录",
+    "register": "注册"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "site": {
+    "name": "NGTT",
+    "description": "Pelacak torrent generasi baharu"
+  },
+  "nav": {
+    "browse": "Semak imbas",
+    "forum": "Forum",
+    "login": "Log masuk",
+    "register": "Daftar"
+  }
+}

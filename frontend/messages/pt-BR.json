@@ -1,0 +1,12 @@
+{
+  "site": {
+    "name": "NGTT",
+    "description": "Tracker de torrents de nova geração"
+  },
+  "nav": {
+    "browse": "Explorar",
+    "forum": "Fórum",
+    "login": "Entrar",
+    "register": "Cadastrar"
+  }
+}
