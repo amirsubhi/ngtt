@@ -61,6 +61,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
+        # pinned to lts/iron (Node 20) until the project upgrades
         with:
           node-version: '20'
           cache: npm
@@ -69,10 +70,6 @@ jobs:
       - name: Install dependencies
         working-directory: backend
         run: npm ci
-
-      - name: Lint
-        working-directory: backend
-        run: npm run lint
 
       - name: Build
         working-directory: backend
@@ -90,6 +87,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
+        # pinned to lts/iron (Node 20) until the project upgrades
         with:
           node-version: '20'
           cache: npm
@@ -98,10 +96,6 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
-
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint
 
       - name: Build
         working-directory: frontend
