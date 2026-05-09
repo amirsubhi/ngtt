@@ -50,8 +50,8 @@ export async function checkExpiredHnr(): Promise<void> {
       });
       void jobsQueue.add('send-email', {
         to_user_id: hnr.user_id,
-        subject: 'NGTT Account Suspended',
-        body: `Your account has been suspended due to ${expiredCount} expired Hit & Runs.`,
+        template: 'ban-notice',
+        vars: { reason: `Auto-banned: ${expiredCount} expired Hit & Runs` },
       });
     } else if (expiredCount >= warnThreshold) {
       await execute(
@@ -63,6 +63,11 @@ export async function checkExpiredHnr(): Promise<void> {
         title: 'Hit & Run Warning',
         body: `You have ${expiredCount} expired Hit & Runs. Further H&Rs may result in a ban.`,
         url: '/profile',
+      });
+      void jobsQueue.add('send-email', {
+        to_user_id: hnr.user_id,
+        template: 'hnr-warning',
+        vars: { count: String(expiredCount) },
       });
     }
 

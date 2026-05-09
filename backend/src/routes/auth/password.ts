@@ -3,9 +3,9 @@ import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { queryOne, execute } from '../../lib/db';
-import { sendMail } from '../../lib/mail';
 import { ValidationError, AppError } from '../../lib/errors';
 import { config } from '../../lib/config';
+import { jobsQueue } from '../../lib/queues';
 
 const BCRYPT_COST = 12;
 
@@ -39,13 +39,12 @@ export async function passwordRoutes(app: FastifyInstance): Promise<void> {
       [token, expires, user.id],
     );
 
-    await sendMail(
-      email,
-      'Reset your NGTT password',
-      `<p>Hi ${user.username},</p>
-       <p>Click <a href="${config.frontendUrl}/reset-password/${token}">here</a> to reset your password. This link expires in 1 hour.</p>
-       <p>If you did not request a password reset, you can safely ignore this email.</p>`,
-    );
+    void jobsQueue.add('send-email', {
+      to: email,
+      template: 'password-reset',
+      locale: 'en',
+      vars: { username: user.username, reset_link: `${config.frontendUrl}/reset-password/${token}` },
+    });
 
     return reply.send({ ok: true });
   });

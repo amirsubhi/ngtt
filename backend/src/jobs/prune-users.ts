@@ -40,8 +40,8 @@ export async function pruneUsers(): Promise<void> {
   for (const user of toWarn) {
     void jobsQueue.add('send-email', {
       to_user_id: user.id,
-      subject: 'NGTT — Inactivity Warning',
-      body: `Hi ${user.username}, your account has been inactive for over ${warnDays} days. Please log in to keep your account active, or it will be disabled after ${pruneDays} days.`,
+      template: 'inactivity-warning',
+      vars: { days: String(warnDays), prune_days: String(pruneDays) },
     });
     await execute(
       'INSERT INTO user_preferences (user_id, inactivity_warned_at) VALUES (?, NOW()) ON DUPLICATE KEY UPDATE inactivity_warned_at = NOW()',

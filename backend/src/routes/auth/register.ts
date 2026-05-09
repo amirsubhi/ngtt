@@ -4,7 +4,6 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import mysql from 'mysql2/promise';
 import { queryOne, withTransaction } from '../../lib/db';
-import { sendMail } from '../../lib/mail';
 import { verifyTurnstile } from '../../lib/turnstile';
 import { ValidationError, AppError } from '../../lib/errors';
 import { config } from '../../lib/config';
@@ -94,11 +93,12 @@ export async function registerRoute(app: FastifyInstance): Promise<void> {
     });
 
     void jobsQueue.add('welcome-pm', { user_id: userId });
-    await sendMail(
-      email,
-      'Verify your NGTT account',
-      `<p>Click <a href="${config.frontendUrl}/verify-email/${verifyToken}">here</a> to verify your email. Link expires in 24 hours.</p>`,
-    );
+    void jobsQueue.add('send-email', {
+      to: email,
+      template: 'welcome',
+      locale: 'en',
+      vars: { username, verify_link: `${config.frontendUrl}/verify-email/${verifyToken}` },
+    });
 
     return reply.status(201).send({ id: userId });
   });

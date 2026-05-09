@@ -5,18 +5,28 @@ interface WelcomePmPayload {
 }
 
 export async function sendWelcomePm(data: WelcomePmPayload): Promise<void> {
-  const setting = await queryOne<{ value: string }>(
+  const enabledRow = await queryOne<{ value: string }>(
     "SELECT value FROM site_settings WHERE `key` = 'welcome_pm_enabled' LIMIT 1",
   );
-  if (setting?.value !== 'true') return;
+  if (enabledRow?.value !== 'true') return;
 
-  const staffAccount = await queryOne<{ id: number }>(
+  const systemUser = await queryOne<{ id: number }>(
     "SELECT id FROM users WHERE username = 'System' LIMIT 1",
   );
-  if (!staffAccount) return;
+  if (!systemUser) return;
+
+  const subjectRow = await queryOne<{ value: string }>(
+    "SELECT value FROM site_settings WHERE `key` = 'welcome_pm_subject' LIMIT 1",
+  );
+  const bodyRow = await queryOne<{ value: string }>(
+    "SELECT value FROM site_settings WHERE `key` = 'welcome_pm_body' LIMIT 1",
+  );
+
+  const subject = subjectRow?.value ?? 'Welcome to NGTT';
+  const body = bodyRow?.value ?? 'Welcome! Please read the rules before uploading.';
 
   await execute(
-    "INSERT INTO messages (sender_id, receiver_id, subject, body) VALUES (?, ?, 'Welcome to NGTT', 'Welcome! Please read the rules before uploading.')",
-    [staffAccount.id, data.user_id],
+    'INSERT INTO messages (sender_id, receiver_id, subject, body) VALUES (?, ?, ?, ?)',
+    [systemUser.id, data.user_id, subject, body],
   );
 }
