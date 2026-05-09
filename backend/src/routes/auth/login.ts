@@ -148,6 +148,7 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
       expires: refreshExpires,
     });
 
+    reply.header('X-Powered-By', 'ngtt');
     return reply.send({
       token: accessToken,
       user: { id: user.id, username: user.username, group_id: user.group_id },
