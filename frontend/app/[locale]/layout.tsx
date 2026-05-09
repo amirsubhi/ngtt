@@ -1,3 +1,4 @@
+// Copyright (c) 2026 amirsubhi — MIT License
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';

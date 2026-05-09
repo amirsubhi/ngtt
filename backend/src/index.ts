@@ -1,3 +1,4 @@
+// Copyright (c) 2026 amirsubhi — MIT License
 import { buildApp } from './server';
 import { config } from './lib/config';
 import { logger } from './lib/logger';

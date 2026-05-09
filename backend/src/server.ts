@@ -92,5 +92,10 @@ export async function buildApp() {
   // Debounced last_seen_at update for authenticated requests
   app.addHook('onRequest', updateLastSeen);
 
+  app.addHook('onSend', (_req, reply, _payload, done) => {
+    void reply.header('X-Powered-By', 'RazgrizMY');
+    done();
+  });
+
   return app;
 }
