@@ -41,7 +41,13 @@ async function migrate() {
     }
 
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
-    await conn.execute(sql);
+    const statements = sql
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    for (const stmt of statements) {
+      await conn.execute(stmt);
+    }
     await conn.execute('INSERT INTO schema_migrations (filename) VALUES (?)', [file]);
     logger.info({ file }, 'apply');
   }

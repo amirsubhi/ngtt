@@ -17,7 +17,7 @@ CREATE TABLE flux_store_items (
   description   TEXT         NULL,
   cost          DECIMAL(10,2) NOT NULL,
   type          ENUM('invite_token','freeleech_token','upload_credit','username_change') NOT NULL,
-  value         INT          DEFAULT 1,
+  value         BIGINT       DEFAULT 1,
   is_active     BOOLEAN      DEFAULT TRUE,
   display_order INT          DEFAULT 0,
   created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
