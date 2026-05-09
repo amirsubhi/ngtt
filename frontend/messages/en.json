@@ -73,7 +73,8 @@
       "download": "Download", "magnet": "Magnet", "thank": "Thank", "thanked": "Thanked",
       "bookmark": "Bookmark", "bookmarked": "Bookmarked",
       "tab_files": "Files", "tab_nfo": "NFO", "tab_screenshots": "Screenshots",
-      "tab_peers": "Peers", "seeders": "Seeders", "leechers": "Leechers",
+      "tab_peers": "Peers", "tab_subtitles": "Subtitles",
+      "seeders": "Seeders", "leechers": "Leechers",
       "freeleech": "Freeleech", "uploader": "Uploader", "added": "Added"
     },
     "upload": {

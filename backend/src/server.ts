@@ -20,6 +20,7 @@ import { messagesRoutes } from './routes/messages/index';
 import { notificationsRoutes } from './routes/notifications/index';
 import { newsRoutes } from './routes/news/index';
 import { hnrRoutes } from './routes/hnr/index';
+import { subtitleRoutes } from './routes/subtitles/index';
 import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
@@ -63,6 +64,7 @@ export async function buildApp() {
   await app.register(notificationsRoutes);
   await app.register(newsRoutes);
   await app.register(hnrRoutes);
+  await app.register(subtitleRoutes);
 
   // Debounced last_seen_at update for authenticated requests
   app.addHook('onRequest', updateLastSeen);
