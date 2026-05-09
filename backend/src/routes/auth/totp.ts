@@ -8,13 +8,14 @@ import { queryOne, execute } from '../../lib/db';
 import { get as redisGet, setEx as redisSetEx, del as redisDel } from '../../lib/redis';
 import { authenticate } from '../../middleware/auth';
 import { ValidationError, AppError } from '../../lib/errors';
+import { encrypt, decrypt } from '../../lib/encrypt';
 
 const SETUP_TTL = 300; // 5 minutes
 const BACKUP_CODE_COUNT = 8;
 
 const SetupBody = z.object({ password: z.string().min(1) });
 const VerifyBody = z.object({ code: z.string().length(6) });
-const DisableBody = z.object({ code: z.string().min(1) });
+const DisableBody = z.object({ code: z.string().min(1), password: z.string().min(1) });
 
 function setupKey(userId: number): string {
   return `2fa_setup:${userId}`;
@@ -65,9 +66,10 @@ export async function totpRoutes(app: FastifyInstance): Promise<void> {
     const result = await verifyOTP({ secret, token: parsed.data.code });
     if (!result.valid) throw new ValidationError('Invalid 2FA code');
 
+    const encryptedSecret = encrypt(secret);
     await execute(
       'UPDATE users SET two_factor_enabled = TRUE, two_factor_secret = ? WHERE id = ?',
-      [secret, req.user.id],
+      [encryptedSecret, req.user.id],
     );
     await redisDel(setupKey(req.user.id));
 
@@ -83,15 +85,20 @@ export async function totpRoutes(app: FastifyInstance): Promise<void> {
     const parsed = DisableBody.safeParse(req.body);
     if (!parsed.success) throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
 
-    const user = await queryOne<{ two_factor_enabled: boolean; two_factor_secret: string | null }>(
-      'SELECT two_factor_enabled, two_factor_secret FROM users WHERE id = ?',
+    const user = await queryOne<{ two_factor_enabled: boolean; two_factor_secret: string | null; password_hash: string }>(
+      'SELECT two_factor_enabled, two_factor_secret, password_hash FROM users WHERE id = ?',
       [req.user.id],
     );
     if (!user?.two_factor_enabled) throw new AppError('2FA is not enabled', 400, 'NOT_ENABLED');
 
+    const passwordOk = await bcrypt.compare(parsed.data.password, user.password_hash);
+    if (!passwordOk) throw new ValidationError('Incorrect password');
+
     let valid = false;
     if (user.two_factor_secret) {
-      const result = await verifyOTP({ secret: user.two_factor_secret, token: parsed.data.code });
+      let plainSecret = user.two_factor_secret ?? '';
+      try { plainSecret = decrypt(plainSecret); } catch { /* stored plaintext (legacy) */ }
+      const result = await verifyOTP({ secret: plainSecret, token: parsed.data.code });
       valid = result.valid;
     }
     if (!valid) {

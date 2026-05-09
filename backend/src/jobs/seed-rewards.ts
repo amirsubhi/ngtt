@@ -1,5 +1,5 @@
 import { redis } from '../lib/redis';
-import { query, queryOne, execute } from '../lib/db';
+import { queryOne, execute } from '../lib/db';
 import { logger } from '../lib/logger';
 
 // Batches flux awards for all active seeders — one UPDATE per user, not per torrent
@@ -10,8 +10,15 @@ export async function awardSeedingFlux(): Promise<void> {
   const fluxPerTorrentHour = parseFloat(setting?.value ?? '1.0');
   if (fluxPerTorrentHour <= 0) return;
 
-  // Scan all peer hashes (Redis TTL ensures only active torrents remain)
-  const peerKeys = await redis.keys('peers:*');
+  // SCAN instead of KEYS to avoid blocking Redis
+  const peerKeys: string[] = [];
+  let cursor = '0';
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', 'peers:*', 'COUNT', 100);
+    cursor = nextCursor;
+    peerKeys.push(...keys);
+  } while (cursor !== '0');
+
   if (peerKeys.length === 0) return;
 
   // Tally seeding counts per user_id
@@ -19,13 +26,15 @@ export async function awardSeedingFlux(): Promise<void> {
   for (const key of peerKeys) {
     const entries = await redis.hgetall(key);
     if (!entries) continue;
-    for (const raw of Object.values(entries)) {
+    for (const [, raw] of Object.entries(entries)) {
       try {
         const peer = JSON.parse(raw) as { user_id: number; seeder: boolean };
         if (peer.seeder && peer.user_id) {
           seederCounts.set(peer.user_id, (seederCounts.get(peer.user_id) ?? 0) + 1);
         }
-      } catch { /* malformed entry */ }
+      } catch (err) {
+        logger.warn({ err, key, raw }, 'seed-rewards: malformed peer entry, skipping');
+      }
     }
   }
 

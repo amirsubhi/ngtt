@@ -7,6 +7,7 @@ interface HnrUpdatePayload {
   torrent_id: number;
   is_freeleech: boolean;
   info_hash: string;
+  completed?: boolean;
 }
 
 const ANNOUNCE_INTERVAL_MINS = 30;
@@ -18,12 +19,15 @@ async function isUserSeeding(infoHash: string, userId: number): Promise<boolean>
     try {
       const p = JSON.parse(raw) as { user_id: number; seeder: boolean };
       return p.user_id === userId && p.seeder;
-    } catch { return false; }
+    } catch (err) {
+      logger.warn({ err, raw }, 'isUserSeeding: malformed peer entry');
+      return false;
+    }
   });
 }
 
 export async function updateHnr(data: HnrUpdatePayload): Promise<void> {
-  const { user_id, torrent_id, is_freeleech, info_hash } = data;
+  const { user_id, torrent_id, is_freeleech, info_hash, completed } = data;
 
   // 8e: skip H&R entirely for freeleech
   if (is_freeleech) return;
@@ -40,7 +44,8 @@ export async function updateHnr(data: HnrUpdatePayload): Promise<void> {
   );
 
   if (!hnr) {
-    // First completion — create the record
+    // Create H&R only on the completed event — not on every seeder announce
+    if (!completed) return;
     await execute(
       `INSERT INTO hit_and_runs (user_id, torrent_id, downloaded_at, seed_deadline_at)
        VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? HOUR))

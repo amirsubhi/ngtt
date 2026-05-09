@@ -55,7 +55,10 @@ export async function checkExpiredHnr(): Promise<void> {
       });
     } else if (expiredCount >= warnThreshold) {
       await execute(
-        "INSERT INTO user_warnings (user_id, issued_by, reason, type) SELECT ?, id, ?, 'warning' FROM users WHERE slug = 'admin' LIMIT 1",
+        `INSERT INTO user_warnings (user_id, issued_by, reason, type)
+         SELECT ?, u.id, ?, 'warning'
+         FROM users u JOIN user_groups ug ON ug.id = u.group_id
+         WHERE ug.slug = 'admin' AND u.is_deleted = FALSE LIMIT 1`,
         [hnr.user_id, `Automated H&R warning: ${expiredCount} expired H&Rs`],
       );
       void jobsQueue.add('send-notif', {

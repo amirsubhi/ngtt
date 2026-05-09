@@ -6,6 +6,7 @@ import { queryOne, execute } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { NotFoundError } from '../../lib/errors';
 import { config } from '../../lib/config';
+import { logger } from '../../lib/logger';
 
 export async function downloadRoutes(app: FastifyInstance): Promise<void> {
   app.get(
@@ -46,11 +47,10 @@ export async function downloadRoutes(app: FastifyInstance): Promise<void> {
       const modified = Buffer.from(encodeToBytes(torrentData));
 
       // Non-blocking: increment download count and record snatch
-      void execute('UPDATE torrents SET download_count = download_count + 1 WHERE id = ?', [id]);
-      void execute(
-        'INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)',
-        [req.user.id, id],
-      );
+      void execute('UPDATE torrents SET download_count = download_count + 1 WHERE id = ?', [id])
+        .catch(err => logger.warn({ err, torrentId: id }, 'download_count increment failed'));
+      void execute('INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)', [req.user.id, id])
+        .catch(err => logger.warn({ err, userId: req.user.id, torrentId: id }, 'snatch record failed'));
 
       const safeName = torrent.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       return reply

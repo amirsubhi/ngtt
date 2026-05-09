@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { queryOne, execute } from '../../lib/db';
+import { queryOne, execute, withTransaction, executeAffected } from '../../lib/db';
 import { UnauthorizedError } from '../../lib/errors';
 import { config } from '../../lib/config';
 
@@ -43,15 +43,24 @@ export async function tokenRoutes(app: FastifyInstance): Promise<void> {
     );
     if (!user || user.is_deleted || user.is_banned) throw new UnauthorizedError();
 
-    // Token rotation
-    await execute('DELETE FROM refresh_tokens WHERE id = ?', [stored.id]);
+    // Atomic token rotation — delete-then-insert in a transaction
+    // If two concurrent requests race, only one DELETE wins; the other returns 0 affectedRows → 401
     const newRaw = crypto.randomBytes(32).toString('hex');
     const newHash = crypto.createHash('sha256').update(newRaw).digest('hex');
     const newExpires = new Date(Date.now() + REFRESH_DAYS * 24 * 60 * 60 * 1000);
-    await execute(
-      'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
-      [user.id, newHash, newExpires],
-    );
+    let rotated = false;
+    await withTransaction(async conn => {
+      const [delResult] = await conn.execute<import('mysql2').ResultSetHeader>(
+        'DELETE FROM refresh_tokens WHERE id = ?', [stored.id],
+      );
+      if (delResult.affectedRows === 0) return; // already consumed by concurrent request
+      await conn.execute(
+        'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
+        [user.id, newHash, newExpires],
+      );
+      rotated = true;
+    });
+    if (!rotated) throw new UnauthorizedError('Refresh token already used');
 
     reply.setCookie('refresh_token', newRaw, {
       httpOnly: true,

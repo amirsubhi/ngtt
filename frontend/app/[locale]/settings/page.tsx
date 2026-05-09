@@ -116,11 +116,16 @@ export default function SettingsPage() {
     e.preventDefault();
     setDeleteError('');
     try {
-      await fetch('/api/users/me/account', {
+      const res = await fetch('/api/users/me/account', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ password: deletePassword }),
       });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { message?: string };
+        setDeleteError(body.message ?? 'Deletion failed. Check your password.');
+        return;
+      }
       localStorage.removeItem('access_token');
       router.push('/');
     } catch {

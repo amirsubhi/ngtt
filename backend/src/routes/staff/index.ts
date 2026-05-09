@@ -65,8 +65,8 @@ export const staffRoutes: FastifyPluginAsync = async app => {
       if (flux > 0) {
         await conn.execute('UPDATE users SET flux=flux+? WHERE id=?', [flux, torrent.uploader_id]);
         await conn.execute(
-          "INSERT INTO flux_transactions(user_id,amount,source,reference_id) VALUES(?,?,'torrent_approved',?)",
-          [torrent.uploader_id, flux, torrentId],
+          "INSERT INTO flux_transactions(user_id,amount,type,source,description) VALUES(?,?,'earn','torrent_approved',?)",
+          [torrent.uploader_id, flux, `Torrent approved: ${torrentId}`],
         );
       }
     });
@@ -200,7 +200,7 @@ export const staffRoutes: FastifyPluginAsync = async app => {
   app.get<{ Params: { id: string } }>('/api/staff/users/:id/history', { preHandler: pre }, async (req, reply) => {
     const userId = parseInt(req.params.id, 10);
     const [usernames, warnings, logs] = await Promise.all([
-      query('SELECT old_username, new_username, changed_at FROM username_history WHERE user_id=? ORDER BY changed_at DESC', [userId]),
+      query('SELECT old_username, created_at FROM username_history WHERE user_id=? ORDER BY created_at DESC', [userId]),
       query('SELECT * FROM user_warnings WHERE user_id=? ORDER BY created_at DESC', [userId]),
       query('SELECT action, target_type, target_id, metadata, created_at FROM audit_logs WHERE user_id=? ORDER BY created_at DESC LIMIT 50', [userId]),
     ]);
@@ -215,6 +215,14 @@ export const staffRoutes: FastifyPluginAsync = async app => {
     const group = await queryOne<{ id: number; slug: string }>('SELECT id, slug FROM user_groups WHERE id=?', [parsed.data.group_id]);
     if (!group) throw new NotFoundError('Group not found');
     if (group.slug === 'admin') throw new ForbiddenError('Cannot assign admin group via this endpoint');
+    // Guard: non-admin callers cannot demote existing admin accounts
+    const target = await queryOne<{ group_slug: string }>(
+      'SELECT ug.slug AS group_slug FROM users u JOIN user_groups ug ON ug.id=u.group_id WHERE u.id=?',
+      [userId],
+    );
+    if (target?.group_slug === 'admin' && req.user.slug !== 'admin') {
+      throw new ForbiddenError('Cannot change an admin\'s group');
+    }
     await execute('UPDATE users SET group_id=? WHERE id=?', [parsed.data.group_id, userId]);
     await audit(req.user.id, 'change_group', 'user', userId, { new_group_id: parsed.data.group_id });
     return reply.send({ ok: true });

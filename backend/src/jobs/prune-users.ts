@@ -16,7 +16,12 @@ export async function pruneUsers(): Promise<void> {
   const exemptRaw  = await getSetting('prune_exempt_classes', '["vip","uploader","moderator","admin"]');
 
   let exemptSlugs: string[] = [];
-  try { exemptSlugs = JSON.parse(exemptRaw) as string[]; } catch { /* fallback to empty */ }
+  try {
+    exemptSlugs = JSON.parse(exemptRaw) as string[];
+  } catch (err) {
+    logger.error({ err, raw: exemptRaw }, 'prune-users: malformed prune_exempt_classes — aborting to prevent accidental deletions');
+    return;
+  }
 
   const exemptPlaceholders = exemptSlugs.length
     ? `AND ug.slug NOT IN (${exemptSlugs.map(() => '?').join(',')})`

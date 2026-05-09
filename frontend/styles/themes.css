@@ -1,5 +1,11 @@
 /* NGTT — 7 themes via CSS custom properties on [data-theme] */
 
+/* Compatibility aliases used in component files */
+[data-theme] {
+  --color-accent: var(--accent);
+  --color-bg: var(--bg-surface);
+}
+
 [data-theme="void"] {
   --bg-base: #0a0a0a;
   --bg-surface: #111111;

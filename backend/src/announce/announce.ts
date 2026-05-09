@@ -6,7 +6,7 @@ import { statsQueue, jobsQueue } from '../lib/queues';
 import { logger } from '../lib/logger';
 import { config } from '../lib/config';
 import { announceRateLimit } from '../middleware/rateLimiter';
-import { updatePeer, removePeer, getPeers } from './peers';
+import { updatePeer, removePeer, getPeers, getSeederCount, getLeecherCount } from './peers';
 import { compactPeers } from './bencode-compact';
 
 const USER_CACHE_TTL = 300; // 5 min
@@ -125,7 +125,7 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
       const event = query_['event'] ?? '';
       const numwant = Math.min(parseInt(query_['numwant'] ?? '50', 10), 200);
       const compact = query_['compact'] !== '0';
-      const ip = (query_['ip'] ?? req.ip).split(',')[0].trim();
+      const ip = req.ip.split(',')[0].trim();
 
       if (!peerId || port < 1 || port > 65535) {
         return reply.send(failure('missing required params'));
@@ -208,13 +208,15 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         ip,
       });
 
-      // 12. Seeding — fire H&R update on every seeder announce
+      // 12. Seeding — fire H&R update on every seeder announce to accumulate time;
+      // H&R record is only created on event=completed (see hnr-update job)
       if (left === 0) {
         void jobsQueue.add('hnr-update', {
           user_id: user.id,
           torrent_id: torrent.id,
           is_freeleech: freeleech,
           info_hash: infoHash,
+          completed: event === 'completed',
         });
         if (event === 'completed') {
           // Upsert snatch record once
@@ -227,10 +229,12 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
-      // 13-14. Collect peers and counts
-      const allPeers = await getPeers(infoHash, numwant);
-      const seeders = allPeers.filter(p => p.seeder).length;
-      const leechers = allPeers.filter(p => !p.seeder).length;
+      // 13-14. Collect peers for response; count from full swarm (not capped list)
+      const [allPeers, seeders, leechers] = await Promise.all([
+        getPeers(infoHash, numwant),
+        getSeederCount(infoHash),
+        getLeecherCount(infoHash),
+      ]);
 
       const announceInterval = parseInt((await getSiteSetting('announce_interval')) ?? String(config.announceInterval), 10);
       const minInterval = parseInt((await getSiteSetting('min_announce_interval')) ?? String(config.minAnnounceInterval), 10);

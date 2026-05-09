@@ -41,7 +41,7 @@ export default function LoginPage() {
       }
 
       if (res.token) {
-        localStorage.setItem('token', res.token);
+        localStorage.setItem('access_token', res.token);
       }
       router.push('/');
     } catch (err) {

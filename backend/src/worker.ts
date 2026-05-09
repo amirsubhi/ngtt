@@ -17,6 +17,7 @@ import { awardSeedingFlux } from './jobs/seed-rewards';
 import { awardBirthdayFlux } from './jobs/birthdays';
 import { checkExpiredHnr } from './jobs/hnr-check';
 import { pruneUsers } from './jobs/prune-users';
+import { promoteUsers } from './jobs/promote-users';
 
 const connection = new Redis(config.redisUrl, { maxRetriesPerRequest: null });
 
@@ -46,6 +47,7 @@ const jobsWorker = new Worker(
       case 'birthday-flux':   return awardBirthdayFlux();
       case 'hnr-check':       return checkExpiredHnr();
       case 'prune-users':    return pruneUsers();
+      case 'promote-users':  return promoteUsers();
       default:
         logger.warn({ name: job.name }, 'unknown job type');
     }
@@ -60,7 +62,8 @@ jobsWorker.on('failed', (job, err) => logger.error({ job: job?.name, err }, 'job
 void jobsQueue.add('seed-rewards', {}, { repeat: { pattern: '0 * * * *' }, jobId: 'seed-rewards-cron' });
 void jobsQueue.add('birthday-flux', {}, { repeat: { pattern: '0 0 * * *' }, jobId: 'birthday-flux-cron' });
 void jobsQueue.add('hnr-check', {}, { repeat: { pattern: '*/30 * * * *' }, jobId: 'hnr-check-cron' });
-void jobsQueue.add('prune-users', {}, { repeat: { pattern: '0 3 * * *' }, jobId: 'prune-users-cron' });
+void jobsQueue.add('prune-users',   {}, { repeat: { pattern: '0 3 * * *' },  jobId: 'prune-users-cron' });
+void jobsQueue.add('promote-users', {}, { repeat: { pattern: '0 2 * * *' },  jobId: 'promote-users-cron' });
 
 logger.info('Worker process started');
 

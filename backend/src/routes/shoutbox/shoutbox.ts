@@ -14,8 +14,8 @@ function bbToHtml(raw: string): string {
     .replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\[b\](.*?)\[\/b\]/gis, '<strong>$1</strong>')
     .replace(/\[i\](.*?)\[\/i\]/gis, '<em>$1</em>')
-    .replace(/\[url=(https?:\/\/[^\]]{1,500})\](.*?)\[\/url\]/gis,
-      '<a href="$1" rel="noopener noreferrer" target="_blank">$2</a>');
+    .replace(/\[url=(https?:\/\/[^"'\]\s]{1,500})\](.*?)\[\/url\]/gis,
+      (_, url, text) => `<a href="${url}" rel="noopener noreferrer" target="_blank">${text}</a>`);
 }
 
 export function setupShoutbox(ns: Namespace): void {

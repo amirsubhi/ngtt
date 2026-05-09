@@ -31,20 +31,20 @@ export default function MessageDetailPage({ params }: { params: { id: string } }
     if (!tok) { router.push('/login'); return; }
     api.get<MessageDetail>(`/api/messages/${params.id}`, tok)
       .then(setMsg)
-      .catch(() => router.push(`/${locale}/messages`));
+      .catch(() => router.push('/messages'));
   }, [params.id, router, locale]);
 
   async function deleteMsg() {
     await api.post(`/api/messages/mark-read`, { ids: [msg!.id] }, token).catch(() => {});
     await fetch(`/api/messages/${msg!.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-    router.push(`/${locale}/messages`);
+    router.push('/messages');
   }
 
   if (!msg) return <div className="flex min-h-screen items-center justify-center opacity-40">Loading…</div>;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
-      <Link href={`/${locale}/messages`} className="text-sm opacity-50 hover:opacity-70">{t('back')}</Link>
+      <Link href="/messages" className="text-sm opacity-50 hover:opacity-70">{t('back')}</Link>
 
       <div className="border border-current/10 rounded-lg p-6 space-y-4">
         <h1 className="text-xl font-semibold">{msg.subject}</h1>

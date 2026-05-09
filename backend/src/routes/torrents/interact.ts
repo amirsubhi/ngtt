@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { queryOne, execute } from '../../lib/db';
+import { queryOne, execute, withTransaction } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { NotFoundError, ValidationError } from '../../lib/errors';
 import { jobsQueue } from '../../lib/queues';
@@ -26,8 +26,10 @@ export async function interactRoutes(app: FastifyInstance): Promise<void> {
       );
       if (existing) throw new ValidationError('Already thanked');
 
-      await execute('INSERT INTO torrent_thanks (user_id, torrent_id) VALUES (?, ?)', [req.user.id, torrentId]);
-      await execute('UPDATE torrents SET thank_count = thank_count + 1 WHERE id = ?', [torrentId]);
+      await withTransaction(async conn => {
+        await conn.execute('INSERT INTO torrent_thanks (user_id, torrent_id) VALUES (?, ?)', [req.user.id, torrentId]);
+        await conn.execute('UPDATE torrents SET thank_count = thank_count + 1 WHERE id = ?', [torrentId]);
+      });
 
       const fluxSetting = await queryOne<{ value: string }>(
         "SELECT value FROM site_settings WHERE `key` = 'flux_per_thank' LIMIT 1",

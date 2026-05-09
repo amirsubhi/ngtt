@@ -32,14 +32,25 @@ import { registerRateLimiter } from './middleware/rateLimiter';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function buildApp() {
-  const app = Fastify({ loggerInstance: logger });
+  const app = Fastify({ loggerInstance: logger, trustProxy: true });
 
   await app.register(cors, {
     origin: config.frontendUrl,
     credentials: true,
   });
 
-  await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc:  ["'self'"],
+        scriptSrc:   ["'self'"],
+        styleSrc:    ["'self'", "'unsafe-inline'"],
+        imgSrc:      ["'self'", 'data:', 'https:'],
+        connectSrc:  ["'self'", 'wss:'],
+        frameAncestors: ["'none'"],
+      },
+    },
+  });
   await app.register(cookie);
   await app.register(multipart, { attachFieldsToBody: false });
 

@@ -95,7 +95,7 @@ export default function MessagesPage() {
 
       <div className="space-y-1">
         {messages.map(msg => (
-          <Link key={msg.id} href={`/${locale}/messages/${msg.id}`}
+          <Link key={msg.id} href={`/messages/${msg.id}`}
             className={`flex justify-between items-center py-2 border-b border-current/5 hover:bg-current/5 px-2 rounded ${!msg.is_read && folder === 'inbox' ? 'font-medium' : ''}`}>
             <div className="min-w-0">
               <span className="text-sm truncate">{msg.subject}</span>

@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import sanitizeHtml from 'sanitize-html';
 import { query, queryOne, executeInsert, execute } from '../../lib/db';
 import { authenticate, requireStaff } from '../../middleware/auth';
 import { requireFeature } from '../../middleware/featureFlag';
@@ -8,15 +9,20 @@ import { jobsQueue } from '../../lib/queues';
 
 const PAGE_SIZE = 25;
 
+const ALLOWED_TAGS = ['p','br','strong','em','ul','ol','li','blockquote','code','pre','a','h1','h2','h3','h4','img'];
+const ALLOWED_ATTRS: sanitizeHtml.IOptions['allowedAttributes'] = {
+  a:   ['href', 'title'],
+  img: ['src', 'alt', 'title'],
+};
+
 async function renderMarkdown(text: string): Promise<string> {
   const { marked } = await import('marked');
   const html = await marked.parse(text, { async: false }) as string;
-  // Strip dangerous tags — allow only safe subset
-  return html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/ on\w+="[^"]*"/gi, '');
+  return sanitizeHtml(html, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttributes: ALLOWED_ATTRS,
+    allowedSchemes: ['http', 'https'],
+  });
 }
 
 function slugify(title: string): string {

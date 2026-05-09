@@ -9,6 +9,7 @@ import { verifyTurnstile } from '../../lib/turnstile';
 import { ValidationError, UnauthorizedError, ForbiddenError, AppError } from '../../lib/errors';
 import { config } from '../../lib/config';
 import { authRateLimit } from '../../middleware/rateLimiter';
+import { decrypt } from '../../lib/encrypt';
 
 const MAX_FAILED = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -101,8 +102,12 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
 
     if (user.two_factor_enabled) {
       if (!totp_code) return reply.status(200).send({ requires_2fa: true });
-      const validTotp = user.two_factor_secret
-        ? (await verifyOTP({ secret: user.two_factor_secret, token: totp_code })).valid
+      let plainSecret = '';
+      if (user.two_factor_secret) {
+        try { plainSecret = decrypt(user.two_factor_secret); } catch { plainSecret = user.two_factor_secret; }
+      }
+      const validTotp = plainSecret
+        ? (await verifyOTP({ secret: plainSecret, token: totp_code })).valid
         : false;
       let validBackup = false;
       if (!validTotp) {

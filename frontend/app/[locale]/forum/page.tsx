@@ -34,7 +34,7 @@ export default function ForumPage() {
           <div key={cat.id} className="rounded-lg border border-current/10 p-4 hover:border-current/20 transition-colors">
             <div className="flex justify-between items-start">
               <div>
-                <Link href={`/${locale}/forum/${cat.slug}`} className="font-semibold hover:underline text-[var(--color-accent)]">
+                <Link href={`/forum/${cat.slug}`} className="font-semibold hover:underline text-[var(--color-accent)]">
                   {cat.name}
                 </Link>
                 {cat.description && <p className="text-sm opacity-60 mt-1">{cat.description}</p>}
