@@ -25,6 +25,7 @@ import { staffRoutes } from './routes/staff/index';
 import { adminRoutes } from './routes/admin/index';
 import { apiRoutes } from './routes/api/index';
 import { rssRoutes } from './routes/rss/index';
+import { requestRoutes } from './routes/requests/index';
 import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
@@ -73,6 +74,7 @@ export async function buildApp() {
   await app.register(adminRoutes);
   await app.register(apiRoutes);
   await app.register(rssRoutes);
+  await app.register(requestRoutes);
 
   // Debounced last_seen_at update for authenticated requests
   app.addHook('onRequest', updateLastSeen);
