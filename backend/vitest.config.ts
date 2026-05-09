@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     passWithNoTests: true,
+    exclude: ['dist/**', 'node_modules/**'],
     coverage: { provider: 'v8' },
   },
 });

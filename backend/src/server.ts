@@ -9,6 +9,8 @@ import { healthRoutes } from './routes/health';
 import { settingsRoutes } from './routes/settings';
 import { authRoutes } from './routes/auth';
 import { inviteRoutes } from './routes/invites';
+import { announceRoutes } from './announce/announce';
+import { scrapeRoutes } from './announce/scrape';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -40,6 +42,8 @@ export async function buildApp() {
   await app.register(settingsRoutes);
   await app.register(authRoutes);
   await app.register(inviteRoutes);
+  await app.register(announceRoutes);
+  await app.register(scrapeRoutes);
 
   return app;
 }

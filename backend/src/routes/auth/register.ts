@@ -9,6 +9,7 @@ import { verifyTurnstile } from '../../lib/turnstile';
 import { ValidationError, AppError } from '../../lib/errors';
 import { config } from '../../lib/config';
 import { authRateLimit } from '../../middleware/rateLimiter';
+import { jobsQueue } from '../../lib/queues';
 
 const BCRYPT_COST = 12;
 const MIN_FORM_MS = 3000;
@@ -92,7 +93,7 @@ export async function registerRoute(app: FastifyInstance): Promise<void> {
       return uid;
     });
 
-    // TODO(batch-3): queue welcome-pm via jobsQueue
+    void jobsQueue.add('welcome-pm', { user_id: userId });
     await sendMail(
       email,
       'Verify your NGTT account',
