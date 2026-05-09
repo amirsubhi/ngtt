@@ -23,16 +23,16 @@ export const messagesRoutes: FastifyPluginAsync = async app => {
                   u.username AS sender_username, u.avatar_url AS sender_avatar
            FROM messages m JOIN users u ON u.id = m.sender_id
            WHERE m.receiver_id = ? AND m.deleted_by_receiver = FALSE
-           ORDER BY m.created_at DESC LIMIT ?`,
-          [userId, PAGE_SIZE],
+           ORDER BY m.created_at DESC LIMIT ${PAGE_SIZE}`,
+          [userId],
         )
       : await query(
           `SELECT m.id, m.subject, m.created_at,
                   u.username AS receiver_username, u.avatar_url AS receiver_avatar
            FROM messages m JOIN users u ON u.id = m.receiver_id
            WHERE m.sender_id = ? AND m.deleted_by_sender = FALSE
-           ORDER BY m.created_at DESC LIMIT ?`,
-          [userId, PAGE_SIZE],
+           ORDER BY m.created_at DESC LIMIT ${PAGE_SIZE}`,
+          [userId],
         );
 
     return reply.send({ folder, messages: rows });

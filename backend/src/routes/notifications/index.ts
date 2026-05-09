@@ -8,14 +8,15 @@ import { getIo } from '../../lib/socket';
 export const notificationsRoutes: FastifyPluginAsync = async app => {
   // GET /api/notifications
   app.get('/api/notifications', { preHandler: [authenticate] }, async (req, reply) => {
-    const page = Math.max(1, parseInt(((req.query as { page?: string }).page ?? '1'), 10));
+    const rawPage = parseInt(((req.query as { page?: string }).page ?? '1'), 10);
+    const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
     const offset = (page - 1) * 25;
 
     const notifications = await query(
       `SELECT id, type, title, body, url, is_read, created_at
        FROM notifications WHERE user_id = ?
-       ORDER BY created_at DESC LIMIT 25 OFFSET ?`,
-      [req.user.id, offset],
+       ORDER BY created_at DESC LIMIT 25 OFFSET ${offset}`,
+      [req.user.id],
     );
     const unread = await queryOne<{ count: number }>(
       'SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND is_read = FALSE',

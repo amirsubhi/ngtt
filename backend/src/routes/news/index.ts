@@ -12,14 +12,14 @@ function slugify(title: string): string {
 export const newsRoutes: FastifyPluginAsync = async app => {
   // GET /api/news
   app.get('/api/news', async (req, reply) => {
-    const page = Math.max(1, parseInt(((req.query as { page?: string }).page ?? '1'), 10));
+    const rawPage = parseInt(((req.query as { page?: string }).page ?? '1'), 10);
+    const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
     const offset = (page - 1) * 10;
     const items = await query(
       `SELECT n.id, n.title, n.slug, n.is_pinned, n.published_at, u.username AS author
        FROM news n JOIN users u ON u.id = n.author_id
        ORDER BY n.is_pinned DESC, n.published_at DESC
-       LIMIT 10 OFFSET ?`,
-      [offset],
+       LIMIT 10 OFFSET ${offset}`,
     );
     return reply.send({ news: items, page });
   });
