@@ -134,25 +134,37 @@ BullMQ Workers  (PM2 fork · single instance)
 
 ---
 
-## Quick Start (Development)
+## Quick Start
+
+### First-time setup
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/amirsubhi/ngtt.git
 cd ngtt
 
-# 2. Backend
+# 2. Configure environment
 cd backend
-cp .env.example .env          # fill in the required values
-npm install
-npm run migrate               # applies all SQL migrations (idempotent)
-npm run dev                   # starts Fastify with live reload
+cp .env.example .env          # fill in every required value
 
-# 3. Frontend  (new terminal)
-cd frontend
+# 3. Run the installer  (checks requirements, migrates DB, creates admin account)
+npm install
+node install.js               # self-deletes on success, writes .installed
+
+# 4. Frontend
+cd ../frontend
 cp .env.example .env.local    # fill in the required values
 npm install
-npm run dev                   # starts Next.js dev server
+```
+
+### Development
+
+```bash
+# Backend (from backend/)
+npm run dev
+
+# Frontend (from frontend/, new terminal)
+npm run dev
 ```
 
 | Service | URL |
@@ -225,11 +237,14 @@ NEXT_PUBLIC_SITE_NAME=NGTT
 ## Production Deployment
 
 ```bash
-# Build both applications
+# 1. Follow the first-time setup above on the server
+#    (installer handles migrations and admin account)
+
+# 2. Build both applications
 cd backend  && npm run build
 cd frontend && npm run build
 
-# Start all processes via PM2
+# 3. Start all processes via PM2
 pm2 start ecosystem.config.js
 pm2 save && pm2 startup
 
