@@ -32,5 +32,12 @@
     "browse": { "title": "浏览种子", "search_placeholder": "搜索种子…", "filter_category": "分类", "filter_all": "所有分类", "filter_freeleech": "仅限免费下载", "col_name": "名称", "col_size": "大小", "col_seeders": "做种", "col_leechers": "下载", "col_added": "添加时间", "heat_dead": "无活动", "heat_cold": "冷", "heat_warm": "温", "heat_hot": "热", "heat_burning": "火爆", "no_results": "未找到种子。" },
     "detail": { "download": "下载", "magnet": "磁链", "thank": "感谢", "thanked": "已感谢", "bookmark": "收藏", "bookmarked": "已收藏", "tab_files": "文件", "tab_nfo": "NFO", "tab_screenshots": "截图", "tab_peers": "节点", "seeders": "做种", "leechers": "下载", "freeleech": "免费下载", "uploader": "上传者", "added": "添加时间" },
     "upload": { "title": "上传种子", "file_label": "种子文件 (.torrent)", "name": "显示名称", "description": "描述", "category": "分类", "tags": "标签（逗号分隔）", "nfo": "NFO", "tmdb_id": "TMDB ID（可选）", "imdb_id": "IMDb ID（可选）", "submit": "上传", "success": "种子上传成功！" }
+  },
+  "flux": {
+    "balance": "FLX 余额", "store": "FLX 商店", "buy": "购买",
+    "confirm_title": "确认购买", "confirm_body": "用 {cost} FLX 购买 {name}？",
+    "confirm_buy": "确认", "cancel": "取消", "purchasing": "购买中…",
+    "purchase_success": "{name} 购买成功！", "purchase_error": "购买失败",
+    "history": "交易记录"
   }
 }

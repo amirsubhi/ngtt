@@ -32,5 +32,12 @@
     "browse": { "title": "Semak Imbas Torrent", "search_placeholder": "Cari torrent…", "filter_category": "Kategori", "filter_all": "Semua Kategori", "filter_freeleech": "Freeleech sahaja", "col_name": "Nama", "col_size": "Saiz", "col_seeders": "S", "col_leechers": "L", "col_added": "Ditambah", "heat_dead": "Mati", "heat_cold": "Sejuk", "heat_warm": "Suam", "heat_hot": "Panas", "heat_burning": "Membara", "no_results": "Tiada torrent ditemui." },
     "detail": { "download": "Muat Turun", "magnet": "Pautan Magnet", "thank": "Terima Kasih", "thanked": "Sudah Terima Kasih", "bookmark": "Tandai", "bookmarked": "Sudah Ditandai", "tab_files": "Fail", "tab_nfo": "NFO", "tab_screenshots": "Tangkap Layar", "tab_peers": "Rakan Setara", "seeders": "Pembenihkan", "leechers": "Pemuat turun", "freeleech": "Freeleech", "uploader": "Pemuat naik", "added": "Ditambah" },
     "upload": { "title": "Muat Naik Torrent", "file_label": "Fail torrent (.torrent)", "name": "Nama Paparan", "description": "Penerangan", "category": "Kategori", "tags": "Tag (pisah dengan koma)", "nfo": "NFO", "tmdb_id": "ID TMDB (pilihan)", "imdb_id": "ID IMDb (pilihan)", "submit": "Muat Naik", "success": "Torrent berjaya dimuat naik!" }
+  },
+  "flux": {
+    "balance": "Baki FLX", "store": "Kedai FLX", "buy": "Beli",
+    "confirm_title": "Sahkan Pembelian", "confirm_body": "Beli {name} dengan {cost} FLX?",
+    "confirm_buy": "Sahkan", "cancel": "Batal", "purchasing": "Membeli…",
+    "purchase_success": "{name} berjaya dibeli!", "purchase_error": "Pembelian gagal",
+    "history": "Sejarah Transaksi"
   }
 }

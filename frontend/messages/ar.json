@@ -36,5 +36,12 @@
     "browse": { "title": "تصفح التورنت", "search_placeholder": "بحث عن التورنت…", "filter_category": "الفئة", "filter_all": "جميع الفئات", "filter_freeleech": "مجاني فقط", "col_name": "الاسم", "col_size": "الحجم", "col_seeders": "بذّار", "col_leechers": "محمّل", "col_added": "تاريخ الإضافة", "heat_dead": "ميت", "heat_cold": "بارد", "heat_warm": "دافئ", "heat_hot": "ساخن", "heat_burning": "ملتهب", "no_results": "لا توجد تورنت." },
     "detail": { "download": "تنزيل", "magnet": "رابط مغناطيسي", "thank": "شكر", "thanked": "تم الشكر", "bookmark": "إشارة مرجعية", "bookmarked": "تم الحفظ", "tab_files": "الملفات", "tab_nfo": "NFO", "tab_screenshots": "لقطات الشاشة", "tab_peers": "النظراء", "seeders": "البذّارون", "leechers": "المحمّلون", "freeleech": "مجاني", "uploader": "الرافع", "added": "تاريخ الإضافة" },
     "upload": { "title": "رفع تورنت", "file_label": "ملف تورنت (.torrent)", "name": "الاسم", "description": "الوصف", "category": "الفئة", "tags": "الوسوم (مفصولة بفواصل)", "nfo": "NFO", "tmdb_id": "معرّف TMDB (اختياري)", "imdb_id": "معرّف IMDb (اختياري)", "submit": "رفع", "success": "تم رفع التورنت بنجاح!" }
+  },
+  "flux": {
+    "balance": "رصيد FLX", "store": "متجر FLX", "buy": "شراء",
+    "confirm_title": "تأكيد الشراء", "confirm_body": "شراء {name} مقابل {cost} FLX؟",
+    "confirm_buy": "تأكيد", "cancel": "إلغاء", "purchasing": "جارٍ الشراء…",
+    "purchase_success": "تم شراء {name} بنجاح!", "purchase_error": "فشل الشراء",
+    "history": "سجل المعاملات"
   }
 }

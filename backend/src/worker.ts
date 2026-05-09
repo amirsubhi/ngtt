@@ -3,6 +3,7 @@ import Redis from 'ioredis';
 import { Worker } from 'bullmq';
 import { config } from './lib/config';
 import { logger } from './lib/logger';
+import { jobsQueue } from './lib/queues';
 import { writeAnnounceStats } from './jobs/write-announce-stats';
 import { updateHnr } from './jobs/hnr-update';
 import { earnFlux } from './jobs/flux-earn';
@@ -12,6 +13,8 @@ import { flagCheat } from './jobs/flag-cheat';
 import { sendWelcomePm } from './jobs/welcome-pm';
 import { parseMediaInfo } from './jobs/parse-mediainfo';
 import { archiveShoutboxMsg } from './jobs/shoutbox-archive';
+import { awardSeedingFlux } from './jobs/seed-rewards';
+import { awardBirthdayFlux } from './jobs/birthdays';
 
 const connection = new Redis(config.redisUrl, { maxRetriesPerRequest: null });
 
@@ -37,6 +40,8 @@ const jobsWorker = new Worker(
       case 'welcome-pm':      return sendWelcomePm(job.data);
       case 'parse-mediainfo': return parseMediaInfo(job.data);
       case 'shoutbox-archive':return archiveShoutboxMsg(job.data);
+      case 'seed-rewards':    return awardSeedingFlux();
+      case 'birthday-flux':   return awardBirthdayFlux();
       default:
         logger.warn({ name: job.name }, 'unknown job type');
     }
@@ -46,6 +51,10 @@ const jobsWorker = new Worker(
 
 statsWorker.on('failed', (job, err) => logger.error({ job: job?.name, err }, 'stats job failed'));
 jobsWorker.on('failed', (job, err) => logger.error({ job: job?.name, err }, 'jobs job failed'));
+
+// Register repeatable cron jobs (idempotent — BullMQ deduplicates by key)
+void jobsQueue.add('seed-rewards', {}, { repeat: { pattern: '0 * * * *' }, jobId: 'seed-rewards-cron' });
+void jobsQueue.add('birthday-flux', {}, { repeat: { pattern: '0 0 * * *' }, jobId: 'birthday-flux-cron' });
 
 logger.info('Worker process started');
 

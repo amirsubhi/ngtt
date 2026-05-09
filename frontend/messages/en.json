@@ -84,6 +84,19 @@
       "submit": "Upload", "success": "Torrent uploaded successfully!"
     }
   },
+  "flux": {
+    "balance": "FLX Balance",
+    "store": "FLX Store",
+    "buy": "Buy",
+    "confirm_title": "Confirm Purchase",
+    "confirm_body": "Purchase {name} for {cost} FLX?",
+    "confirm_buy": "Confirm",
+    "cancel": "Cancel",
+    "purchasing": "Purchasing…",
+    "purchase_success": "{name} purchased successfully!",
+    "purchase_error": "Purchase failed",
+    "history": "Transaction History"
+  },
   "user": {
     "profile": {
       "uploaded": "Uploaded", "downloaded": "Downloaded", "ratio": "Ratio",
