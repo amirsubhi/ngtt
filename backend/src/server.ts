@@ -13,6 +13,7 @@ import { inviteRoutes } from './routes/invites';
 import { announceRoutes } from './announce/announce';
 import { scrapeRoutes } from './announce/scrape';
 import { torrentRoutes } from './routes/torrents/index';
+import { userRoutes } from './routes/users/index';
 import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
@@ -49,6 +50,7 @@ export async function buildApp() {
   await app.register(announceRoutes);
   await app.register(scrapeRoutes);
   await app.register(torrentRoutes);
+  await app.register(userRoutes);
 
   // Debounced last_seen_at update for authenticated requests
   app.addHook('onRequest', updateLastSeen);

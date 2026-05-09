@@ -37,8 +37,8 @@ export async function interactRoutes(app: FastifyInstance): Promise<void> {
       void jobsQueue.add('send-notif', {
         user_id: torrent.uploader_id,
         type: 'thank',
-        message: 'Someone thanked your torrent!',
-        link: `/torrent/${torrentId}`,
+        title: 'Someone thanked your torrent!',
+        url: `/torrent/${torrentId}`,
       });
 
       return reply.send({ thanked: true });

@@ -83,5 +83,36 @@
       "tmdb_id": "TMDB ID (optional)", "imdb_id": "IMDb ID (optional)",
       "submit": "Upload", "success": "Torrent uploaded successfully!"
     }
+  },
+  "user": {
+    "profile": {
+      "uploaded": "Uploaded", "downloaded": "Downloaded", "ratio": "Ratio",
+      "flux": "FLX Balance", "joined": "Joined", "last_seen": "Last seen",
+      "uploads": "Uploads", "thanks_received": "Thanks received",
+      "active_hnr": "Active H&Rs", "private": "This profile is private.",
+      "tab_uploads": "Uploads", "tab_snatches": "Snatches", "tab_bookmarks": "Bookmarks"
+    },
+    "settings": {
+      "title": "Settings",
+      "tab_appearance": "Appearance", "tab_privacy": "Privacy",
+      "tab_notifications": "Notifications", "tab_security": "Security",
+      "tab_integrations": "Integrations", "tab_danger": "Danger Zone",
+      "theme": "Theme", "language": "Language", "browse_view": "Browse View",
+      "view_table": "Table", "view_card": "Card",
+      "profile_private": "Private profile", "show_online": "Show online status",
+      "hide_downloads": "Hide download history",
+      "save": "Save", "saved": "Saved!",
+      "username_change_title": "Change Username",
+      "username_change_cost": "Costs 500 FLX · once per 90 days",
+      "new_username": "New username", "confirm_password": "Confirm password",
+      "change_username": "Change username",
+      "export_data": "Export my data",
+      "delete_account": "Delete account",
+      "delete_confirm": "Enter password to confirm deletion",
+      "os_title": "OpenSubtitles", "os_api_key": "API Key",
+      "os_username": "OS Username", "os_password": "OS Password",
+      "os_connect": "Connect", "os_disconnect": "Disconnect",
+      "os_connected": "Connected as"
+    }
   }
 }

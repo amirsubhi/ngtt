@@ -16,7 +16,7 @@ export async function sendWelcomePm(data: WelcomePmPayload): Promise<void> {
   if (!staffAccount) return;
 
   await execute(
-    "INSERT INTO pm_messages (sender_id, recipient_id, subject, body) VALUES (?, ?, 'Welcome to NGTT', 'Welcome! Please read the rules before uploading.')",
+    "INSERT INTO messages (sender_id, receiver_id, subject, body) VALUES (?, ?, 'Welcome to NGTT', 'Welcome! Please read the rules before uploading.')",
     [staffAccount.id, data.user_id],
   );
 }

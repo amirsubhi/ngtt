@@ -3,13 +3,14 @@ import { execute } from '../lib/db';
 interface SendNotifPayload {
   user_id: number;
   type: string;
-  message: string;
-  link?: string;
+  title: string;
+  body?: string;
+  url?: string;
 }
 
 export async function createNotification(data: SendNotifPayload): Promise<void> {
   await execute(
-    'INSERT INTO notifications (user_id, type, message, link) VALUES (?, ?, ?, ?)',
-    [data.user_id, data.type, data.message, data.link ?? null],
+    'INSERT INTO notifications (user_id, type, title, body, url) VALUES (?, ?, ?, ?, ?)',
+    [data.user_id, data.type, data.title, data.body ?? null, data.url ?? null],
   );
 }

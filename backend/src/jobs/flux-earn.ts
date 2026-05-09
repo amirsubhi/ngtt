@@ -21,7 +21,7 @@ export async function earnFlux(data: FluxEarnPayload): Promise<void> {
   }
 
   await execute(
-    "INSERT INTO flux_log (user_id, amount, type, note) VALUES (?, ?, 'earn', ?)",
+    "INSERT INTO flux_transactions (user_id, amount, type, source) VALUES (?, ?, 'earn', ?)",
     [user_id, amount, reason],
   );
 }
