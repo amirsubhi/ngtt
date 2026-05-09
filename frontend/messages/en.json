@@ -84,6 +84,26 @@
       "submit": "Upload", "success": "Torrent uploaded successfully!"
     }
   },
+  "forum": {
+    "title": "Forum", "back": "← Back",
+    "topics": "topics", "posts": "posts",
+    "no_categories": "No forum categories.", "no_topics": "No topics yet.", "no_posts": "No posts yet.",
+    "replies": "replies", "prev": "← Prev", "next": "Next →",
+    "new_topic": "New Topic", "topic_title": "Topic title", "topic_body": "Post content (Markdown supported)",
+    "post_topic": "Create Topic", "reply": "Post a Reply",
+    "reply_placeholder": "Your reply (Markdown supported)", "post_reply": "Post Reply",
+    "edited": "(edited)", "locked": "This topic is locked."
+  },
+  "messages": {
+    "title": "Private Messages", "compose": "Compose",
+    "new_message": "New Message", "to": "To (username)", "subject": "Subject", "body": "Message",
+    "send": "Send", "sending": "Sending…", "cancel": "Cancel", "send_error": "Failed to send",
+    "inbox": "Inbox", "sent": "Sent", "empty": "No messages.",
+    "from": "From", "delete": "Delete", "back": "← Back to messages"
+  },
+  "notifications": {
+    "title": "Notifications", "mark_all_read": "Mark all read", "empty": "No notifications."
+  },
   "flux": {
     "balance": "FLX Balance",
     "store": "FLX Store",

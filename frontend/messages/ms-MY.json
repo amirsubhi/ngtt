@@ -1,43 +1,170 @@
 {
-  "site": { "name": "NGTT", "description": "Pelacak torrent generasi baharu" },
-  "nav": { "browse": "Semak imbas", "forum": "Forum", "login": "Log masuk", "register": "Daftar", "logout": "Log keluar" },
+  "site": {
+    "name": "NGTT",
+    "description": "Pelacak torrent generasi baharu"
+  },
+  "nav": {
+    "browse": "Semak imbas",
+    "forum": "Forum",
+    "login": "Log masuk",
+    "register": "Daftar",
+    "logout": "Log keluar"
+  },
   "auth": {
     "login": {
-      "title": "Log Masuk ke NGTT", "email": "E-mel", "password": "Kata Laluan", "submit": "Log Masuk",
-      "forgot": "Lupa kata laluan?", "no_account": "Tiada akaun?", "register_link": "Minta jemputan",
-      "error_invalid": "E-mel atau kata laluan tidak sah", "error_locked": "Akaun dikunci sementara",
-      "error_banned": "Akaun diharamkan", "error_unverified": "Sila sahkan e-mel anda dahulu",
-      "two_fa_prompt": "Masukkan kod 2FA anda", "two_fa_label": "Kod pengesah atau kod sandaran"
+      "title": "Log Masuk ke NGTT",
+      "email": "E-mel",
+      "password": "Kata Laluan",
+      "submit": "Log Masuk",
+      "forgot": "Lupa kata laluan?",
+      "no_account": "Tiada akaun?",
+      "register_link": "Minta jemputan",
+      "error_invalid": "E-mel atau kata laluan tidak sah",
+      "error_locked": "Akaun dikunci sementara",
+      "error_banned": "Akaun diharamkan",
+      "error_unverified": "Sila sahkan e-mel anda dahulu",
+      "two_fa_prompt": "Masukkan kod 2FA anda",
+      "two_fa_label": "Kod pengesah atau kod sandaran"
     },
     "register": {
-      "title": "Buat Akaun", "username": "Nama Pengguna", "email": "E-mel", "password": "Kata Laluan",
-      "invite": "Token jemputan", "submit": "Buat Akaun", "have_account": "Sudah ada akaun?",
-      "login_link": "Log masuk", "success": "Akaun dibuat! Semak e-mel anda untuk mengesahkan alamat.",
-      "error_taken": "Nama pengguna atau e-mel sudah digunakan", "error_closed": "Pendaftaran ditutup buat masa ini"
+      "title": "Buat Akaun",
+      "username": "Nama Pengguna",
+      "email": "E-mel",
+      "password": "Kata Laluan",
+      "invite": "Token jemputan",
+      "submit": "Buat Akaun",
+      "have_account": "Sudah ada akaun?",
+      "login_link": "Log masuk",
+      "success": "Akaun dibuat! Semak e-mel anda untuk mengesahkan alamat.",
+      "error_taken": "Nama pengguna atau e-mel sudah digunakan",
+      "error_closed": "Pendaftaran ditutup buat masa ini"
     },
     "verify_email": {
-      "title": "Pengesahan E-mel", "loading": "Mengesahkan…",
-      "success": "E-mel anda telah disahkan. Anda boleh log masuk sekarang.", "error": "Pautan tidak sah atau telah tamat tempoh."
+      "title": "Pengesahan E-mel",
+      "loading": "Mengesahkan…",
+      "success": "E-mel anda telah disahkan. Anda boleh log masuk sekarang.",
+      "error": "Pautan tidak sah atau telah tamat tempoh."
     },
     "forgot": {
-      "title": "Tetapkan Semula Kata Laluan", "email": "Alamat e-mel", "submit": "Hantar pautan",
-      "success": "Jika e-mel itu berdaftar, anda akan menerima pautan tidak lama lagi.", "back_login": "Kembali ke log masuk"
+      "title": "Tetapkan Semula Kata Laluan",
+      "email": "Alamat e-mel",
+      "submit": "Hantar pautan",
+      "success": "Jika e-mel itu berdaftar, anda akan menerima pautan tidak lama lagi.",
+      "back_login": "Kembali ke log masuk"
     },
     "reset": {
-      "title": "Pilih Kata Laluan Baharu", "password": "Kata laluan baharu", "submit": "Tetapkan semula",
-      "success": "Kata laluan dikemas kini. Anda boleh log masuk sekarang.", "error": "Pautan tidak sah atau telah tamat tempoh."
+      "title": "Pilih Kata Laluan Baharu",
+      "password": "Kata laluan baharu",
+      "submit": "Tetapkan semula",
+      "success": "Kata laluan dikemas kini. Anda boleh log masuk sekarang.",
+      "error": "Pautan tidak sah atau telah tamat tempoh."
     }
   },
   "torrent": {
-    "browse": { "title": "Semak Imbas Torrent", "search_placeholder": "Cari torrent…", "filter_category": "Kategori", "filter_all": "Semua Kategori", "filter_freeleech": "Freeleech sahaja", "col_name": "Nama", "col_size": "Saiz", "col_seeders": "S", "col_leechers": "L", "col_added": "Ditambah", "heat_dead": "Mati", "heat_cold": "Sejuk", "heat_warm": "Suam", "heat_hot": "Panas", "heat_burning": "Membara", "no_results": "Tiada torrent ditemui." },
-    "detail": { "download": "Muat Turun", "magnet": "Pautan Magnet", "thank": "Terima Kasih", "thanked": "Sudah Terima Kasih", "bookmark": "Tandai", "bookmarked": "Sudah Ditandai", "tab_files": "Fail", "tab_nfo": "NFO", "tab_screenshots": "Tangkap Layar", "tab_peers": "Rakan Setara", "seeders": "Pembenihkan", "leechers": "Pemuat turun", "freeleech": "Freeleech", "uploader": "Pemuat naik", "added": "Ditambah" },
-    "upload": { "title": "Muat Naik Torrent", "file_label": "Fail torrent (.torrent)", "name": "Nama Paparan", "description": "Penerangan", "category": "Kategori", "tags": "Tag (pisah dengan koma)", "nfo": "NFO", "tmdb_id": "ID TMDB (pilihan)", "imdb_id": "ID IMDb (pilihan)", "submit": "Muat Naik", "success": "Torrent berjaya dimuat naik!" }
+    "browse": {
+      "title": "Semak Imbas Torrent",
+      "search_placeholder": "Cari torrent…",
+      "filter_category": "Kategori",
+      "filter_all": "Semua Kategori",
+      "filter_freeleech": "Freeleech sahaja",
+      "col_name": "Nama",
+      "col_size": "Saiz",
+      "col_seeders": "S",
+      "col_leechers": "L",
+      "col_added": "Ditambah",
+      "heat_dead": "Mati",
+      "heat_cold": "Sejuk",
+      "heat_warm": "Suam",
+      "heat_hot": "Panas",
+      "heat_burning": "Membara",
+      "no_results": "Tiada torrent ditemui."
+    },
+    "detail": {
+      "download": "Muat Turun",
+      "magnet": "Pautan Magnet",
+      "thank": "Terima Kasih",
+      "thanked": "Sudah Terima Kasih",
+      "bookmark": "Tandai",
+      "bookmarked": "Sudah Ditandai",
+      "tab_files": "Fail",
+      "tab_nfo": "NFO",
+      "tab_screenshots": "Tangkap Layar",
+      "tab_peers": "Rakan Setara",
+      "seeders": "Pembenihkan",
+      "leechers": "Pemuat turun",
+      "freeleech": "Freeleech",
+      "uploader": "Pemuat naik",
+      "added": "Ditambah"
+    },
+    "upload": {
+      "title": "Muat Naik Torrent",
+      "file_label": "Fail torrent (.torrent)",
+      "name": "Nama Paparan",
+      "description": "Penerangan",
+      "category": "Kategori",
+      "tags": "Tag (pisah dengan koma)",
+      "nfo": "NFO",
+      "tmdb_id": "ID TMDB (pilihan)",
+      "imdb_id": "ID IMDb (pilihan)",
+      "submit": "Muat Naik",
+      "success": "Torrent berjaya dimuat naik!"
+    }
   },
   "flux": {
-    "balance": "Baki FLX", "store": "Kedai FLX", "buy": "Beli",
-    "confirm_title": "Sahkan Pembelian", "confirm_body": "Beli {name} dengan {cost} FLX?",
-    "confirm_buy": "Sahkan", "cancel": "Batal", "purchasing": "Membeli…",
-    "purchase_success": "{name} berjaya dibeli!", "purchase_error": "Pembelian gagal",
+    "balance": "Baki FLX",
+    "store": "Kedai FLX",
+    "buy": "Beli",
+    "confirm_title": "Sahkan Pembelian",
+    "confirm_body": "Beli {name} dengan {cost} FLX?",
+    "confirm_buy": "Sahkan",
+    "cancel": "Batal",
+    "purchasing": "Membeli…",
+    "purchase_success": "{name} berjaya dibeli!",
+    "purchase_error": "Pembelian gagal",
     "history": "Sejarah Transaksi"
+  },
+  "forum": {
+    "title": "Forum",
+    "back": "← Back",
+    "topics": "topics",
+    "posts": "posts",
+    "no_categories": "No categories.",
+    "no_topics": "No topics.",
+    "no_posts": "No posts.",
+    "replies": "replies",
+    "prev": "← Prev",
+    "next": "Next →",
+    "new_topic": "New Topic",
+    "topic_title": "Title",
+    "topic_body": "Content",
+    "post_topic": "Create",
+    "reply": "Reply",
+    "reply_placeholder": "Your reply",
+    "post_reply": "Post",
+    "edited": "(edited)",
+    "locked": "Locked."
+  },
+  "messages": {
+    "title": "Messages",
+    "compose": "Compose",
+    "new_message": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "send_error": "Failed",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "empty": "No messages.",
+    "from": "From",
+    "delete": "Delete",
+    "back": "← Back"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all read",
+    "empty": "No notifications."
   }
 }

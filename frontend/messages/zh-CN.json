@@ -1,43 +1,170 @@
 {
-  "site": { "name": "NGTT", "description": "下一代种子站" },
-  "nav": { "browse": "浏览", "forum": "论坛", "login": "登录", "register": "注册", "logout": "退出" },
+  "site": {
+    "name": "NGTT",
+    "description": "下一代种子站"
+  },
+  "nav": {
+    "browse": "浏览",
+    "forum": "论坛",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出"
+  },
   "auth": {
     "login": {
-      "title": "登录 NGTT", "email": "邮箱", "password": "密码", "submit": "登录",
-      "forgot": "忘记密码？", "no_account": "没有账号？", "register_link": "申请邀请",
-      "error_invalid": "邮箱或密码错误", "error_locked": "账号已被临时锁定",
-      "error_banned": "账号已被封禁", "error_unverified": "请先验证您的邮箱",
-      "two_fa_prompt": "输入双因素验证码", "two_fa_label": "验证器代码或备用代码"
+      "title": "登录 NGTT",
+      "email": "邮箱",
+      "password": "密码",
+      "submit": "登录",
+      "forgot": "忘记密码？",
+      "no_account": "没有账号？",
+      "register_link": "申请邀请",
+      "error_invalid": "邮箱或密码错误",
+      "error_locked": "账号已被临时锁定",
+      "error_banned": "账号已被封禁",
+      "error_unverified": "请先验证您的邮箱",
+      "two_fa_prompt": "输入双因素验证码",
+      "two_fa_label": "验证器代码或备用代码"
     },
     "register": {
-      "title": "创建账号", "username": "用户名", "email": "邮箱", "password": "密码",
-      "invite": "邀请码", "submit": "创建账号", "have_account": "已有账号？", "login_link": "登录",
-      "success": "账号已创建！请检查邮箱以验证地址。", "error_taken": "用户名或邮箱已被使用",
+      "title": "创建账号",
+      "username": "用户名",
+      "email": "邮箱",
+      "password": "密码",
+      "invite": "邀请码",
+      "submit": "创建账号",
+      "have_account": "已有账号？",
+      "login_link": "登录",
+      "success": "账号已创建！请检查邮箱以验证地址。",
+      "error_taken": "用户名或邮箱已被使用",
       "error_closed": "注册目前已关闭"
     },
     "verify_email": {
-      "title": "邮箱验证", "loading": "验证中…",
-      "success": "邮箱验证成功，现在可以登录了。", "error": "验证链接无效或已过期。"
+      "title": "邮箱验证",
+      "loading": "验证中…",
+      "success": "邮箱验证成功，现在可以登录了。",
+      "error": "验证链接无效或已过期。"
     },
     "forgot": {
-      "title": "重置密码", "email": "邮箱地址", "submit": "发送重置链接",
-      "success": "如果该邮箱已注册，您将收到重置链接。", "back_login": "返回登录"
+      "title": "重置密码",
+      "email": "邮箱地址",
+      "submit": "发送重置链接",
+      "success": "如果该邮箱已注册，您将收到重置链接。",
+      "back_login": "返回登录"
     },
     "reset": {
-      "title": "设置新密码", "password": "新密码", "submit": "重置密码",
-      "success": "密码已更新，现在可以登录了。", "error": "重置链接无效或已过期。"
+      "title": "设置新密码",
+      "password": "新密码",
+      "submit": "重置密码",
+      "success": "密码已更新，现在可以登录了。",
+      "error": "重置链接无效或已过期。"
     }
   },
   "torrent": {
-    "browse": { "title": "浏览种子", "search_placeholder": "搜索种子…", "filter_category": "分类", "filter_all": "所有分类", "filter_freeleech": "仅限免费下载", "col_name": "名称", "col_size": "大小", "col_seeders": "做种", "col_leechers": "下载", "col_added": "添加时间", "heat_dead": "无活动", "heat_cold": "冷", "heat_warm": "温", "heat_hot": "热", "heat_burning": "火爆", "no_results": "未找到种子。" },
-    "detail": { "download": "下载", "magnet": "磁链", "thank": "感谢", "thanked": "已感谢", "bookmark": "收藏", "bookmarked": "已收藏", "tab_files": "文件", "tab_nfo": "NFO", "tab_screenshots": "截图", "tab_peers": "节点", "seeders": "做种", "leechers": "下载", "freeleech": "免费下载", "uploader": "上传者", "added": "添加时间" },
-    "upload": { "title": "上传种子", "file_label": "种子文件 (.torrent)", "name": "显示名称", "description": "描述", "category": "分类", "tags": "标签（逗号分隔）", "nfo": "NFO", "tmdb_id": "TMDB ID（可选）", "imdb_id": "IMDb ID（可选）", "submit": "上传", "success": "种子上传成功！" }
+    "browse": {
+      "title": "浏览种子",
+      "search_placeholder": "搜索种子…",
+      "filter_category": "分类",
+      "filter_all": "所有分类",
+      "filter_freeleech": "仅限免费下载",
+      "col_name": "名称",
+      "col_size": "大小",
+      "col_seeders": "做种",
+      "col_leechers": "下载",
+      "col_added": "添加时间",
+      "heat_dead": "无活动",
+      "heat_cold": "冷",
+      "heat_warm": "温",
+      "heat_hot": "热",
+      "heat_burning": "火爆",
+      "no_results": "未找到种子。"
+    },
+    "detail": {
+      "download": "下载",
+      "magnet": "磁链",
+      "thank": "感谢",
+      "thanked": "已感谢",
+      "bookmark": "收藏",
+      "bookmarked": "已收藏",
+      "tab_files": "文件",
+      "tab_nfo": "NFO",
+      "tab_screenshots": "截图",
+      "tab_peers": "节点",
+      "seeders": "做种",
+      "leechers": "下载",
+      "freeleech": "免费下载",
+      "uploader": "上传者",
+      "added": "添加时间"
+    },
+    "upload": {
+      "title": "上传种子",
+      "file_label": "种子文件 (.torrent)",
+      "name": "显示名称",
+      "description": "描述",
+      "category": "分类",
+      "tags": "标签（逗号分隔）",
+      "nfo": "NFO",
+      "tmdb_id": "TMDB ID（可选）",
+      "imdb_id": "IMDb ID（可选）",
+      "submit": "上传",
+      "success": "种子上传成功！"
+    }
   },
   "flux": {
-    "balance": "FLX 余额", "store": "FLX 商店", "buy": "购买",
-    "confirm_title": "确认购买", "confirm_body": "用 {cost} FLX 购买 {name}？",
-    "confirm_buy": "确认", "cancel": "取消", "purchasing": "购买中…",
-    "purchase_success": "{name} 购买成功！", "purchase_error": "购买失败",
+    "balance": "FLX 余额",
+    "store": "FLX 商店",
+    "buy": "购买",
+    "confirm_title": "确认购买",
+    "confirm_body": "用 {cost} FLX 购买 {name}？",
+    "confirm_buy": "确认",
+    "cancel": "取消",
+    "purchasing": "购买中…",
+    "purchase_success": "{name} 购买成功！",
+    "purchase_error": "购买失败",
     "history": "交易记录"
+  },
+  "forum": {
+    "title": "Forum",
+    "back": "← Back",
+    "topics": "topics",
+    "posts": "posts",
+    "no_categories": "No categories.",
+    "no_topics": "No topics.",
+    "no_posts": "No posts.",
+    "replies": "replies",
+    "prev": "← Prev",
+    "next": "Next →",
+    "new_topic": "New Topic",
+    "topic_title": "Title",
+    "topic_body": "Content",
+    "post_topic": "Create",
+    "reply": "Reply",
+    "reply_placeholder": "Your reply",
+    "post_reply": "Post",
+    "edited": "(edited)",
+    "locked": "Locked."
+  },
+  "messages": {
+    "title": "Messages",
+    "compose": "Compose",
+    "new_message": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "send_error": "Failed",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "empty": "No messages.",
+    "from": "From",
+    "delete": "Delete",
+    "back": "← Back"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all read",
+    "empty": "No notifications."
   }
 }

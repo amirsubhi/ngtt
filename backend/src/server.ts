@@ -15,6 +15,10 @@ import { scrapeRoutes } from './announce/scrape';
 import { torrentRoutes } from './routes/torrents/index';
 import { userRoutes } from './routes/users/index';
 import { fluxRoutes } from './routes/flux/index';
+import { forumRoutes } from './routes/forum/index';
+import { messagesRoutes } from './routes/messages/index';
+import { notificationsRoutes } from './routes/notifications/index';
+import { newsRoutes } from './routes/news/index';
 import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
@@ -53,6 +57,10 @@ export async function buildApp() {
   await app.register(torrentRoutes);
   await app.register(userRoutes);
   await app.register(fluxRoutes);
+  await app.register(forumRoutes);
+  await app.register(messagesRoutes);
+  await app.register(notificationsRoutes);
+  await app.register(newsRoutes);
 
   // Debounced last_seen_at update for authenticated requests
   app.addHook('onRequest', updateLastSeen);

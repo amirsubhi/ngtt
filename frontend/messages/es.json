@@ -1,45 +1,170 @@
 {
-  "site": { "name": "NGTT", "description": "Tracker de torrents de nueva generación" },
-  "nav": { "browse": "Explorar", "forum": "Foro", "login": "Iniciar sesión", "register": "Registrarse", "logout": "Cerrar sesión" },
+  "site": {
+    "name": "NGTT",
+    "description": "Tracker de torrents de nueva generación"
+  },
+  "nav": {
+    "browse": "Explorar",
+    "forum": "Foro",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión"
+  },
   "auth": {
     "login": {
-      "title": "Iniciar sesión en NGTT", "email": "Correo", "password": "Contraseña",
-      "submit": "Iniciar sesión", "forgot": "¿Olvidaste tu contraseña?",
-      "no_account": "¿No tienes cuenta?", "register_link": "Solicitar invitación",
-      "error_invalid": "Correo o contraseña incorrectos", "error_locked": "Cuenta bloqueada temporalmente",
-      "error_banned": "Cuenta suspendida", "error_unverified": "Verifica tu correo primero",
-      "two_fa_prompt": "Ingresa tu código 2FA", "two_fa_label": "Código de autenticador o de respaldo"
+      "title": "Iniciar sesión en NGTT",
+      "email": "Correo",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "no_account": "¿No tienes cuenta?",
+      "register_link": "Solicitar invitación",
+      "error_invalid": "Correo o contraseña incorrectos",
+      "error_locked": "Cuenta bloqueada temporalmente",
+      "error_banned": "Cuenta suspendida",
+      "error_unverified": "Verifica tu correo primero",
+      "two_fa_prompt": "Ingresa tu código 2FA",
+      "two_fa_label": "Código de autenticador o de respaldo"
     },
     "register": {
-      "title": "Crear cuenta", "username": "Usuario", "email": "Correo", "password": "Contraseña",
-      "invite": "Token de invitación", "submit": "Crear cuenta",
-      "have_account": "¿Ya tienes cuenta?", "login_link": "Iniciar sesión",
+      "title": "Crear cuenta",
+      "username": "Usuario",
+      "email": "Correo",
+      "password": "Contraseña",
+      "invite": "Token de invitación",
+      "submit": "Crear cuenta",
+      "have_account": "¿Ya tienes cuenta?",
+      "login_link": "Iniciar sesión",
       "success": "¡Cuenta creada! Revisa tu correo para verificar tu dirección.",
-      "error_taken": "Usuario o correo ya en uso", "error_closed": "El registro está cerrado"
+      "error_taken": "Usuario o correo ya en uso",
+      "error_closed": "El registro está cerrado"
     },
     "verify_email": {
-      "title": "Verificación de correo", "loading": "Verificando…",
-      "success": "Correo verificado. Ya puedes iniciar sesión.", "error": "Enlace inválido o expirado."
+      "title": "Verificación de correo",
+      "loading": "Verificando…",
+      "success": "Correo verificado. Ya puedes iniciar sesión.",
+      "error": "Enlace inválido o expirado."
     },
     "forgot": {
-      "title": "Restablecer contraseña", "email": "Correo electrónico", "submit": "Enviar enlace",
-      "success": "Si ese correo está registrado, recibirás un enlace en breve.", "back_login": "Volver al inicio de sesión"
+      "title": "Restablecer contraseña",
+      "email": "Correo electrónico",
+      "submit": "Enviar enlace",
+      "success": "Si ese correo está registrado, recibirás un enlace en breve.",
+      "back_login": "Volver al inicio de sesión"
     },
     "reset": {
-      "title": "Nueva contraseña", "password": "Nueva contraseña", "submit": "Restablecer",
-      "success": "Contraseña actualizada. Ya puedes iniciar sesión.", "error": "Enlace inválido o expirado."
+      "title": "Nueva contraseña",
+      "password": "Nueva contraseña",
+      "submit": "Restablecer",
+      "success": "Contraseña actualizada. Ya puedes iniciar sesión.",
+      "error": "Enlace inválido o expirado."
     }
   },
   "torrent": {
-    "browse": { "title": "Explorar Torrents", "search_placeholder": "Buscar torrents…", "filter_category": "Categoría", "filter_all": "Todas", "filter_freeleech": "Solo freeleech", "col_name": "Nombre", "col_size": "Tamaño", "col_seeders": "S", "col_leechers": "L", "col_added": "Añadido", "heat_dead": "Muerto", "heat_cold": "Frío", "heat_warm": "Tibio", "heat_hot": "Caliente", "heat_burning": "Ardiente", "no_results": "No se encontraron torrents." },
-    "detail": { "download": "Descargar", "magnet": "Magnet", "thank": "Agradecer", "thanked": "Agradecido", "bookmark": "Guardar", "bookmarked": "Guardado", "tab_files": "Archivos", "tab_nfo": "NFO", "tab_screenshots": "Capturas", "tab_peers": "Peers", "seeders": "Seeders", "leechers": "Leechers", "freeleech": "Freeleech", "uploader": "Subido por", "added": "Añadido" },
-    "upload": { "title": "Subir Torrent", "file_label": "Archivo .torrent", "name": "Nombre", "description": "Descripción", "category": "Categoría", "tags": "Etiquetas (separadas por coma)", "nfo": "NFO", "tmdb_id": "ID de TMDB (opcional)", "imdb_id": "ID de IMDb (opcional)", "submit": "Subir", "success": "¡Torrent subido con éxito!" }
+    "browse": {
+      "title": "Explorar Torrents",
+      "search_placeholder": "Buscar torrents…",
+      "filter_category": "Categoría",
+      "filter_all": "Todas",
+      "filter_freeleech": "Solo freeleech",
+      "col_name": "Nombre",
+      "col_size": "Tamaño",
+      "col_seeders": "S",
+      "col_leechers": "L",
+      "col_added": "Añadido",
+      "heat_dead": "Muerto",
+      "heat_cold": "Frío",
+      "heat_warm": "Tibio",
+      "heat_hot": "Caliente",
+      "heat_burning": "Ardiente",
+      "no_results": "No se encontraron torrents."
+    },
+    "detail": {
+      "download": "Descargar",
+      "magnet": "Magnet",
+      "thank": "Agradecer",
+      "thanked": "Agradecido",
+      "bookmark": "Guardar",
+      "bookmarked": "Guardado",
+      "tab_files": "Archivos",
+      "tab_nfo": "NFO",
+      "tab_screenshots": "Capturas",
+      "tab_peers": "Peers",
+      "seeders": "Seeders",
+      "leechers": "Leechers",
+      "freeleech": "Freeleech",
+      "uploader": "Subido por",
+      "added": "Añadido"
+    },
+    "upload": {
+      "title": "Subir Torrent",
+      "file_label": "Archivo .torrent",
+      "name": "Nombre",
+      "description": "Descripción",
+      "category": "Categoría",
+      "tags": "Etiquetas (separadas por coma)",
+      "nfo": "NFO",
+      "tmdb_id": "ID de TMDB (opcional)",
+      "imdb_id": "ID de IMDb (opcional)",
+      "submit": "Subir",
+      "success": "¡Torrent subido con éxito!"
+    }
   },
   "flux": {
-    "balance": "Saldo FLX", "store": "Tienda FLX", "buy": "Comprar",
-    "confirm_title": "Confirmar compra", "confirm_body": "¿Comprar {name} por {cost} FLX?",
-    "confirm_buy": "Confirmar", "cancel": "Cancelar", "purchasing": "Comprando…",
-    "purchase_success": "¡{name} comprado con éxito!", "purchase_error": "Error al comprar",
+    "balance": "Saldo FLX",
+    "store": "Tienda FLX",
+    "buy": "Comprar",
+    "confirm_title": "Confirmar compra",
+    "confirm_body": "¿Comprar {name} por {cost} FLX?",
+    "confirm_buy": "Confirmar",
+    "cancel": "Cancelar",
+    "purchasing": "Comprando…",
+    "purchase_success": "¡{name} comprado con éxito!",
+    "purchase_error": "Error al comprar",
     "history": "Historial de transacciones"
+  },
+  "forum": {
+    "title": "Forum",
+    "back": "← Back",
+    "topics": "topics",
+    "posts": "posts",
+    "no_categories": "No categories.",
+    "no_topics": "No topics.",
+    "no_posts": "No posts.",
+    "replies": "replies",
+    "prev": "← Prev",
+    "next": "Next →",
+    "new_topic": "New Topic",
+    "topic_title": "Title",
+    "topic_body": "Content",
+    "post_topic": "Create",
+    "reply": "Reply",
+    "reply_placeholder": "Your reply",
+    "post_reply": "Post",
+    "edited": "(edited)",
+    "locked": "Locked."
+  },
+  "messages": {
+    "title": "Messages",
+    "compose": "Compose",
+    "new_message": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "send_error": "Failed",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "empty": "No messages.",
+    "from": "From",
+    "delete": "Delete",
+    "back": "← Back"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all read",
+    "empty": "No notifications."
   }
 }

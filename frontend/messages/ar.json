@@ -1,47 +1,170 @@
 {
-  "site": { "name": "NGTT", "description": "محرك تورنت الجيل القادم" },
-  "nav": { "browse": "تصفح", "forum": "المنتدى", "login": "تسجيل الدخول", "register": "التسجيل", "logout": "تسجيل الخروج" },
+  "site": {
+    "name": "NGTT",
+    "description": "محرك تورنت الجيل القادم"
+  },
+  "nav": {
+    "browse": "تصفح",
+    "forum": "المنتدى",
+    "login": "تسجيل الدخول",
+    "register": "التسجيل",
+    "logout": "تسجيل الخروج"
+  },
   "auth": {
     "login": {
-      "title": "تسجيل الدخول إلى NGTT", "email": "البريد الإلكتروني", "password": "كلمة المرور",
-      "submit": "تسجيل الدخول", "forgot": "هل نسيت كلمة المرور؟",
-      "no_account": "ليس لديك حساب؟", "register_link": "طلب دعوة",
-      "error_invalid": "بريد إلكتروني أو كلمة مرور غير صحيحة", "error_locked": "الحساب مقفل مؤقتاً",
-      "error_banned": "الحساب محظور", "error_unverified": "يرجى التحقق من بريدك الإلكتروني أولاً",
-      "two_fa_prompt": "أدخل رمز التحقق الثنائي", "two_fa_label": "رمز المصادقة أو رمز الاحتياط"
+      "title": "تسجيل الدخول إلى NGTT",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "submit": "تسجيل الدخول",
+      "forgot": "هل نسيت كلمة المرور؟",
+      "no_account": "ليس لديك حساب؟",
+      "register_link": "طلب دعوة",
+      "error_invalid": "بريد إلكتروني أو كلمة مرور غير صحيحة",
+      "error_locked": "الحساب مقفل مؤقتاً",
+      "error_banned": "الحساب محظور",
+      "error_unverified": "يرجى التحقق من بريدك الإلكتروني أولاً",
+      "two_fa_prompt": "أدخل رمز التحقق الثنائي",
+      "two_fa_label": "رمز المصادقة أو رمز الاحتياط"
     },
     "register": {
-      "title": "إنشاء حساب", "username": "اسم المستخدم", "email": "البريد الإلكتروني",
-      "password": "كلمة المرور", "invite": "رمز الدعوة", "submit": "إنشاء حساب",
-      "have_account": "لديك حساب بالفعل؟", "login_link": "تسجيل الدخول",
+      "title": "إنشاء حساب",
+      "username": "اسم المستخدم",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "invite": "رمز الدعوة",
+      "submit": "إنشاء حساب",
+      "have_account": "لديك حساب بالفعل؟",
+      "login_link": "تسجيل الدخول",
       "success": "تم إنشاء الحساب! تحقق من بريدك الإلكتروني للتأكيد.",
-      "error_taken": "اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل", "error_closed": "التسجيل مغلق حالياً"
+      "error_taken": "اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل",
+      "error_closed": "التسجيل مغلق حالياً"
     },
     "verify_email": {
-      "title": "التحقق من البريد الإلكتروني", "loading": "جارٍ التحقق…",
-      "success": "تم التحقق من بريدك الإلكتروني. يمكنك تسجيل الدخول الآن.", "error": "الرابط غير صالح أو منتهي الصلاحية."
+      "title": "التحقق من البريد الإلكتروني",
+      "loading": "جارٍ التحقق…",
+      "success": "تم التحقق من بريدك الإلكتروني. يمكنك تسجيل الدخول الآن.",
+      "error": "الرابط غير صالح أو منتهي الصلاحية."
     },
     "forgot": {
-      "title": "إعادة تعيين كلمة المرور", "email": "عنوان البريد الإلكتروني",
+      "title": "إعادة تعيين كلمة المرور",
+      "email": "عنوان البريد الإلكتروني",
       "submit": "إرسال رابط الإعادة",
-      "success": "إذا كان هذا البريد مسجلاً، ستصلك رسالة قريباً.", "back_login": "العودة إلى تسجيل الدخول"
+      "success": "إذا كان هذا البريد مسجلاً، ستصلك رسالة قريباً.",
+      "back_login": "العودة إلى تسجيل الدخول"
     },
     "reset": {
-      "title": "اختر كلمة مرور جديدة", "password": "كلمة المرور الجديدة",
+      "title": "اختر كلمة مرور جديدة",
+      "password": "كلمة المرور الجديدة",
       "submit": "إعادة تعيين كلمة المرور",
-      "success": "تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.", "error": "الرابط غير صالح أو منتهي الصلاحية."
+      "success": "تم تحديث كلمة المرور. يمكنك تسجيل الدخول الآن.",
+      "error": "الرابط غير صالح أو منتهي الصلاحية."
     }
   },
   "torrent": {
-    "browse": { "title": "تصفح التورنت", "search_placeholder": "بحث عن التورنت…", "filter_category": "الفئة", "filter_all": "جميع الفئات", "filter_freeleech": "مجاني فقط", "col_name": "الاسم", "col_size": "الحجم", "col_seeders": "بذّار", "col_leechers": "محمّل", "col_added": "تاريخ الإضافة", "heat_dead": "ميت", "heat_cold": "بارد", "heat_warm": "دافئ", "heat_hot": "ساخن", "heat_burning": "ملتهب", "no_results": "لا توجد تورنت." },
-    "detail": { "download": "تنزيل", "magnet": "رابط مغناطيسي", "thank": "شكر", "thanked": "تم الشكر", "bookmark": "إشارة مرجعية", "bookmarked": "تم الحفظ", "tab_files": "الملفات", "tab_nfo": "NFO", "tab_screenshots": "لقطات الشاشة", "tab_peers": "النظراء", "seeders": "البذّارون", "leechers": "المحمّلون", "freeleech": "مجاني", "uploader": "الرافع", "added": "تاريخ الإضافة" },
-    "upload": { "title": "رفع تورنت", "file_label": "ملف تورنت (.torrent)", "name": "الاسم", "description": "الوصف", "category": "الفئة", "tags": "الوسوم (مفصولة بفواصل)", "nfo": "NFO", "tmdb_id": "معرّف TMDB (اختياري)", "imdb_id": "معرّف IMDb (اختياري)", "submit": "رفع", "success": "تم رفع التورنت بنجاح!" }
+    "browse": {
+      "title": "تصفح التورنت",
+      "search_placeholder": "بحث عن التورنت…",
+      "filter_category": "الفئة",
+      "filter_all": "جميع الفئات",
+      "filter_freeleech": "مجاني فقط",
+      "col_name": "الاسم",
+      "col_size": "الحجم",
+      "col_seeders": "بذّار",
+      "col_leechers": "محمّل",
+      "col_added": "تاريخ الإضافة",
+      "heat_dead": "ميت",
+      "heat_cold": "بارد",
+      "heat_warm": "دافئ",
+      "heat_hot": "ساخن",
+      "heat_burning": "ملتهب",
+      "no_results": "لا توجد تورنت."
+    },
+    "detail": {
+      "download": "تنزيل",
+      "magnet": "رابط مغناطيسي",
+      "thank": "شكر",
+      "thanked": "تم الشكر",
+      "bookmark": "إشارة مرجعية",
+      "bookmarked": "تم الحفظ",
+      "tab_files": "الملفات",
+      "tab_nfo": "NFO",
+      "tab_screenshots": "لقطات الشاشة",
+      "tab_peers": "النظراء",
+      "seeders": "البذّارون",
+      "leechers": "المحمّلون",
+      "freeleech": "مجاني",
+      "uploader": "الرافع",
+      "added": "تاريخ الإضافة"
+    },
+    "upload": {
+      "title": "رفع تورنت",
+      "file_label": "ملف تورنت (.torrent)",
+      "name": "الاسم",
+      "description": "الوصف",
+      "category": "الفئة",
+      "tags": "الوسوم (مفصولة بفواصل)",
+      "nfo": "NFO",
+      "tmdb_id": "معرّف TMDB (اختياري)",
+      "imdb_id": "معرّف IMDb (اختياري)",
+      "submit": "رفع",
+      "success": "تم رفع التورنت بنجاح!"
+    }
   },
   "flux": {
-    "balance": "رصيد FLX", "store": "متجر FLX", "buy": "شراء",
-    "confirm_title": "تأكيد الشراء", "confirm_body": "شراء {name} مقابل {cost} FLX؟",
-    "confirm_buy": "تأكيد", "cancel": "إلغاء", "purchasing": "جارٍ الشراء…",
-    "purchase_success": "تم شراء {name} بنجاح!", "purchase_error": "فشل الشراء",
+    "balance": "رصيد FLX",
+    "store": "متجر FLX",
+    "buy": "شراء",
+    "confirm_title": "تأكيد الشراء",
+    "confirm_body": "شراء {name} مقابل {cost} FLX؟",
+    "confirm_buy": "تأكيد",
+    "cancel": "إلغاء",
+    "purchasing": "جارٍ الشراء…",
+    "purchase_success": "تم شراء {name} بنجاح!",
+    "purchase_error": "فشل الشراء",
     "history": "سجل المعاملات"
+  },
+  "forum": {
+    "title": "Forum",
+    "back": "← Back",
+    "topics": "topics",
+    "posts": "posts",
+    "no_categories": "No categories.",
+    "no_topics": "No topics.",
+    "no_posts": "No posts.",
+    "replies": "replies",
+    "prev": "← Prev",
+    "next": "Next →",
+    "new_topic": "New Topic",
+    "topic_title": "Title",
+    "topic_body": "Content",
+    "post_topic": "Create",
+    "reply": "Reply",
+    "reply_placeholder": "Your reply",
+    "post_reply": "Post",
+    "edited": "(edited)",
+    "locked": "Locked."
+  },
+  "messages": {
+    "title": "Messages",
+    "compose": "Compose",
+    "new_message": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "send_error": "Failed",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "empty": "No messages.",
+    "from": "From",
+    "delete": "Delete",
+    "back": "← Back"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all read",
+    "empty": "No notifications."
   }
 }

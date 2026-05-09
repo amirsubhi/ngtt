@@ -1,44 +1,170 @@
 {
-  "site": { "name": "NGTT", "description": "Tracker de torrents de nova geração" },
-  "nav": { "browse": "Explorar", "forum": "Fórum", "login": "Entrar", "register": "Cadastrar", "logout": "Sair" },
+  "site": {
+    "name": "NGTT",
+    "description": "Tracker de torrents de nova geração"
+  },
+  "nav": {
+    "browse": "Explorar",
+    "forum": "Fórum",
+    "login": "Entrar",
+    "register": "Cadastrar",
+    "logout": "Sair"
+  },
   "auth": {
     "login": {
-      "title": "Entrar no NGTT", "email": "E-mail", "password": "Senha", "submit": "Entrar",
-      "forgot": "Esqueceu a senha?", "no_account": "Não tem conta?", "register_link": "Solicitar convite",
-      "error_invalid": "E-mail ou senha incorretos", "error_locked": "Conta temporariamente bloqueada",
-      "error_banned": "Conta banida", "error_unverified": "Verifique seu e-mail primeiro",
-      "two_fa_prompt": "Insira seu código 2FA", "two_fa_label": "Código do autenticador ou código de backup"
+      "title": "Entrar no NGTT",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "forgot": "Esqueceu a senha?",
+      "no_account": "Não tem conta?",
+      "register_link": "Solicitar convite",
+      "error_invalid": "E-mail ou senha incorretos",
+      "error_locked": "Conta temporariamente bloqueada",
+      "error_banned": "Conta banida",
+      "error_unverified": "Verifique seu e-mail primeiro",
+      "two_fa_prompt": "Insira seu código 2FA",
+      "two_fa_label": "Código do autenticador ou código de backup"
     },
     "register": {
-      "title": "Criar conta", "username": "Usuário", "email": "E-mail", "password": "Senha",
-      "invite": "Token de convite", "submit": "Criar conta",
-      "have_account": "Já tem conta?", "login_link": "Entrar",
+      "title": "Criar conta",
+      "username": "Usuário",
+      "email": "E-mail",
+      "password": "Senha",
+      "invite": "Token de convite",
+      "submit": "Criar conta",
+      "have_account": "Já tem conta?",
+      "login_link": "Entrar",
       "success": "Conta criada! Verifique seu e-mail para confirmar seu endereço.",
-      "error_taken": "Usuário ou e-mail já em uso", "error_closed": "Registro está fechado"
+      "error_taken": "Usuário ou e-mail já em uso",
+      "error_closed": "Registro está fechado"
     },
     "verify_email": {
-      "title": "Verificação de e-mail", "loading": "Verificando…",
-      "success": "E-mail verificado. Você já pode entrar.", "error": "Link inválido ou expirado."
+      "title": "Verificação de e-mail",
+      "loading": "Verificando…",
+      "success": "E-mail verificado. Você já pode entrar.",
+      "error": "Link inválido ou expirado."
     },
     "forgot": {
-      "title": "Redefinir senha", "email": "Endereço de e-mail", "submit": "Enviar link",
-      "success": "Se esse e-mail estiver cadastrado, você receberá um link em breve.", "back_login": "Voltar ao login"
+      "title": "Redefinir senha",
+      "email": "Endereço de e-mail",
+      "submit": "Enviar link",
+      "success": "Se esse e-mail estiver cadastrado, você receberá um link em breve.",
+      "back_login": "Voltar ao login"
     },
     "reset": {
-      "title": "Nova senha", "password": "Nova senha", "submit": "Redefinir senha",
-      "success": "Senha atualizada. Você já pode entrar.", "error": "Link inválido ou expirado."
+      "title": "Nova senha",
+      "password": "Nova senha",
+      "submit": "Redefinir senha",
+      "success": "Senha atualizada. Você já pode entrar.",
+      "error": "Link inválido ou expirado."
     }
   },
   "torrent": {
-    "browse": { "title": "Explorar Torrents", "search_placeholder": "Pesquisar torrents…", "filter_category": "Categoria", "filter_all": "Todas", "filter_freeleech": "Apenas freeleech", "col_name": "Nome", "col_size": "Tamanho", "col_seeders": "S", "col_leechers": "L", "col_added": "Adicionado", "heat_dead": "Morto", "heat_cold": "Frio", "heat_warm": "Morno", "heat_hot": "Quente", "heat_burning": "Ardente", "no_results": "Nenhum torrent encontrado." },
-    "detail": { "download": "Baixar", "magnet": "Magnet", "thank": "Agradecer", "thanked": "Agradecido", "bookmark": "Salvar", "bookmarked": "Salvo", "tab_files": "Arquivos", "tab_nfo": "NFO", "tab_screenshots": "Capturas", "tab_peers": "Peers", "seeders": "Seeders", "leechers": "Leechers", "freeleech": "Freeleech", "uploader": "Enviado por", "added": "Adicionado" },
-    "upload": { "title": "Enviar Torrent", "file_label": "Arquivo .torrent", "name": "Nome", "description": "Descrição", "category": "Categoria", "tags": "Tags (separadas por vírgula)", "nfo": "NFO", "tmdb_id": "ID do TMDB (opcional)", "imdb_id": "ID do IMDb (opcional)", "submit": "Enviar", "success": "Torrent enviado com sucesso!" }
+    "browse": {
+      "title": "Explorar Torrents",
+      "search_placeholder": "Pesquisar torrents…",
+      "filter_category": "Categoria",
+      "filter_all": "Todas",
+      "filter_freeleech": "Apenas freeleech",
+      "col_name": "Nome",
+      "col_size": "Tamanho",
+      "col_seeders": "S",
+      "col_leechers": "L",
+      "col_added": "Adicionado",
+      "heat_dead": "Morto",
+      "heat_cold": "Frio",
+      "heat_warm": "Morno",
+      "heat_hot": "Quente",
+      "heat_burning": "Ardente",
+      "no_results": "Nenhum torrent encontrado."
+    },
+    "detail": {
+      "download": "Baixar",
+      "magnet": "Magnet",
+      "thank": "Agradecer",
+      "thanked": "Agradecido",
+      "bookmark": "Salvar",
+      "bookmarked": "Salvo",
+      "tab_files": "Arquivos",
+      "tab_nfo": "NFO",
+      "tab_screenshots": "Capturas",
+      "tab_peers": "Peers",
+      "seeders": "Seeders",
+      "leechers": "Leechers",
+      "freeleech": "Freeleech",
+      "uploader": "Enviado por",
+      "added": "Adicionado"
+    },
+    "upload": {
+      "title": "Enviar Torrent",
+      "file_label": "Arquivo .torrent",
+      "name": "Nome",
+      "description": "Descrição",
+      "category": "Categoria",
+      "tags": "Tags (separadas por vírgula)",
+      "nfo": "NFO",
+      "tmdb_id": "ID do TMDB (opcional)",
+      "imdb_id": "ID do IMDb (opcional)",
+      "submit": "Enviar",
+      "success": "Torrent enviado com sucesso!"
+    }
   },
   "flux": {
-    "balance": "Saldo FLX", "store": "Loja FLX", "buy": "Comprar",
-    "confirm_title": "Confirmar compra", "confirm_body": "Comprar {name} por {cost} FLX?",
-    "confirm_buy": "Confirmar", "cancel": "Cancelar", "purchasing": "Comprando…",
-    "purchase_success": "{name} comprado com sucesso!", "purchase_error": "Falha na compra",
+    "balance": "Saldo FLX",
+    "store": "Loja FLX",
+    "buy": "Comprar",
+    "confirm_title": "Confirmar compra",
+    "confirm_body": "Comprar {name} por {cost} FLX?",
+    "confirm_buy": "Confirmar",
+    "cancel": "Cancelar",
+    "purchasing": "Comprando…",
+    "purchase_success": "{name} comprado com sucesso!",
+    "purchase_error": "Falha na compra",
     "history": "Histórico de transações"
+  },
+  "forum": {
+    "title": "Forum",
+    "back": "← Back",
+    "topics": "topics",
+    "posts": "posts",
+    "no_categories": "No categories.",
+    "no_topics": "No topics.",
+    "no_posts": "No posts.",
+    "replies": "replies",
+    "prev": "← Prev",
+    "next": "Next →",
+    "new_topic": "New Topic",
+    "topic_title": "Title",
+    "topic_body": "Content",
+    "post_topic": "Create",
+    "reply": "Reply",
+    "reply_placeholder": "Your reply",
+    "post_reply": "Post",
+    "edited": "(edited)",
+    "locked": "Locked."
+  },
+  "messages": {
+    "title": "Messages",
+    "compose": "Compose",
+    "new_message": "New Message",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message",
+    "send": "Send",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "send_error": "Failed",
+    "inbox": "Inbox",
+    "sent": "Sent",
+    "empty": "No messages.",
+    "from": "From",
+    "delete": "Delete",
+    "back": "← Back"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "mark_all_read": "Mark all read",
+    "empty": "No notifications."
   }
 }
