@@ -208,16 +208,23 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         ip,
       });
 
-      // 12. Download complete
-      if (left === 0 && event === 'completed') {
-        void jobsQueue.add('hnr-update', { user_id: user.id, torrent_id: torrent.id });
-        // Upsert snatch record (ignore duplicate)
-        void import('../lib/db').then(({ execute }) =>
-          execute(
-            'INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)',
-            [user.id, torrent.id],
-          ).catch(err => logger.error(err, 'snatch upsert failed')),
-        );
+      // 12. Seeding — fire H&R update on every seeder announce
+      if (left === 0) {
+        void jobsQueue.add('hnr-update', {
+          user_id: user.id,
+          torrent_id: torrent.id,
+          is_freeleech: freeleech,
+          info_hash: infoHash,
+        });
+        if (event === 'completed') {
+          // Upsert snatch record once
+          void import('../lib/db').then(({ execute }) =>
+            execute(
+              'INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)',
+              [user.id, torrent.id],
+            ).catch(err => logger.error(err, 'snatch upsert failed')),
+          );
+        }
       }
 
       // 13-14. Collect peers and counts

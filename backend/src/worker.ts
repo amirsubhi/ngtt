@@ -15,6 +15,7 @@ import { parseMediaInfo } from './jobs/parse-mediainfo';
 import { archiveShoutboxMsg } from './jobs/shoutbox-archive';
 import { awardSeedingFlux } from './jobs/seed-rewards';
 import { awardBirthdayFlux } from './jobs/birthdays';
+import { checkExpiredHnr } from './jobs/hnr-check';
 
 const connection = new Redis(config.redisUrl, { maxRetriesPerRequest: null });
 
@@ -42,6 +43,7 @@ const jobsWorker = new Worker(
       case 'shoutbox-archive':return archiveShoutboxMsg(job.data);
       case 'seed-rewards':    return awardSeedingFlux();
       case 'birthday-flux':   return awardBirthdayFlux();
+      case 'hnr-check':       return checkExpiredHnr();
       default:
         logger.warn({ name: job.name }, 'unknown job type');
     }
@@ -55,6 +57,7 @@ jobsWorker.on('failed', (job, err) => logger.error({ job: job?.name, err }, 'job
 // Register repeatable cron jobs (idempotent — BullMQ deduplicates by key)
 void jobsQueue.add('seed-rewards', {}, { repeat: { pattern: '0 * * * *' }, jobId: 'seed-rewards-cron' });
 void jobsQueue.add('birthday-flux', {}, { repeat: { pattern: '0 0 * * *' }, jobId: 'birthday-flux-cron' });
+void jobsQueue.add('hnr-check', {}, { repeat: { pattern: '*/30 * * * *' }, jobId: 'hnr-check-cron' });
 
 logger.info('Worker process started');
 

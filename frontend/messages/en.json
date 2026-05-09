@@ -123,7 +123,8 @@
       "flux": "FLX Balance", "joined": "Joined", "last_seen": "Last seen",
       "uploads": "Uploads", "thanks_received": "Thanks received",
       "active_hnr": "Active H&Rs", "private": "This profile is private.",
-      "tab_uploads": "Uploads", "tab_snatches": "Snatches", "tab_bookmarks": "Bookmarks"
+      "tab_uploads": "Uploads", "tab_snatches": "Snatches", "tab_bookmarks": "Bookmarks",
+      "tab_hnr": "Hit & Runs", "hnr_seeded": "Seeded", "hnr_deadline": "Deadline", "hnr_empty": "No H&Rs found."
     },
     "settings": {
       "title": "Settings",

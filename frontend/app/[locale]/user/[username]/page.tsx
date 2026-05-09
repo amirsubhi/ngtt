@@ -31,6 +31,16 @@ interface StatsData {
   bookmarks: { torrent_id: number; name: string; created_at: string }[];
 }
 
+interface HnrRow {
+  id: number;
+  torrent_id: number;
+  torrent_name: string;
+  downloaded_at: string;
+  seed_deadline_at: string;
+  seeded_time_mins: number;
+  status: 'active' | 'resolved' | 'pardoned' | 'expired';
+}
+
 function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -38,17 +48,21 @@ function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-type Tab = 'uploads' | 'snatches' | 'bookmarks';
+const HNR_ICON: Record<string, string> = { active: '⚠️', resolved: '✅', pardoned: '🟢', expired: '❌' };
+
+type Tab = 'uploads' | 'snatches' | 'bookmarks' | 'hnr';
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const t = useTranslations('user.profile');
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [hnrList, setHnrList] = useState<HnrRow[]>([]);
   const [tab, setTab] = useState<Tab>('uploads');
   const [error, setError] = useState('');
+  const [isSelf, setIsSelf] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') ?? '';
     if (!token) return;
     api.get<ProfileData>(`/api/users/${params.username}`, token)
       .then(setProfile)
@@ -56,11 +70,26 @@ export default function UserProfilePage({ params }: { params: { username: string
   }, [params.username]);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token') ?? '';
     if (!token || !profile || profile.private) return;
     api.get<StatsData>(`/api/users/${params.username}/stats`, token)
       .then(setStats)
       .catch(() => {});
+  }, [profile, params.username]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token') ?? '';
+    if (!token || !profile) return;
+    // Check if self by decoding stored username
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.username === params.username) {
+        setIsSelf(true);
+        api.get<{ hnr: HnrRow[] }>('/api/users/me/hnr', token)
+          .then(d => setHnrList(d.hnr))
+          .catch(() => {});
+      }
+    } catch { /* non-standard token */ }
   }, [profile, params.username]);
 
   if (error) return <div className="flex min-h-screen items-center justify-center opacity-60">{error}</div>;
@@ -81,6 +110,7 @@ export default function UserProfilePage({ params }: { params: { username: string
     { key: 'uploads', label: t('tab_uploads') },
     { key: 'snatches', label: t('tab_snatches') },
     { key: 'bookmarks', label: t('tab_bookmarks') },
+    ...(isSelf ? [{ key: 'hnr' as Tab, label: t('tab_hnr') }] : []),
   ];
 
   return (
@@ -153,6 +183,28 @@ export default function UserProfilePage({ params }: { params: { username: string
             </div>
           ))}
           {!stats?.bookmarks.length && <p className="opacity-40 text-sm">No bookmarks.</p>}
+        </div>
+      )}
+
+      {tab === 'hnr' && (
+        <div className="space-y-2">
+          {hnrList.map(hnr => (
+            <div key={hnr.id} className="flex items-start justify-between py-2 border-b border-current/5 gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span>{HNR_ICON[hnr.status]}</span>
+                  <Link href={`/torrent/${hnr.torrent_id}`} className="text-sm hover:underline truncate">{hnr.torrent_name}</Link>
+                </div>
+                <div className="text-xs opacity-50 mt-0.5">
+                  {t('hnr_seeded')}: {hnr.seeded_time_mins}m · {t('hnr_deadline')}: {new Date(hnr.seed_deadline_at).toLocaleDateString()}
+                </div>
+              </div>
+              <span className={`text-xs capitalize whitespace-nowrap ${hnr.status === 'expired' ? 'text-red-500' : hnr.status === 'resolved' ? 'text-green-500' : 'opacity-60'}`}>
+                {hnr.status}
+              </span>
+            </div>
+          ))}
+          {hnrList.length === 0 && <p className="opacity-40 text-sm">{t('hnr_empty')}</p>}
         </div>
       )}
     </div>
