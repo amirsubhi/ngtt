@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import cookie from '@fastify/cookie';
+import multipart from '@fastify/multipart';
 import { logger } from './lib/logger';
 import { config } from './lib/config';
 import { AppError } from './lib/errors';
@@ -11,6 +12,8 @@ import { authRoutes } from './routes/auth';
 import { inviteRoutes } from './routes/invites';
 import { announceRoutes } from './announce/announce';
 import { scrapeRoutes } from './announce/scrape';
+import { torrentRoutes } from './routes/torrents/index';
+import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -24,6 +27,7 @@ export async function buildApp() {
 
   await app.register(helmet, { contentSecurityPolicy: false });
   await app.register(cookie);
+  await app.register(multipart, { attachFieldsToBody: false });
 
   await registerRateLimiter(app);
 
@@ -44,6 +48,10 @@ export async function buildApp() {
   await app.register(inviteRoutes);
   await app.register(announceRoutes);
   await app.register(scrapeRoutes);
+  await app.register(torrentRoutes);
+
+  // Debounced last_seen_at update for authenticated requests
+  app.addHook('onRequest', updateLastSeen);
 
   return app;
 }
