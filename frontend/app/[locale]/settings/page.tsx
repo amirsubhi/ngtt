@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { api, ApiError } from '@/lib/api';
 
 const THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand'] as const;
@@ -40,6 +41,7 @@ interface Settings {
 export default function SettingsPage() {
   const t = useTranslations('user.settings');
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [tab, setTab] = useState<Tab>('appearance');
   const [settings, setSettings] = useState<Partial<Settings>>({});
   const [saved, setSaved] = useState(false);
@@ -71,6 +73,7 @@ export default function SettingsPage() {
 
   async function save(partial: Partial<Settings>) {
     if (!token) return;
+    if (partial.theme) setTheme(partial.theme);
     try {
       await api.post('/api/users/me/settings', partial, token);
       setSettings(prev => ({ ...prev, ...partial }));
@@ -161,7 +164,7 @@ export default function SettingsPage() {
             <div className="flex flex-wrap gap-2">
               {THEMES.map(th => (
                 <button key={th} onClick={() => save({ theme: th })}
-                  className={`px-4 py-2 rounded border text-sm capitalize transition-colors ${settings.theme === th ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-current/20 hover:border-current/40'}`}>
+                  className={`px-4 py-2 rounded border text-sm capitalize transition-colors ${(theme ?? settings.theme) === th ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-current/20 hover:border-current/40'}`}>
                   {th}
                 </button>
               ))}
