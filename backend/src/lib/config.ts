@@ -43,4 +43,6 @@ export const config = {
 
   announceInterval:    parseInt(optional('ANNOUNCE_INTERVAL', '1800'), 10),
   minAnnounceInterval: parseInt(optional('MIN_ANNOUNCE_INTERVAL', '900'), 10),
+
+  cookieSecure: optional('COOKIE_SECURE', '') === 'true',
 };

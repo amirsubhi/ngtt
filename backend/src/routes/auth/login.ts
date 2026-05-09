@@ -143,7 +143,7 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
     reply.setCookie('refresh_token', rawRefresh, {
       httpOnly: true,
       sameSite: 'strict',
-      secure: config.nodeEnv === 'production',
+      secure: config.cookieSecure,
       path: '/',
       expires: refreshExpires,
     });

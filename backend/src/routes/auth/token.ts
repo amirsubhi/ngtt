@@ -65,7 +65,7 @@ export async function tokenRoutes(app: FastifyInstance): Promise<void> {
     reply.setCookie('refresh_token', newRaw, {
       httpOnly: true,
       sameSite: 'strict',
-      secure: config.nodeEnv === 'production',
+      secure: config.cookieSecure,
       path: '/',
       expires: newExpires,
     });
