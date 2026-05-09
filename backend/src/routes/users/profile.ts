@@ -18,6 +18,15 @@ interface PublicProfile {
 }
 
 export async function profileRoutes(app: FastifyInstance): Promise<void> {
+  app.get('/api/users/me', { preHandler: [authenticate] }, async (req, reply) => {
+    const user = await queryOne<{ id: number; username: string; group_id: number; flux: number; uploaded: number; downloaded: number; avatar_url: string | null }>(
+      'SELECT id, username, group_id, flux, uploaded, downloaded, avatar_url FROM users WHERE id = ? AND is_deleted = FALSE',
+      [req.user.id],
+    );
+    if (!user) throw new NotFoundError('User not found');
+    return reply.send(user);
+  });
+
   app.get('/api/users/:username', { preHandler: [authenticate] }, async (req, reply) => {
     const { username } = req.params as { username: string };
 

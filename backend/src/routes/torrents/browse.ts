@@ -100,9 +100,7 @@ export async function browseRoutes(app: FastifyInstance): Promise<void> {
       ${joinClause}
       WHERE ${where}
       ORDER BY ${sortCol} ${order}
-      LIMIT ? OFFSET ?`;
-
-    params.push(limit, offset);
+      LIMIT ${limit} OFFSET ${offset}`;
 
     const torrents = await query<TorrentRow>(sql, params);
 
