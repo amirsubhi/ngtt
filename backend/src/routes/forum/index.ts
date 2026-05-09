@@ -34,7 +34,7 @@ export const forumRoutes: FastifyPluginAsync = async app => {
   const ff = requireFeature('forum_enabled');
 
   // GET /api/forum/categories
-  app.get('/api/forum/categories', { preHandler: [ff] }, async (_req, reply) => {
+  app.get('/api/forum/categories', { preHandler: [ff, authenticate] }, async (_req, reply) => {
     const categories = await query(
       `SELECT id, name, slug, description, display_order, topic_count, post_count
        FROM forum_categories
@@ -47,10 +47,11 @@ export const forumRoutes: FastifyPluginAsync = async app => {
   // GET /api/forum/categories/:slug/topics
   app.get<{ Params: { slug: string }; Querystring: { page?: string } }>(
     '/api/forum/categories/:slug/topics',
-    { preHandler: [ff] },
+    { preHandler: [ff, authenticate] },
     async (req, reply) => {
       const { slug } = req.params as { slug: string };
-      const page = Math.max(1, parseInt((req.query as { page?: string }).page ?? '1', 10));
+      const rawPage = parseInt((req.query as { page?: string }).page ?? '1', 10);
+      const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
       const offset = (page - 1) * PAGE_SIZE;
 
       const cat = await queryOne<{ id: number; name: string }>('SELECT id, name FROM forum_categories WHERE slug = ?', [slug]);
@@ -65,8 +66,8 @@ export const forumRoutes: FastifyPluginAsync = async app => {
          LEFT JOIN users u2 ON u2.id = ft.last_reply_by
          WHERE ft.category_id = ?
          ORDER BY ft.is_pinned DESC, ft.last_reply_at DESC
-         LIMIT ? OFFSET ?`,
-        [cat.id, PAGE_SIZE, offset],
+         LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+        [cat.id],
       );
       return reply.send({ category: cat, topics, page, page_size: PAGE_SIZE });
     },
@@ -75,10 +76,11 @@ export const forumRoutes: FastifyPluginAsync = async app => {
   // GET /api/forum/topics/:id
   app.get<{ Params: { id: string }; Querystring: { page?: string } }>(
     '/api/forum/topics/:id',
-    { preHandler: [ff] },
+    { preHandler: [ff, authenticate] },
     async (req, reply) => {
       const topicId = parseInt((req.params as { id: string }).id, 10);
-      const page = Math.max(1, parseInt((req.query as { page?: string }).page ?? '1', 10));
+      const rawPage = parseInt((req.query as { page?: string }).page ?? '1', 10);
+      const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
       const offset = (page - 1) * PAGE_SIZE;
 
       const topic = await queryOne(
@@ -96,8 +98,8 @@ export const forumRoutes: FastifyPluginAsync = async app => {
          JOIN users u ON u.id = fp.user_id
          WHERE fp.topic_id = ?
          ORDER BY fp.created_at ASC
-         LIMIT ? OFFSET ?`,
-        [topicId, PAGE_SIZE, offset],
+         LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+        [topicId],
       );
 
       const posts = await Promise.all(rawPosts.map(async p => ({ ...p, body: await renderMarkdown(p.body) })));

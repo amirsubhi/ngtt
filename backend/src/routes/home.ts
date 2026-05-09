@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { query, queryOne } from '../lib/db';
+import { authenticate } from '../middleware/auth';
 
 interface HomeTorrent {
   id: number;
@@ -27,7 +28,7 @@ interface HomeBirthday {
 }
 
 export const homeRoutes: FastifyPluginAsync = async app => {
-  app.get('/api/home', async (_req, reply) => {
+  app.get('/api/home', { preHandler: [authenticate] }, async (_req, reply) => {
     const [stats, newsRows, torrentRows, birthdayRows] = await Promise.all([
       queryOne<{
         torrent_count: number;

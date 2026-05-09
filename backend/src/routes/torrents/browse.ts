@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { query, queryOne } from '../../lib/db';
+import { authenticate } from '../../middleware/auth';
 import { redis } from '../../lib/redis';
 import { getSeederCount, getLeecherCount } from '../../announce/peers';
 
@@ -50,7 +51,7 @@ interface TorrentRow {
 }
 
 export async function browseRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/torrents', async (req: FastifyRequest, reply: FastifyReply) => {
+  app.get('/api/torrents', { preHandler: [authenticate] }, async (req: FastifyRequest, reply: FastifyReply) => {
     const parsed = QueryParams.safeParse(req.query);
     if (!parsed.success) return reply.status(400).send({ error: 'INVALID_PARAMS', message: parsed.error.issues[0]?.message ?? 'Invalid params' });
     const { q, category_id, tag, freeleech, resolution, codec, source, uploader, sort, order, page, limit } = parsed.data;

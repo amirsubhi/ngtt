@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { query } from '../lib/db';
+import { authenticate } from '../middleware/auth';
 
 const PUBLIC_KEYS = [
   'captcha_on_register',
@@ -12,7 +13,7 @@ const PUBLIC_KEYS = [
 ] as const;
 
 export async function settingsRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/api/settings/categories', async (_req, reply) => {
+  app.get('/api/settings/categories', { preHandler: [authenticate] }, async (_req, reply) => {
     const categories = await query<{ id: number; name: string; slug: string; icon: string | null }>(
       'SELECT id, name, slug, icon FROM categories WHERE is_active = TRUE ORDER BY display_order',
     );

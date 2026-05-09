@@ -11,7 +11,7 @@ function slugify(title: string): string {
 
 export const newsRoutes: FastifyPluginAsync = async app => {
   // GET /api/news
-  app.get('/api/news', async (req, reply) => {
+  app.get('/api/news', { preHandler: [authenticate] }, async (req, reply) => {
     const rawPage = parseInt(((req.query as { page?: string }).page ?? '1'), 10);
     const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
     const offset = (page - 1) * 10;
@@ -25,7 +25,7 @@ export const newsRoutes: FastifyPluginAsync = async app => {
   });
 
   // GET /api/news/:slug
-  app.get<{ Params: { slug: string } }>('/api/news/:slug', async (req, reply) => {
+  app.get<{ Params: { slug: string } }>('/api/news/:slug', { preHandler: [authenticate] }, async (req, reply) => {
     const { slug } = req.params as { slug: string };
     const item = await queryOne(
       `SELECT n.*, u.username AS author FROM news n JOIN users u ON u.id = n.author_id WHERE n.slug = ?`,
@@ -80,7 +80,7 @@ export const newsRoutes: FastifyPluginAsync = async app => {
   });
 
   // GET /api/pages/:slug
-  app.get<{ Params: { slug: string } }>('/api/pages/:slug', async (req, reply) => {
+  app.get<{ Params: { slug: string } }>('/api/pages/:slug', { preHandler: [authenticate] }, async (req, reply) => {
     const { slug } = req.params as { slug: string };
     const page = await queryOne(
       'SELECT title, slug, body FROM custom_pages WHERE slug = ? AND is_published = TRUE', [slug],
