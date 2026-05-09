@@ -59,5 +59,29 @@
       "success": "Password updated. You can now log in.",
       "error": "This reset link is invalid or has expired."
     }
+  },
+  "torrent": {
+    "browse": {
+      "title": "Browse Torrents", "search_placeholder": "Search torrents…",
+      "filter_category": "Category", "filter_all": "All Categories",
+      "filter_freeleech": "Freeleech only",
+      "col_name": "Name", "col_size": "Size", "col_seeders": "S", "col_leechers": "L", "col_added": "Added",
+      "heat_dead": "Dead", "heat_cold": "Cold", "heat_warm": "Warm", "heat_hot": "Hot", "heat_burning": "Burning",
+      "no_results": "No torrents found."
+    },
+    "detail": {
+      "download": "Download", "magnet": "Magnet", "thank": "Thank", "thanked": "Thanked",
+      "bookmark": "Bookmark", "bookmarked": "Bookmarked",
+      "tab_files": "Files", "tab_nfo": "NFO", "tab_screenshots": "Screenshots",
+      "tab_peers": "Peers", "seeders": "Seeders", "leechers": "Leechers",
+      "freeleech": "Freeleech", "uploader": "Uploader", "added": "Added"
+    },
+    "upload": {
+      "title": "Upload Torrent", "file_label": "Torrent File (.torrent)",
+      "name": "Display Name", "description": "Description", "category": "Category",
+      "tags": "Tags (comma separated)", "nfo": "NFO",
+      "tmdb_id": "TMDB ID (optional)", "imdb_id": "IMDb ID (optional)",
+      "submit": "Upload", "success": "Torrent uploaded successfully!"
+    }
   }
 }

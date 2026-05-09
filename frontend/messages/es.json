@@ -29,5 +29,10 @@
       "title": "Nueva contraseña", "password": "Nueva contraseña", "submit": "Restablecer",
       "success": "Contraseña actualizada. Ya puedes iniciar sesión.", "error": "Enlace inválido o expirado."
     }
+  },
+  "torrent": {
+    "browse": { "title": "Explorar Torrents", "search_placeholder": "Buscar torrents…", "filter_category": "Categoría", "filter_all": "Todas", "filter_freeleech": "Solo freeleech", "col_name": "Nombre", "col_size": "Tamaño", "col_seeders": "S", "col_leechers": "L", "col_added": "Añadido", "heat_dead": "Muerto", "heat_cold": "Frío", "heat_warm": "Tibio", "heat_hot": "Caliente", "heat_burning": "Ardiente", "no_results": "No se encontraron torrents." },
+    "detail": { "download": "Descargar", "magnet": "Magnet", "thank": "Agradecer", "thanked": "Agradecido", "bookmark": "Guardar", "bookmarked": "Guardado", "tab_files": "Archivos", "tab_nfo": "NFO", "tab_screenshots": "Capturas", "tab_peers": "Peers", "seeders": "Seeders", "leechers": "Leechers", "freeleech": "Freeleech", "uploader": "Subido por", "added": "Añadido" },
+    "upload": { "title": "Subir Torrent", "file_label": "Archivo .torrent", "name": "Nombre", "description": "Descripción", "category": "Categoría", "tags": "Etiquetas (separadas por coma)", "nfo": "NFO", "tmdb_id": "ID de TMDB (opcional)", "imdb_id": "ID de IMDb (opcional)", "submit": "Subir", "success": "¡Torrent subido con éxito!" }
   }
 }

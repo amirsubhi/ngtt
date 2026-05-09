@@ -27,5 +27,10 @@
       "title": "Pilih Kata Laluan Baharu", "password": "Kata laluan baharu", "submit": "Tetapkan semula",
       "success": "Kata laluan dikemas kini. Anda boleh log masuk sekarang.", "error": "Pautan tidak sah atau telah tamat tempoh."
     }
+  },
+  "torrent": {
+    "browse": { "title": "Semak Imbas Torrent", "search_placeholder": "Cari torrent…", "filter_category": "Kategori", "filter_all": "Semua Kategori", "filter_freeleech": "Freeleech sahaja", "col_name": "Nama", "col_size": "Saiz", "col_seeders": "S", "col_leechers": "L", "col_added": "Ditambah", "heat_dead": "Mati", "heat_cold": "Sejuk", "heat_warm": "Suam", "heat_hot": "Panas", "heat_burning": "Membara", "no_results": "Tiada torrent ditemui." },
+    "detail": { "download": "Muat Turun", "magnet": "Pautan Magnet", "thank": "Terima Kasih", "thanked": "Sudah Terima Kasih", "bookmark": "Tandai", "bookmarked": "Sudah Ditandai", "tab_files": "Fail", "tab_nfo": "NFO", "tab_screenshots": "Tangkap Layar", "tab_peers": "Rakan Setara", "seeders": "Pembenihkan", "leechers": "Pemuat turun", "freeleech": "Freeleech", "uploader": "Pemuat naik", "added": "Ditambah" },
+    "upload": { "title": "Muat Naik Torrent", "file_label": "Fail torrent (.torrent)", "name": "Nama Paparan", "description": "Penerangan", "category": "Kategori", "tags": "Tag (pisah dengan koma)", "nfo": "NFO", "tmdb_id": "ID TMDB (pilihan)", "imdb_id": "ID IMDb (pilihan)", "submit": "Muat Naik", "success": "Torrent berjaya dimuat naik!" }
   }
 }
