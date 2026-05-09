@@ -1,0 +1,24 @@
+# /etc/cron.d/ngtt
+# Copy this file to /etc/cron.d/ngtt on the production server.
+# Runs as www-data (or whichever user owns /var/www/ngtt).
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Flux earning — every hour on the hour
+0  * * * * www-data node /var/www/ngtt/backend/dist/jobs/flux-earn.js >> /var/log/ngtt/cron.log 2>&1
+
+# H&R check — 30 minutes past every hour
+30 * * * * www-data node /var/www/ngtt/backend/dist/jobs/hnr-check.js >> /var/log/ngtt/cron.log 2>&1
+
+# Peer cleanup — every 15 minutes
+*/15 * * * * www-data node /var/www/ngtt/backend/dist/jobs/peer-cleanup.js >> /var/log/ngtt/cron.log 2>&1
+
+# Birthday flux + shoutbox — daily at midnight
+0  0 * * * www-data node /var/www/ngtt/backend/dist/jobs/birthdays.js >> /var/log/ngtt/cron.log 2>&1
+
+# Inactivity pruning — daily at 03:00
+0  3 * * * www-data node /var/www/ngtt/backend/dist/jobs/prune-users.js >> /var/log/ngtt/cron.log 2>&1
+
+# Let's Encrypt renewal — twice daily
+0  0,12 * * * root certbot renew --quiet

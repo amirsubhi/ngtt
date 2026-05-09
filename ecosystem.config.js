@@ -1,10 +1,27 @@
 module.exports = {
   apps: [
     {
+      name: 'ngtt-frontend',
+      script: 'node_modules/.bin/next',
+      args: 'start',
+      cwd: '/var/www/ngtt/frontend',
+      instances: 2,
+      exec_mode: 'cluster',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+      },
+      error_file: '/var/log/ngtt/frontend-error.log',
+      out_file: '/var/log/ngtt/frontend-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss',
+      restart_delay: 3000,
+      max_restarts: 10,
+    },
+    {
       name: 'ngtt-backend',
       script: 'dist/index.js',
-      cwd: './backend',
-      instances: 'max',
+      cwd: '/var/www/ngtt/backend',
+      instances: 2,
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',
