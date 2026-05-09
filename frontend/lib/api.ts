@@ -31,6 +31,8 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(path: string, token?: string | null) => request<T>('GET', path, undefined, token),
-  post: <T>(path: string, body: unknown, token?: string | null) => request<T>('POST', path, body, token),
+  get:    <T>(path: string, token?: string | null) => request<T>('GET', path, undefined, token),
+  post:   <T>(path: string, body: unknown, token?: string | null) => request<T>('POST', path, body, token),
+  put:    <T>(path: string, body: unknown, token?: string | null) => request<T>('PUT', path, body, token),
+  delete: <T>(path: string, token?: string | null) => request<T>('DELETE', path, undefined, token),
 };

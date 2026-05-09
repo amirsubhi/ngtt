@@ -73,6 +73,12 @@ export const newsRoutes: FastifyPluginAsync = async app => {
     },
   );
 
+  // GET /api/admin/pages (list all, staff only)
+  app.get('/api/admin/pages', { preHandler: [authenticate, requireStaff] }, async (_req, reply) => {
+    const pages = await query('SELECT id, title, slug, body, show_in_nav, is_published, display_order FROM custom_pages ORDER BY display_order ASC');
+    return reply.send({ pages });
+  });
+
   // GET /api/pages/:slug
   app.get<{ Params: { slug: string } }>('/api/pages/:slug', async (req, reply) => {
     const { slug } = req.params as { slug: string };
