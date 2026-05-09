@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-function require(name: string): string {
+function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
     console.error(`[config] Missing required env var: ${name}`);
@@ -16,26 +16,26 @@ function optional(name: string, fallback: string): string {
 export const config = {
   nodeEnv:   optional('NODE_ENV', 'development'),
   port:      parseInt(optional('PORT', '4000'), 10),
-  frontendUrl: require('FRONTEND_URL'),
+  frontendUrl: requireEnv('FRONTEND_URL'),
 
-  databaseUrl: require('DATABASE_URL'),
-  redisUrl:    require('REDIS_URL'),
+  databaseUrl: requireEnv('DATABASE_URL'),
+  redisUrl:    requireEnv('REDIS_URL'),
 
-  jwtAccessSecret:  require('JWT_ACCESS_SECRET'),
-  jwtRefreshSecret: require('JWT_REFRESH_SECRET'),
+  jwtAccessSecret:  requireEnv('JWT_ACCESS_SECRET'),
+  jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
   jwtAccessExpires:  optional('JWT_ACCESS_EXPIRES', '15m'),
   jwtRefreshExpires: optional('JWT_REFRESH_EXPIRES', '7d'),
 
-  uploadPath: require('UPLOAD_PATH'),
-  uploadUrl:  require('UPLOAD_URL'),
+  uploadPath: requireEnv('UPLOAD_PATH'),
+  uploadUrl:  requireEnv('UPLOAD_URL'),
 
-  smtpHost: require('SMTP_HOST'),
+  smtpHost: requireEnv('SMTP_HOST'),
   smtpPort: parseInt(optional('SMTP_PORT', '587'), 10),
-  smtpUser: require('SMTP_USER'),
-  smtpPass: require('SMTP_PASS'),
-  smtpFrom: require('SMTP_FROM'),
+  smtpUser: requireEnv('SMTP_USER'),
+  smtpPass: requireEnv('SMTP_PASS'),
+  smtpFrom: requireEnv('SMTP_FROM'),
 
-  encryptionKey: require('ENCRYPTION_KEY'),
+  encryptionKey: requireEnv('ENCRYPTION_KEY'),
 
   turnstileSecret: optional('TURNSTILE_SECRET_KEY', ''),
   tmdbApiKey:      optional('TMDB_API_KEY', ''),

@@ -1,10 +1,14 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import cookie from '@fastify/cookie';
 import { logger } from './lib/logger';
 import { config } from './lib/config';
 import { AppError } from './lib/errors';
 import { healthRoutes } from './routes/health';
+import { settingsRoutes } from './routes/settings';
+import { authRoutes } from './routes/auth';
+import { inviteRoutes } from './routes/invites';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -17,6 +21,7 @@ export async function buildApp() {
   });
 
   await app.register(helmet, { contentSecurityPolicy: false });
+  await app.register(cookie);
 
   await registerRateLimiter(app);
 
@@ -32,6 +37,9 @@ export async function buildApp() {
   });
 
   await app.register(healthRoutes);
+  await app.register(settingsRoutes);
+  await app.register(authRoutes);
+  await app.register(inviteRoutes);
 
   return app;
 }
