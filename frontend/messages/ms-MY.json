@@ -1,12 +1,31 @@
 {
-  "site": {
-    "name": "NGTT",
-    "description": "Pelacak torrent generasi baharu"
-  },
-  "nav": {
-    "browse": "Semak imbas",
-    "forum": "Forum",
-    "login": "Log masuk",
-    "register": "Daftar"
+  "site": { "name": "NGTT", "description": "Pelacak torrent generasi baharu" },
+  "nav": { "browse": "Semak imbas", "forum": "Forum", "login": "Log masuk", "register": "Daftar", "logout": "Log keluar" },
+  "auth": {
+    "login": {
+      "title": "Log Masuk ke NGTT", "email": "E-mel", "password": "Kata Laluan", "submit": "Log Masuk",
+      "forgot": "Lupa kata laluan?", "no_account": "Tiada akaun?", "register_link": "Minta jemputan",
+      "error_invalid": "E-mel atau kata laluan tidak sah", "error_locked": "Akaun dikunci sementara",
+      "error_banned": "Akaun diharamkan", "error_unverified": "Sila sahkan e-mel anda dahulu",
+      "two_fa_prompt": "Masukkan kod 2FA anda", "two_fa_label": "Kod pengesah atau kod sandaran"
+    },
+    "register": {
+      "title": "Buat Akaun", "username": "Nama Pengguna", "email": "E-mel", "password": "Kata Laluan",
+      "invite": "Token jemputan", "submit": "Buat Akaun", "have_account": "Sudah ada akaun?",
+      "login_link": "Log masuk", "success": "Akaun dibuat! Semak e-mel anda untuk mengesahkan alamat.",
+      "error_taken": "Nama pengguna atau e-mel sudah digunakan", "error_closed": "Pendaftaran ditutup buat masa ini"
+    },
+    "verify_email": {
+      "title": "Pengesahan E-mel", "loading": "Mengesahkan…",
+      "success": "E-mel anda telah disahkan. Anda boleh log masuk sekarang.", "error": "Pautan tidak sah atau telah tamat tempoh."
+    },
+    "forgot": {
+      "title": "Tetapkan Semula Kata Laluan", "email": "Alamat e-mel", "submit": "Hantar pautan",
+      "success": "Jika e-mel itu berdaftar, anda akan menerima pautan tidak lama lagi.", "back_login": "Kembali ke log masuk"
+    },
+    "reset": {
+      "title": "Pilih Kata Laluan Baharu", "password": "Kata laluan baharu", "submit": "Tetapkan semula",
+      "success": "Kata laluan dikemas kini. Anda boleh log masuk sekarang.", "error": "Pautan tidak sah atau telah tamat tempoh."
+    }
   }
 }

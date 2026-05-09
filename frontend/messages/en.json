@@ -7,6 +7,57 @@
     "browse": "Browse",
     "forum": "Forum",
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to NGTT",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgot": "Forgot password?",
+      "no_account": "Don't have an account?",
+      "register_link": "Request an invite",
+      "error_invalid": "Invalid email or password",
+      "error_locked": "Account is temporarily locked",
+      "error_banned": "Account is banned",
+      "error_unverified": "Please verify your email first",
+      "two_fa_prompt": "Enter your 2FA code",
+      "two_fa_label": "Authenticator code or backup code"
+    },
+    "register": {
+      "title": "Create your account",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "invite": "Invite token",
+      "submit": "Create account",
+      "have_account": "Already have an account?",
+      "login_link": "Sign in",
+      "success": "Account created! Check your email to verify your address.",
+      "error_taken": "Username or email already taken",
+      "error_closed": "Registration is currently closed"
+    },
+    "verify_email": {
+      "title": "Email Verification",
+      "loading": "Verifying…",
+      "success": "Your email has been verified. You can now log in.",
+      "error": "This verification link is invalid or has expired."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "email": "Email address",
+      "submit": "Send reset link",
+      "success": "If that email is registered, you'll receive a reset link shortly.",
+      "back_login": "Back to login"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "password": "New password",
+      "submit": "Reset password",
+      "success": "Password updated. You can now log in.",
+      "error": "This reset link is invalid or has expired."
+    }
   }
 }

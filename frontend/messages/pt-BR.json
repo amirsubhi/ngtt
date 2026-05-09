@@ -1,12 +1,32 @@
 {
-  "site": {
-    "name": "NGTT",
-    "description": "Tracker de torrents de nova geração"
-  },
-  "nav": {
-    "browse": "Explorar",
-    "forum": "Fórum",
-    "login": "Entrar",
-    "register": "Cadastrar"
+  "site": { "name": "NGTT", "description": "Tracker de torrents de nova geração" },
+  "nav": { "browse": "Explorar", "forum": "Fórum", "login": "Entrar", "register": "Cadastrar", "logout": "Sair" },
+  "auth": {
+    "login": {
+      "title": "Entrar no NGTT", "email": "E-mail", "password": "Senha", "submit": "Entrar",
+      "forgot": "Esqueceu a senha?", "no_account": "Não tem conta?", "register_link": "Solicitar convite",
+      "error_invalid": "E-mail ou senha incorretos", "error_locked": "Conta temporariamente bloqueada",
+      "error_banned": "Conta banida", "error_unverified": "Verifique seu e-mail primeiro",
+      "two_fa_prompt": "Insira seu código 2FA", "two_fa_label": "Código do autenticador ou código de backup"
+    },
+    "register": {
+      "title": "Criar conta", "username": "Usuário", "email": "E-mail", "password": "Senha",
+      "invite": "Token de convite", "submit": "Criar conta",
+      "have_account": "Já tem conta?", "login_link": "Entrar",
+      "success": "Conta criada! Verifique seu e-mail para confirmar seu endereço.",
+      "error_taken": "Usuário ou e-mail já em uso", "error_closed": "Registro está fechado"
+    },
+    "verify_email": {
+      "title": "Verificação de e-mail", "loading": "Verificando…",
+      "success": "E-mail verificado. Você já pode entrar.", "error": "Link inválido ou expirado."
+    },
+    "forgot": {
+      "title": "Redefinir senha", "email": "Endereço de e-mail", "submit": "Enviar link",
+      "success": "Se esse e-mail estiver cadastrado, você receberá um link em breve.", "back_login": "Voltar ao login"
+    },
+    "reset": {
+      "title": "Nova senha", "password": "Nova senha", "submit": "Redefinir senha",
+      "success": "Senha atualizada. Você já pode entrar.", "error": "Link inválido ou expirado."
+    }
   }
 }
