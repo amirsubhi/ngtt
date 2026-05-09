@@ -112,24 +112,31 @@ sudo chown -R www-data:www-data /var/www/ngtt
 sudo chown -R www-data:www-data /var/log/ngtt
 ```
 
-### 4. Build backend
+### 4. Build backend and run the installer
 
 ```bash
 cd /var/www/ngtt/backend
+
+# Install dependencies (omit devDeps in production)
 sudo -u www-data npm install --omit=dev
+
+# Build TypeScript
 sudo -u www-data npm run build
+
+# Run the one-time installer: checks requirements, migrates DB, creates first admin account
+sudo -u www-data node install.js
 ```
 
-### 5. Run database migrations
+The installer:
+- Validates all required env vars
+- Tests MySQL and Redis connectivity
+- Applies all pending migrations (idempotent)
+- Prompts for the first administrator's username, email, and password
+- Writes `.installed` as a lock file and self-deletes
 
-```bash
-cd /var/www/ngtt/backend
-sudo -u www-data npm run migrate
-```
+> **Re-running:** Delete `backend/.installed` to run the installer again (e.g. on a fresh database). For future upgrades use `npm run migrate` — not the installer.
 
-Migrations are idempotent — safe to re-run. Never apply SQL files manually after the first deploy.
-
-### 6. Build frontend
+### 5. Build frontend
 
 ```bash
 cd /var/www/ngtt/frontend
@@ -176,33 +183,13 @@ sudo chmod 644 /etc/cron.d/ngtt
 
 After the first deploy, complete these steps in order:
 
+- [ ] Verify `backend/.installed` exists (confirms installer ran successfully)
 - [ ] Visit `https://ngtt.com/api/health` — expect `{"status":"ok"}`
-- [ ] Register the first account via the web UI
-- [ ] Promote that account to Admin (see below)
-- [ ] Log in and open **Admin → Site Settings** — configure site name, invite-only mode, announce interval
+- [ ] Log in with the admin account created during installation
+- [ ] Open **Admin → Site Settings** — configure site name, invite-only mode, announce interval
 - [ ] Send a test email from **Admin → Email Test**
 - [ ] Upload one test torrent and verify announce works with a real torrent client
 - [ ] Confirm `/var/log/ngtt/` logs are being written by PM2 and cron
-
----
-
-## Adding the First Admin User
-
-After registering, promote via MySQL:
-
-```sql
--- Find the user group for Admin (created by migrations)
-SELECT id, name FROM user_groups WHERE name = 'Admin';
-
--- Promote user (replace 1 with the correct group id)
-UPDATE users SET group_id = 1 WHERE username = 'your_username';
-```
-
-Or use the provided CLI script if available:
-```bash
-cd /var/www/ngtt/backend
-node dist/scripts/make-admin.js your_username
-```
 
 ---
 

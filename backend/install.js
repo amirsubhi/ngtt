@@ -15,7 +15,6 @@
 
 const fs   = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
 // ── ANSI helpers ──────────────────────────────────────────────────────────────
 
@@ -204,23 +203,36 @@ function promptPassword(question) {
   console.log(`\n${bold('[ 5/6 ]  Database Setup')}\n`);
 
   note('Applying migrations…');
-  const mg = spawnSync(
-    path.join(__dirname, 'node_modules/.bin/tsx'),
-    ['src/lib/migrate.ts'],
-    {
-      cwd: __dirname,
-      env: { ...process.env, FORCE_COLOR: '0' },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    },
-  );
+  try {
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        filename   VARCHAR(255) PRIMARY KEY,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
 
-  if (mg.status === 0) {
-    pass('Migrations applied');
-  } else {
-    const combined = (mg.stdout?.toString() ?? '') + (mg.stderr?.toString() ?? '');
-    const lastLine = combined.trim().split('\n').pop() ?? '';
-    bad('Migration failed', lastLine);
-    if (combined.trim()) console.log(`\n${dim(combined.trim())}\n`);
+    const migrationsDir = path.join(__dirname, 'migrations');
+    const files = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
+
+    let applied = 0;
+    for (const file of files) {
+      const [rows] = await conn.execute('SELECT filename FROM schema_migrations WHERE filename = ?', [file]);
+      if (rows.length > 0) continue;
+
+      const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+      const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+      for (const stmt of statements) {
+        await conn.execute(stmt);
+      }
+      await conn.execute('INSERT INTO schema_migrations (filename) VALUES (?)', [file]);
+      applied++;
+    }
+
+    pass(`Migrations applied  ${dim(`(${applied} new, ${files.length - applied} already applied)`)}`);
+  } catch (e) {
+    bad('Migration failed', e.message);
     process.exit(1);
   }
 
