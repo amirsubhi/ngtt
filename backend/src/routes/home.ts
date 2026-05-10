@@ -50,7 +50,7 @@ export const homeRoutes: FastifyPluginAsync = async app => {
       ),
 
       query<HomeTorrent>(
-        `SELECT t.id, t.name, c.name AS category_name, t.size,
+        `SELECT t.id, t.name, c.label AS category_name, t.size,
                 0 AS seeders, 0 AS leechers, t.is_freeleech, t.created_at,
                 u.username AS uploader
          FROM torrents t

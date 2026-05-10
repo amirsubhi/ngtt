@@ -40,7 +40,7 @@ export const staffRoutes: FastifyPluginAsync = async app => {
   // 10b — Torrent approval queue
   app.get('/api/staff/torrents/pending', { preHandler: pre }, async (_req, reply) => {
     const rows = await query(
-      `SELECT t.id, t.name, t.size, t.created_at, u.username AS uploader, c.name AS category
+      `SELECT t.id, t.name, t.size, t.created_at, u.username AS uploader, c.label AS category
        FROM torrents t JOIN users u ON u.id=t.uploader_id JOIN categories c ON c.id=t.category_id
        WHERE t.status='pending' ORDER BY t.created_at ASC LIMIT 100`,
     );

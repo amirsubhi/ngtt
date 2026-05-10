@@ -14,8 +14,8 @@ const PUBLIC_KEYS = [
 
 export async function settingsRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/settings/categories', { preHandler: [authenticate] }, async (_req, reply) => {
-    const categories = await query<{ id: number; name: string; slug: string; icon: string | null }>(
-      'SELECT id, name, slug, icon FROM categories WHERE is_active = TRUE ORDER BY display_order',
+    const categories = await query<{ id: number; label: string; slug: string; icon: string | null }>(
+      'SELECT id, label, slug, icon FROM categories WHERE enabled = TRUE ORDER BY sort_order',
     );
     return reply.send(categories);
   });

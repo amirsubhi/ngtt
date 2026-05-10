@@ -60,7 +60,7 @@ export async function uploadRoutes(app: FastifyInstance): Promise<void> {
 
       // Validate category
       const category = await queryOne<{ id: number; slug: string }>(
-        'SELECT id, slug FROM categories WHERE id = ? AND is_active = TRUE LIMIT 1',
+        'SELECT id, slug FROM categories WHERE id = ? AND enabled = TRUE LIMIT 1',
         [category_id],
       );
       if (!category) throw new ValidationError('Invalid category');

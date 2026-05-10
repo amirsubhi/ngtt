@@ -113,10 +113,10 @@ export const apiRoutes: FastifyPluginAsync = async app => {
     reply.header('Content-Type', 'application/rss+xml; charset=utf-8');
 
     if (t === 'caps') {
-      const categories = await query<{ slug: string; name: string }>('SELECT slug, name FROM categories WHERE is_active = TRUE');
+      const categories = await query<{ slug: string; label: string }>('SELECT slug, label FROM categories WHERE enabled = TRUE');
       const catXml = categories.map(c => {
         const id = NEWZNAB_CAT[c.slug] ?? 8000;
-        return `<category id="${id}" name="${xmlEscape(c.name)}"/>`;
+        return `<category id="${id}" name="${xmlEscape(c.label)}"/>`;
       }).join('\n          ');
       return reply.send(`<?xml version="1.0" encoding="UTF-8"?>
 <caps>
@@ -207,7 +207,7 @@ ${items.join('\n')}
       tmdb_id: number | null; category_name: string; category_slug: string;
     }>(
       `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.created_at,
-              t.imdb_id, t.tmdb_id, c.name AS category_name, c.slug AS category_slug
+              t.imdb_id, t.tmdb_id, c.label AS category_name, c.slug AS category_slug
        FROM torrents t JOIN categories c ON c.id = t.category_id
        WHERE t.status = 'approved'
        ORDER BY t.created_at DESC LIMIT 50`,
@@ -270,7 +270,7 @@ ${items.join('\n')}
     if (q.category) { conditions.push('c.slug = ?'); params.push(q.category); }
     params.push(50, offset);
     const torrents = await query<{ id: number; name: string; info_hash: string; size: number; is_freeleech: boolean; created_at: string; category_name: string }>(
-      `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.created_at, c.name AS category_name
+      `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.created_at, c.label AS category_name
        FROM torrents t JOIN categories c ON c.id = t.category_id WHERE ${conditions.join(' AND ')}
        ORDER BY t.created_at DESC LIMIT ? OFFSET ?`, params,
     );
@@ -281,7 +281,7 @@ ${items.join('\n')}
     await resolveV1User(req);
     const torrent = await queryOne(
       `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.description,
-              t.imdb_id, t.tmdb_id, t.created_at, c.name AS category_name, u.username AS uploader
+              t.imdb_id, t.tmdb_id, t.created_at, c.label AS category_name, u.username AS uploader
        FROM torrents t JOIN categories c ON c.id=t.category_id JOIN users u ON u.id=t.uploader_id
        WHERE t.id = ? AND t.status = 'approved'`, [parseInt(req.params.id, 10)],
     );
@@ -347,7 +347,7 @@ ${items.join('\n')}
     await resolveV1User(req);
     const rows = await query(
       `SELECT r.id, r.title, r.description, r.bounty_flux, r.is_filled, r.created_at,
-              u.username, c.name AS category_name
+              u.username, c.label AS category_name
        FROM torrent_requests r JOIN users u ON u.id=r.user_id LEFT JOIN categories c ON c.id=r.category_id
        WHERE r.is_filled = FALSE ORDER BY r.bounty_flux DESC LIMIT 50`,
     );

@@ -42,7 +42,7 @@ export const rssRoutes: FastifyPluginAsync = async app => {
       id: number; name: string; description: string | null;
       size: number; is_freeleech: boolean; created_at: string; category_name: string;
     }>(
-      `SELECT t.id, t.name, t.description, t.size, t.is_freeleech, t.created_at, c.name AS category_name
+      `SELECT t.id, t.name, t.description, t.size, t.is_freeleech, t.created_at, c.label AS category_name
        FROM torrents t JOIN categories c ON c.id = t.category_id WHERE ${where}
        ORDER BY t.created_at DESC LIMIT ?`,
       params,

@@ -23,7 +23,7 @@ export const requestRoutes: FastifyPluginAsync = async app => {
   app.get('/api/requests/my', { preHandler: [authenticate] }, async (req, reply) => {
     const rows = await query<RequestRow>(
       `SELECT r.id, r.title, r.bounty_flux, r.is_filled, r.created_at,
-              u.username, c.name AS category_name
+              u.username, c.label AS category_name
        FROM torrent_requests r
        JOIN users u ON u.id = r.user_id
        LEFT JOIN categories c ON c.id = r.category_id
@@ -53,7 +53,7 @@ export const requestRoutes: FastifyPluginAsync = async app => {
 
     const rows = await query<RequestRow>(
       `SELECT r.id, r.title, r.description, r.bounty_flux, r.is_filled,
-              r.filled_torrent_id, r.created_at, u.username, c.name AS category_name
+              r.filled_torrent_id, r.created_at, u.username, c.label AS category_name
        FROM torrent_requests r
        JOIN users u ON u.id = r.user_id
        LEFT JOIN categories c ON c.id = r.category_id
@@ -71,7 +71,7 @@ export const requestRoutes: FastifyPluginAsync = async app => {
     const row = await queryOne(
       `SELECT r.id, r.title, r.description, r.bounty_flux, r.is_filled,
               r.filled_torrent_id, r.created_at, u.username, u.id AS user_id,
-              c.name AS category_name
+              c.label AS category_name
        FROM torrent_requests r
        JOIN users u ON u.id = r.user_id
        LEFT JOIN categories c ON c.id = r.category_id
