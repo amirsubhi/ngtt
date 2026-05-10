@@ -90,16 +90,18 @@ export const adminBackupRoutes: FastifyPluginAsync = async app => {
     let files: string[] = [];
     try { files = await fs.readdir(BACKUP_DIR); } catch { /* dir not yet created */ }
 
-    const backups = await Promise.all(
+    const backups = (await Promise.all(
       files
         .filter(f => FILE_RE.test(f))
         .sort()
         .reverse()
         .map(async name => {
-          const stat = await fs.stat(path.join(BACKUP_DIR, name));
-          return { name, size: stat.size, created_at: stat.birthtime.toISOString() };
+          try {
+            const stat = await fs.stat(path.join(BACKUP_DIR, name));
+            return { name, size: stat.size, created_at: stat.mtime.toISOString() };
+          } catch { return null; }
         }),
-    );
+    )).filter((b): b is { name: string; size: number; created_at: string } => b !== null);
     return reply.send({ backups });
   });
 
