@@ -27,6 +27,7 @@ interface UserRow {
   id: number;
   username: string;
   group_id: number;
+  group_slug: string;
   password_hash: string;
   email_verified: boolean;
   is_banned: boolean;
@@ -70,9 +71,12 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
     }
 
     const user = await queryOne<UserRow>(
-      `SELECT id, username, group_id, password_hash, email_verified, is_banned, ban_reason,
-              failed_login_count, locked_until, two_factor_enabled, two_factor_secret
-       FROM users WHERE email = ? AND is_deleted = FALSE`,
+      `SELECT u.id, u.username, u.group_id, ug.slug AS group_slug, u.password_hash,
+              u.email_verified, u.is_banned, u.ban_reason,
+              u.failed_login_count, u.locked_until, u.two_factor_enabled, u.two_factor_secret
+       FROM users u
+       JOIN user_groups ug ON ug.id = u.group_id
+       WHERE u.email = ? AND u.is_deleted = FALSE`,
       [email],
     );
 
@@ -140,7 +144,7 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
     await execute('UPDATE users SET failed_login_count = 0, locked_until = NULL, last_seen_at = NOW() WHERE id = ?', [user.id]);
 
     const accessToken = jwt.sign(
-      { sub: user.id, username: user.username },
+      { sub: user.id, username: user.username, group_slug: user.group_slug },
       config.jwtAccessSecret,
       { expiresIn: config.jwtAccessExpires as any },
     );

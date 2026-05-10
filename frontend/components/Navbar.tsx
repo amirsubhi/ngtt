@@ -36,7 +36,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     if (!token) return;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload?.id) setUser({ username: payload.username, group_slug: payload.group_slug ?? '' });
+      if (payload?.sub) setUser({ username: payload.username, group_slug: payload.group_slug ?? '' });
     } catch { /* no-op */ }
   }, []);
 
