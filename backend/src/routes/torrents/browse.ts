@@ -192,13 +192,18 @@ export async function browseRoutes(app: FastifyInstance): Promise<void> {
     if (!parsed.success) return reply.status(400).send({ error: 'INVALID_PARAMS', message: 'q must be at least 2 characters' });
     const { q } = parsed.data;
 
+    const groupSlug = req.user.slug;
     const rows = await query<{ name: string; icon: string; label: string }>(
       `SELECT DISTINCT t.name, c.icon, c.label
        FROM torrents t
        JOIN categories c ON t.category_id = c.id
        WHERE t.name LIKE CONCAT(?, '%') AND t.status = 'approved'
+         AND (c.browse_min_group = 'all'
+           OR (c.browse_min_group = 'user'  AND ? IN ('user','power','staff','admin','moderator'))
+           OR (c.browse_min_group = 'power' AND ? IN ('power','staff','admin'))
+           OR (c.browse_min_group = 'staff' AND ? IN ('staff','admin')))
        LIMIT 8`,
-      [q],
+      [q, groupSlug, groupSlug, groupSlug],
     );
     return reply.send(rows.map(r => ({ name: r.name, categoryIcon: r.icon, categoryLabel: r.label })));
   });
