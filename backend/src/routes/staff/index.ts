@@ -77,7 +77,8 @@ export const staffRoutes: FastifyPluginAsync = async app => {
       body: `"${torrent.name}" has been approved.`,
       url: `/torrent/${torrentId}`,
     });
-    void emitSystemShoutbox(`🎉 New torrent approved: <a href="/torrent/${torrentId}">${torrent.name}</a>`);
+    const safeName = torrent.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    void emitSystemShoutbox(`🎉 New torrent approved: <a href="/torrent/${torrentId}">${safeName}</a>`);
     await audit(req.user.id, 'torrent_approve', 'torrent', torrentId);
     return reply.send({ ok: true });
   });
