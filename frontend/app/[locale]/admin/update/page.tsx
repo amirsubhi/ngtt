@@ -54,9 +54,6 @@ export default function AdminUpdatePage() {
       if (!res.ok) return;
       const data = await res.json() as Progress;
       setProgress(data);
-      if (logRef.current) {
-        logRef.current.scrollTop = logRef.current.scrollHeight;
-      }
       if (data.status === 'done' || data.status === 'failed') {
         if (pollingRef.current) clearInterval(pollingRef.current);
         pollingRef.current = null;
@@ -74,6 +71,7 @@ export default function AdminUpdatePage() {
   useEffect(() => {
     if (info?.status === 'running' && !applying) {
       setApplying(true);
+      void fetchProgress();
       pollingRef.current = setInterval(fetchProgress, 2000);
     }
     return () => {
@@ -82,9 +80,17 @@ export default function AdminUpdatePage() {
         pollingRef.current = null;
       }
     };
-  }, [info?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [info?.status, fetchProgress]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-scroll log to bottom when progress updates
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [progress]);
 
   async function handleApply() {
+    if (applying) return;
     if (!info?.latest) return;
     setError('');
     setApplying(true);
@@ -187,7 +193,8 @@ export default function AdminUpdatePage() {
           </p>
           <button
             onClick={handleApply}
-            className="px-4 py-2 rounded bg-[var(--color-accent)] text-sm font-medium text-white hover:opacity-90"
+            disabled={applying || !canApply}
+            className="px-4 py-2 rounded bg-[var(--color-accent)] text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Update to {info.latest!.tag}
           </button>
