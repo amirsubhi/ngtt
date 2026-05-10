@@ -64,7 +64,13 @@ export async function accountRoutes(app: FastifyInstance): Promise<void> {
 
     await withTransaction(async (conn: mysql.PoolConnection) => {
       await conn.execute('INSERT INTO username_history (user_id, old_username, changed_by) VALUES (?, ?, ?)', [req.user.id, user.username, req.user.id]);
-      await conn.execute('UPDATE users SET username = ?, flux = flux - ? WHERE id = ?', [new_username, USERNAME_CHANGE_COST, req.user.id]);
+      const [upd] = await conn.execute<import('mysql2').ResultSetHeader>(
+        'UPDATE users SET username = ?, flux = flux - ? WHERE id = ? AND flux >= ?',
+        [new_username, USERNAME_CHANGE_COST, req.user.id, USERNAME_CHANGE_COST],
+      );
+      if (upd.affectedRows === 0) {
+        return reply.status(402).send({ error: 'INSUFFICIENT_FLUX', message: `Requires ${USERNAME_CHANGE_COST} FLX` });
+      }
       await conn.execute("INSERT INTO flux_transactions (user_id, amount, type, source) VALUES (?, ?, 'spend', 'Username change')", [req.user.id, USERNAME_CHANGE_COST]);
     });
 

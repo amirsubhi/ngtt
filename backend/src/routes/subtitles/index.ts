@@ -265,10 +265,10 @@ export const subtitleRoutes: FastifyPluginAsync = async app => {
         throw new ForbiddenError('OpenSubtitles not connected');
       }
 
-      // 24h cooldown check
+      // 24h cooldown — SET NX is atomic, prevents concurrent double-sync
       const cooldownKey = `os-sync:${req.user.id}:${torrentId}`;
-      const cooldown = await redis.get(cooldownKey);
-      if (cooldown) throw new ForbiddenError('Already synced in the last 24 hours');
+      const acquired = await redis.set(cooldownKey, '1', 'EX', 86400, 'NX');
+      if (!acquired) throw new ForbiddenError('Already synced in the last 24 hours');
 
       const torrent = await queryOne<{ id: number; name: string; imdb_id: string | null }>(
         "SELECT id, name, imdb_id FROM torrents WHERE id = ? AND status = 'approved'", [torrentId],
@@ -369,9 +369,6 @@ export const subtitleRoutes: FastifyPluginAsync = async app => {
         });
         syncedCount++;
       }
-
-      // Set 24h cooldown
-      await redis.set(cooldownKey, '1', 'EX', 86400);
 
       // Get remaining quota
       const quotaRes = await fetch(`${OS_API_BASE}/infos/user`, {

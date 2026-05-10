@@ -149,11 +149,12 @@ export const requestRoutes: FastifyPluginAsync = async app => {
       if (!torrent) throw new NotFoundError('Torrent not found or not approved');
 
       await withTransaction(async conn => {
-        // Mark filled
-        await conn.execute(
+        // Mark filled — atomic guard prevents double-fill under concurrent requests
+        const [fillUpd] = await conn.execute<import('mysql2').ResultSetHeader>(
           'UPDATE torrent_requests SET is_filled=TRUE, filled_by=?, filled_torrent_id=? WHERE id=? AND is_filled=FALSE',
           [req.user.id, parsed.data.torrent_id, requestId],
         );
+        if (fillUpd.affectedRows === 0) throw new ForbiddenError('Request already filled');
 
         // Transfer bounty atomically if > 0
         if (request.bounty_flux > 0) {

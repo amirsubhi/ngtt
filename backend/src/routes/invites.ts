@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import crypto from 'crypto';
-import { query, queryOne, execute, executeInsert } from '../lib/db';
+import { query, queryOne, execute, executeInsert, executeAffected } from '../lib/db';
 import { sendMail } from '../lib/mail';
 import { authenticate } from '../middleware/auth';
 import { ValidationError, AppError, ForbiddenError } from '../lib/errors';
@@ -65,7 +65,11 @@ export async function inviteRoutes(app: FastifyInstance): Promise<void> {
       'INSERT INTO invites (sender_id, receiver_email, token, expires_at) VALUES (?, ?, ?, ?)',
       [req.user.id, email, token, expires],
     );
-    await execute('UPDATE users SET invite_tokens = invite_tokens - 1 WHERE id = ?', [req.user.id]);
+    const affected = await executeAffected(
+      'UPDATE users SET invite_tokens = invite_tokens - 1 WHERE id = ? AND invite_tokens > 0',
+      [req.user.id],
+    );
+    if (affected === 0) throw new ForbiddenError('No invite tokens remaining');
 
     await sendMail(
       email,
