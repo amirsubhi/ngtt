@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { query, queryOne, execute, withTransaction } from '../../lib/db';
+import { redis } from '../../lib/redis';
 import { authenticate, requireStaff } from '../../middleware/auth';
 import { jobsQueue } from '../../lib/queues';
 import { deleteFile } from '../../lib/storage';
@@ -172,8 +173,12 @@ export const staffRoutes: FastifyPluginAsync = async app => {
     const parsed = z.object({ reason: z.string().min(1).max(500) }).safeParse(req.body);
     if (!parsed.success) throw new ValidationError('Reason required');
 
+    const bannedUser = await queryOne<{ passkey: string }>(
+      'SELECT passkey FROM users WHERE id = ? LIMIT 1', [userId],
+    );
     await execute('UPDATE users SET is_banned=TRUE, ban_reason=? WHERE id=?', [parsed.data.reason, userId]);
     await execute('DELETE FROM refresh_tokens WHERE user_id=?', [userId]);
+    if (bannedUser) await redis.del(`passkey:${bannedUser.passkey}`);
     void jobsQueue.add('send-notif', { user_id: userId, title: 'Account Banned', body: parsed.data.reason, url: '/support' });
     await audit(req.user.id, 'user_ban', 'user', userId, { reason: parsed.data.reason });
     return reply.send({ ok: true });

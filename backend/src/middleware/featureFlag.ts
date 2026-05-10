@@ -1,20 +1,21 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { queryOne } from '../lib/db';
+import { redis } from '../lib/redis';
 import { ForbiddenError } from '../lib/errors';
 
-const cache = new Map<string, { value: boolean; expiresAt: number }>();
-const TTL_MS = 60_000;
+const TTL_SECONDS = 60;
 
 async function isEnabled(flag: string): Promise<boolean> {
-  const cached = cache.get(flag);
-  if (cached && Date.now() < cached.expiresAt) return cached.value;
+  const cacheKey = `feature_flag:${flag}`;
+  const cached = await redis.get(cacheKey);
+  if (cached !== null) return cached === 'true';
 
   const row = await queryOne<{ value: string }>(
     'SELECT value FROM site_settings WHERE `key` = ?',
     [flag],
   );
   const value = row?.value === 'true';
-  cache.set(flag, { value, expiresAt: Date.now() + TTL_MS });
+  await redis.setex(cacheKey, TTL_SECONDS, value ? 'true' : 'false');
   return value;
 }
 
