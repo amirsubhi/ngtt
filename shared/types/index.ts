@@ -30,15 +30,6 @@ export interface User {
   created_at: string;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  icon: string | null;
-  display_order: number;
-  is_active: boolean;
-}
-
 export interface Tag {
   id: number;
   name: string;
