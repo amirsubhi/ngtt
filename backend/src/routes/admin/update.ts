@@ -103,6 +103,11 @@ export const adminUpdateRoutes: FastifyPluginAsync = async app => {
       throw new ValidationError(`${tag} is not the current latest GitHub Release`);
     }
 
+    // Refuse to update while a backup is running — both mutate disk/files
+    if (await redis.get('backup:lock')) {
+      return reply.status(409).send({ error: 'BACKUP_IN_PROGRESS', message: 'Cannot update while a backup is running' });
+    }
+
     // Acquire Redis lock — 1800s covers cold-install deploys (npm ci × 2 + builds + migrate + pm2 reload)
     const locked = await redis.set('update:lock', '1', 'EX', 1800, 'NX');
     if (locked === null) {
