@@ -112,6 +112,8 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
         {user && <Link href="/bonus" className="hover:opacity-80">{t('bonus')}</Link>}
         {isStaff && <Link href="/staff" className="hover:opacity-80">{t('staff')}</Link>}
         {isAdmin && <Link href="/admin/settings" className="hover:opacity-80">{t('admin')}</Link>}
+        {isAdmin && <Link href="/admin/backup" className="hover:opacity-80">Backup</Link>}
+        {isAdmin && <Link href="/admin/update" className="hover:opacity-80">Update</Link>}
       </div>
 
       {/* Right-side controls */}
