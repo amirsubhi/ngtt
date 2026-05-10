@@ -2,123 +2,204 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { query, queryOne } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
-import { redis } from '../../lib/redis';
 import { getSeederCount, getLeecherCount } from '../../announce/peers';
 
-const VALID_SORTS = ['created_at', 'name', 'size', 'seeders', 'leechers'] as const;
-const VALID_ORDERS = ['asc', 'desc'] as const;
-
-function heatClass(peers: number): string {
-  if (peers === 0) return 'dead';
-  if (peers < 5) return 'cold';
-  if (peers < 25) return 'warm';
-  if (peers < 100) return 'hot';
-  return 'burning';
-}
+const SORT_MAP: Record<string, string> = {
+  newest:   't.created_at DESC',
+  name:     't.name ASC',
+  size:     't.size DESC',
+  snatched: 't.download_count DESC',
+  seeders:  't.created_at DESC',
+};
 
 const QueryParams = z.object({
-  q: z.string().max(200).optional(),
-  category_id: z.coerce.number().int().positive().optional(),
-  tag: z.string().optional(),
-  freeleech: z.enum(['true', 'false']).optional(),
-  resolution: z.string().optional(),
-  codec: z.string().optional(),
-  source: z.string().optional(),
-  uploader: z.string().optional(),
-  sort: z.enum(VALID_SORTS).optional().default('created_at'),
-  order: z.enum(VALID_ORDERS).optional().default('desc'),
-  page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  q:        z.string().max(200).optional(),
+  catId:    z.coerce.number().int().positive().optional(),
+  subcat:   z.string().max(64).optional(),
+  fl:       z.enum(['true', 'false']).optional(),
+  hdr:      z.enum(['true', 'false']).optional(),
+  internal: z.enum(['true', 'false']).optional(),
+  res:      z.union([z.string(), z.array(z.string())]).optional(),
+  src:      z.union([z.string(), z.array(z.string())]).optional(),
+  yr:       z.union([z.coerce.number().int(), z.array(z.coerce.number().int())]).optional(),
+  lang:     z.string().optional(),
+  sort:     z.enum(['seeders', 'newest', 'size', 'name', 'snatched']).optional().default('newest'),
+  page:     z.coerce.number().int().min(1).optional().default(1),
+  limit:    z.coerce.number().int().min(1).max(100).optional().default(25),
+});
+
+const SuggestParams = z.object({
+  q: z.string().min(2).max(100),
 });
 
 interface TorrentRow {
   id: number;
-  info_hash: string;
   name: string;
   slug: string;
   category_id: number;
-  category_name: string;
-  uploader_id: number;
-  uploader_username: string;
+  category_icon: string;
+  category_color: string;
+  category_label: string;
+  subcat: string | null;
   size: number;
-  num_files: number;
+  uploader_id: number;
+  uploader_name: string;
   is_freeleech: boolean;
-  status: string;
-  created_at: string;
-  poster_url: string | null;
-  thank_count: number;
+  is_internal: boolean;
   download_count: number;
+  created_at: string;
+  resolution: string | null;
+  source: string | null;
+  codec: string | null;
+  hdr: string | null;
+  info_hash: string;
+}
+
+function toArray<T>(v: T | T[] | undefined): T[] {
+  if (v === undefined) return [];
+  return Array.isArray(v) ? v : [v];
 }
 
 export async function browseRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/torrents', { preHandler: [authenticate] }, async (req: FastifyRequest, reply: FastifyReply) => {
     const parsed = QueryParams.safeParse(req.query);
     if (!parsed.success) return reply.status(400).send({ error: 'INVALID_PARAMS', message: parsed.error.issues[0]?.message ?? 'Invalid params' });
-    const { q, category_id, tag, freeleech, resolution, codec, source, uploader, sort, order, page, limit } = parsed.data;
+    const { q, catId, subcat, fl, hdr, internal, res, src, yr, lang, sort, page, limit } = parsed.data;
 
-    const conditions: string[] = ["t.status = 'approved'"];
-    const params: unknown[] = [];
+    // req.user.slug is the user_group slug (set by authenticate middleware)
+    const groupSlug = req.user.slug;
 
-    if (q) {
+    const conditions: string[] = [
+      "t.status = 'approved'",
+      `(c.browse_min_group = 'all' OR (c.browse_min_group = 'user' AND ? IN ('user','power','staff','admin','moderator')) OR (c.browse_min_group = 'power' AND ? IN ('power','staff','admin')) OR (c.browse_min_group = 'staff' AND ? IN ('staff','admin')))`,
+    ];
+    const params: unknown[] = [groupSlug, groupSlug, groupSlug];
+    let needsMediainfo = false;
+
+    if (q && q.length >= 3) {
       conditions.push('MATCH(t.name) AGAINST(? IN BOOLEAN MODE)');
       params.push(`${q}*`);
+    } else if (q) {
+      conditions.push('t.name LIKE ?');
+      params.push(`%${q}%`);
     }
-    if (category_id) { conditions.push('t.category_id = ?'); params.push(category_id); }
-    if (freeleech === 'true') { conditions.push('t.is_freeleech = TRUE'); }
-    if (uploader) {
-      conditions.push('u.username = ?');
-      params.push(uploader);
+    if (catId)    { conditions.push('t.category_id = ?'); params.push(catId); }
+    if (subcat)   { conditions.push('t.subcat = ?');      params.push(subcat); }
+    if (fl === 'true')       conditions.push('t.is_freeleech = TRUE');
+    if (internal === 'true') conditions.push('t.is_internal = TRUE');
+
+    const resArr = toArray(res);
+    if (resArr.length > 0) {
+      conditions.push(`mi.resolution IN (${resArr.map(() => '?').join(',')})`);
+      params.push(...resArr);
+      needsMediainfo = true;
     }
-    if (resolution) { conditions.push('mi.resolution = ?'); params.push(resolution); }
-    if (codec) { conditions.push('mi.video_codec = ?'); params.push(codec); }
-    if (source) { conditions.push('mi.source = ?'); params.push(source); }
+    const srcArr = toArray(src);
+    if (srcArr.length > 0) {
+      conditions.push(`mi.source IN (${srcArr.map(() => '?').join(',')})`);
+      params.push(...srcArr);
+      needsMediainfo = true;
+    }
+    if (hdr === 'true') {
+      conditions.push("mi.hdr != 'none'");
+      needsMediainfo = true;
+    }
+    const yrArr = toArray(yr);
+    if (yrArr.length > 0) {
+      conditions.push(`t.release_year IN (${yrArr.map(() => '?').join(',')})`);
+      params.push(...yrArr);
+    }
+    if (lang) {
+      conditions.push('JSON_CONTAINS(mi.audio_langs, ?)');
+      params.push(JSON.stringify(lang));
+      needsMediainfo = true;
+    }
 
     const where = conditions.join(' AND ');
     const offset = (page - 1) * limit;
+    const orderBy = SORT_MAP[sort] ?? 't.created_at DESC';
+    const miJoin = needsMediainfo
+      ? 'JOIN torrent_mediainfo mi ON mi.torrent_id = t.id'
+      : 'LEFT JOIN torrent_mediainfo mi ON mi.torrent_id = t.id';
 
-    let joinClause = `
-      JOIN categories c ON c.id = t.category_id
-      JOIN users u ON u.id = t.uploader_id`;
-    if (tag) {
-      joinClause += `
-      JOIN torrent_tags tt ON tt.torrent_id = t.id
-      JOIN tags tg ON tg.id = tt.tag_id AND tg.slug = ?`;
-      params.unshift(tag); // tag join before WHERE params
-    }
-    if (resolution || codec || source) {
-      joinClause += '\n      LEFT JOIN torrent_mediainfo mi ON mi.torrent_id = t.id';
-    } else {
-      joinClause += '\n      LEFT JOIN torrent_mediainfo mi ON mi.torrent_id = t.id';
-    }
-
-    const sortCol = sort === 'seeders' || sort === 'leechers' ? 't.created_at' : `t.${sort}`;
     const sql = `
-      SELECT t.id, t.info_hash, t.name, t.slug, t.category_id, c.name AS category_name,
-             t.uploader_id, u.username AS uploader_username,
-             t.size, t.num_files, t.is_freeleech, t.status,
-             t.created_at, t.poster_url, t.thank_count, t.download_count
+      SELECT
+        t.id, t.name, t.slug,
+        t.category_id, c.icon AS category_icon, c.color AS category_color, c.label AS category_label,
+        t.subcat, t.size, t.is_freeleech, t.is_internal,
+        t.uploader_id, u.username AS uploader_name,
+        t.download_count, t.created_at, t.info_hash,
+        mi.resolution, mi.source, mi.video_codec AS codec, mi.hdr
       FROM torrents t
-      ${joinClause}
+      JOIN categories c ON c.id = t.category_id
+      JOIN users u ON u.id = t.uploader_id
+      ${miJoin}
       WHERE ${where}
-      ORDER BY ${sortCol} ${order}
+      ORDER BY ${orderBy}
       LIMIT ${limit} OFFSET ${offset}`;
 
-    const torrents = await query<TorrentRow>(sql, params);
+    const countSql = `
+      SELECT COUNT(*) AS total
+      FROM torrents t
+      JOIN categories c ON c.id = t.category_id
+      JOIN users u ON u.id = t.uploader_id
+      ${miJoin}
+      WHERE ${where}`;
 
-    const countSql = `SELECT COUNT(*) AS total FROM torrents t ${joinClause} WHERE ${where}`;
-    const countParams = params.slice(0, params.length - 2);
-    const countRow = await queryOne<{ total: number }>(countSql, countParams);
-    const total = countRow?.total ?? 0;
+    const [rows, countRow] = await Promise.all([
+      query<TorrentRow>(sql, params),
+      queryOne<{ total: number }>(countSql, params),
+    ]);
 
-    // Attach Redis peer counts
-    const enriched = await Promise.all(torrents.map(async t => {
+    const total = Number(countRow?.total ?? 0);
+
+    const enriched = await Promise.all(rows.map(async t => {
       const [seeders, leechers] = await Promise.all([
         getSeederCount(t.info_hash),
         getLeecherCount(t.info_hash),
       ]);
-      return { ...t, seeders, leechers, heat: heatClass(seeders + leechers) };
+      return {
+        id:            t.id,
+        name:          t.name,
+        slug:          t.slug,
+        categoryId:    t.category_id,
+        categoryIcon:  t.category_icon,
+        categoryColor: t.category_color,
+        categoryLabel: t.category_label,
+        subcat:        t.subcat,
+        size:          t.size,
+        seeders,
+        leechers,
+        snatched:      t.download_count,
+        uploadedAt:    t.created_at,
+        uploaderId:    t.uploader_id,
+        uploaderName:  t.uploader_name,
+        freeleech:     t.is_freeleech,
+        hdr:           t.hdr !== null && t.hdr !== 'none',
+        internal:      t.is_internal,
+        resolution:    t.resolution,
+        source:        t.source,
+        codec:         t.codec,
+        // infoHash intentionally omitted — download via /download endpoint
+      };
     }));
 
-    return reply.send({ data: enriched, total, page, limit });
+    return reply.send({ data: enriched, total, page, pages: Math.ceil(total / limit) });
+  });
+
+  app.get('/api/torrents/suggest', { preHandler: [authenticate] }, async (req: FastifyRequest, reply: FastifyReply) => {
+    const parsed = SuggestParams.safeParse(req.query);
+    if (!parsed.success) return reply.status(400).send({ error: 'INVALID_PARAMS', message: 'q must be at least 2 characters' });
+    const { q } = parsed.data;
+
+    const rows = await query<{ name: string; icon: string; label: string }>(
+      `SELECT DISTINCT t.name, c.icon, c.label
+       FROM torrents t
+       JOIN categories c ON t.category_id = c.id
+       WHERE t.name LIKE CONCAT(?, '%') AND t.status = 'approved'
+       LIMIT 8`,
+      [q],
+    );
+    return reply.send(rows.map(r => ({ name: r.name, categoryIcon: r.icon, categoryLabel: r.label })));
   });
 }
