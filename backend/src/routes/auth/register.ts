@@ -39,12 +39,12 @@ export async function registerRoute(app: FastifyInstance): Promise<void> {
       return reply.status(200).send({ ok: true });
     }
 
-    if (await getSetting('registration_open') !== '1') {
+    if (await getSetting('registration_open') !== 'true') {
       throw new AppError('Registration is closed', 403, 'REGISTRATION_CLOSED');
     }
 
     let inviteRow: { id: number; sender_id: number } | null = null;
-    if (await getSetting('invite_system_enabled') === '1') {
+    if (await getSetting('invite_system_enabled') === 'true') {
       if (!invite_token) throw new ValidationError('An invite token is required');
       inviteRow = await queryOne<{ id: number; sender_id: number }>(
         'SELECT id, sender_id FROM invites WHERE token = ? AND used = FALSE AND expires_at > NOW()',
@@ -53,7 +53,7 @@ export async function registerRoute(app: FastifyInstance): Promise<void> {
       if (!inviteRow) throw new ValidationError('Invalid or expired invite token');
     }
 
-    if (await getSetting('captcha_on_register') === '1') {
+    if (await getSetting('captcha_on_register') === 'true') {
       if (!turnstile_response) throw new ValidationError('Captcha response is required');
       if (!await verifyTurnstile(turnstile_response, req.ip ?? '')) {
         throw new ValidationError('Captcha verification failed');

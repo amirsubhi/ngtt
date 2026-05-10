@@ -21,6 +21,19 @@ export default function AdminSettingsPage() {
     setTimeout(() => setSaved(null), 2000);
   }
 
+  async function uploadImage(key: string, file: File) {
+    const token = localStorage.getItem('access_token') ?? '';
+    const endpoint = key === 'site_logo_url' ? '/api/admin/upload/logo' : '/api/admin/upload/favicon';
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+    if (!res.ok) return;
+    const data = await res.json() as { url: string };
+    setSettings(prev => prev.map(s => s.key === key ? { ...s, value: data.url } : s));
+    setSaved(key);
+    setTimeout(() => setSaved(null), 2000);
+  }
+
   function handleChange(key: string, value: string) {
     setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s));
   }
@@ -51,6 +64,10 @@ export default function AdminSettingsPage() {
                       <option value="true">Enabled</option>
                       <option value="false">Disabled</option>
                     </select>
+                  ) : (s.key === 'site_logo_url' || s.key === 'site_favicon_url') ? (
+                    <input type="file" accept="image/png,image/jpeg,image/webp"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(s.key, f); }}
+                      className="text-xs w-40" />
                   ) : (
                     <input type={s.type === 'int' ? 'number' : 'text'} value={s.value}
                       onChange={e => handleChange(s.key, e.target.value)}

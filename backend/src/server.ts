@@ -23,6 +23,7 @@ import { hnrRoutes } from './routes/hnr/index';
 import { subtitleRoutes } from './routes/subtitles/index';
 import { staffRoutes } from './routes/staff/index';
 import { adminRoutes } from './routes/admin/index';
+import { publicRoutes } from './routes/public';
 import { apiRoutes } from './routes/api/index';
 import { rssRoutes } from './routes/rss/index';
 import { requestRoutes } from './routes/requests/index';
@@ -88,6 +89,7 @@ export async function buildApp() {
   await app.register(hnrRoutes);
   await app.register(subtitleRoutes);
   await app.register(staffRoutes);
+  await app.register(publicRoutes);
   await app.register(adminRoutes);
   await app.register(apiRoutes);
   await app.register(rssRoutes);

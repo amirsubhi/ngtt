@@ -21,7 +21,7 @@ const THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand'] a
 
 interface NavUser { username: string; group_slug: string }
 
-export function Navbar() {
+export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
@@ -83,6 +83,14 @@ export function Navbar() {
   const currentLang = LOCALES.find(l => l.value === locale) ?? LOCALES[0];
   const themeName = (theme ?? 'void') as typeof THEMES[number];
 
+  const AUTH_SEGMENTS = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
+  const isAuthPage = AUTH_SEGMENTS.some(seg =>
+    pathname === seg ||
+    pathname === `/${locale}${seg}` ||
+    pathname.startsWith(`/${locale}${seg}/`),
+  );
+  if (isAuthPage) return null;
+
   return (
     <nav
       className="border-b border-current/10 flex items-center gap-4 px-6 h-14 shrink-0"
@@ -90,7 +98,9 @@ export function Navbar() {
     >
       {/* Logo */}
       <Link href="/" className="font-bold text-lg shrink-0" style={{ color: 'var(--text-primary)' }}>
-        NGTT
+        {logoUrl
+          ? <img src={logoUrl} alt="Site logo" className="h-8 w-auto object-contain" />
+          : 'NGTT'}
       </Link>
 
       {/* Main nav links */}

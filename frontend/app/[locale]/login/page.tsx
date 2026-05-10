@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,14 @@ export default function LoginPage() {
   const [formLoadedAt] = useState(() => Date.now());
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginMessage, setLoginMessage] = useState('');
+
+  useEffect(() => {
+    fetch('/api/public/settings')
+      .then(r => r.json())
+      .then((d: { settings: Record<string, string> }) => setLoginMessage(d.settings.login_message ?? ''))
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -61,6 +69,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-6">
         <h1 className="text-2xl font-bold text-center">{t('title')}</h1>
+
+        {loginMessage && (
+          <p className="text-center text-sm opacity-70">{loginMessage}</p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!requires2fa ? (

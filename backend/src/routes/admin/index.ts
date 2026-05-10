@@ -1,5 +1,8 @@
 import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import sharp from 'sharp';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { query, queryOne, execute } from '../../lib/db';
 import { authenticate, requireAdmin, requireStaff } from '../../middleware/auth';
 import { NotFoundError, ValidationError } from '../../lib/errors';
@@ -14,9 +17,12 @@ async function audit(userId: number, action: string, meta?: object): Promise<voi
 export const adminRoutes: FastifyPluginAsync = async app => {
   const preAdmin = [authenticate, requireAdmin];
 
+  const UPLOADS_DIR = path.join(process.cwd(), '..', 'uploads', 'branding');
+  await fs.mkdir(UPLOADS_DIR, { recursive: true });
+
   // 10i — Site settings
   app.get('/api/admin/settings', { preHandler: preAdmin }, async (_req, reply) => {
-    const rows = await query('SELECT `key`, value, type, category, label FROM site_settings ORDER BY category, `key`');
+    const rows = await query('SELECT `key`, value, type, `group` AS category, label FROM site_settings ORDER BY `group`, `key`');
     return reply.send({ settings: rows });
   });
 
@@ -119,6 +125,35 @@ export const adminRoutes: FastifyPluginAsync = async app => {
   app.delete<{ Params: { id: string } }>('/api/admin/clients/:id', { preHandler: preAdmin }, async (req, reply) => {
     await execute('DELETE FROM banned_clients WHERE id=?', [parseInt(req.params.id, 10)]);
     return reply.send({ ok: true });
+  });
+
+  // Branding uploads
+  app.post('/api/admin/upload/logo', { preHandler: preAdmin }, async (req, reply) => {
+    const file = await req.file();
+    if (!file) throw new ValidationError('No file provided');
+    if (file.mimetype === 'image/svg+xml') throw new ValidationError('SVG not allowed');
+    const buf = await file.toBuffer();
+    const webp = await sharp(buf).resize({ width: 400, withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
+    if (webp.byteLength > 200 * 1024) throw new ValidationError('Logo exceeds 200 KB after conversion');
+    await fs.writeFile(path.join(UPLOADS_DIR, 'logo.webp'), webp);
+    const url = '/uploads/branding/logo.webp';
+    await execute('UPDATE site_settings SET value=? WHERE `key`=?', [url, 'site_logo_url']);
+    await audit(req.user.id, 'setting_update', { key: 'site_logo_url', value: url });
+    return reply.send({ ok: true, url });
+  });
+
+  app.post('/api/admin/upload/favicon', { preHandler: preAdmin }, async (req, reply) => {
+    const file = await req.file();
+    if (!file) throw new ValidationError('No file provided');
+    if (file.mimetype === 'image/svg+xml') throw new ValidationError('SVG not allowed');
+    const buf = await file.toBuffer();
+    const webp = await sharp(buf).resize({ width: 64, height: 64, fit: 'contain' }).webp({ quality: 90 }).toBuffer();
+    if (webp.byteLength > 50 * 1024) throw new ValidationError('Favicon exceeds 50 KB after conversion');
+    await fs.writeFile(path.join(UPLOADS_DIR, 'favicon.webp'), webp);
+    const url = '/uploads/branding/favicon.webp';
+    await execute('UPDATE site_settings SET value=? WHERE `key`=?', [url, 'site_favicon_url']);
+    await audit(req.user.id, 'setting_update', { key: 'site_favicon_url', value: url });
+    return reply.send({ ok: true, url });
   });
 
   // 10n — IP bans
