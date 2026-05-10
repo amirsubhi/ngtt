@@ -76,7 +76,7 @@ export default function BonusPage() {
       <div className="rounded-lg border border-current/10 p-6 text-center">
         <p className="text-sm opacity-50 uppercase tracking-wide mb-1">{t('balance')}</p>
         <p className="text-4xl font-bold">
-          {balance !== null ? balance.toFixed(2) : '—'} <span className="text-xl opacity-50">FLX</span>
+          {balance !== null ? Number(balance).toFixed(2) : '—'} <span className="text-xl opacity-50">FLX</span>
         </p>
       </div>
 

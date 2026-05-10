@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 
-interface Category { id: number; name: string; slug: string }
+interface Category { id: number; label: string; slug: string }
 
 export default function UploadPage() {
   const t = useTranslations('torrent.upload');
@@ -25,9 +25,12 @@ export default function UploadPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings/categories')
+    const token = localStorage.getItem('access_token') ?? '';
+    fetch('/api/settings/categories', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => r.json())
-      .then((cats: Category[]) => setCategories(cats))
+      .then((cats: unknown) => { if (Array.isArray(cats)) setCategories(cats as Category[]); })
       .catch(() => {});
   }, []);
 
@@ -134,7 +137,7 @@ export default function UploadPage() {
             className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none"
           >
             <option value="">— Select —</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
         </div>
 

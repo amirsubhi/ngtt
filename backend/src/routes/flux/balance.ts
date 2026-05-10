@@ -22,6 +22,6 @@ export const fluxBalanceRoutes: FastifyPluginAsync = async app => {
       'SELECT id, amount, type, source, description, created_at FROM flux_transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 20',
       [user.id],
     );
-    return reply.send({ balance: row?.flux ?? 0, transactions });
+    return reply.send({ balance: parseFloat(String(row?.flux ?? 0)), transactions });
   });
 };
