@@ -3,7 +3,7 @@ import { execFileSync, spawn } from 'child_process';
 import path from 'path';
 import { z } from 'zod';
 import { config } from '../../lib/config';
-import { redis } from '../../lib/redis';
+import { redis, rPush } from '../../lib/redis';
 import { execute } from '../../lib/db';
 import { authenticate, requireAdmin } from '../../middleware/auth';
 import { ValidationError } from '../../lib/errors';
@@ -115,6 +115,8 @@ export const adminUpdateRoutes: FastifyPluginAsync = async app => {
     // TTL of 1800s is a safety net: if the script crashes before writing its final
     // status, this key would otherwise persist forever and block future updates.
     await redis.del('update:log');
+    await rPush('update:log', `${new Date().toISOString()} Update to ${tag} initiated`);
+    await redis.expire('update:log', 7 * 24 * 60 * 60);
     await redis.set('update:status', 'running', 'EX', 1800);
 
     await audit(req.user.id, 'update_apply', { tag, prevRef });
@@ -128,8 +130,8 @@ export const adminUpdateRoutes: FastifyPluginAsync = async app => {
     // Attach error listener before unref() so launch failures (e.g. missing script)
     // clear the lock and status rather than leaving them permanently set.
     child.on('error', async (err: Error) => {
-      await redis.set('update:status', 'failed');
-      await redis.rpush('update:log', `FATAL: failed to start update script — ${err.message}`);
+      await redis.set('update:status', 'failed', 'EX', 1800);
+      await rPush('update:log', `FATAL: failed to start update script — ${err.message}`);
       await redis.del('update:lock');
     });
     child.unref();
