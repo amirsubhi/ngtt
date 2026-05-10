@@ -10,8 +10,12 @@ BACKEND_DIR="$REPO_ROOT/backend"
 FRONTEND_DIR="$REPO_ROOT/frontend"
 LOG_FILE="/tmp/ngtt-update-$(date +%s).log"
 
+trap 'finish "failed"' ERR
+trap 'log "Interrupted"; finish "failed"; exit 1' SIGTERM SIGINT
+
 log() {
-  local msg="$(date '+%H:%M:%S') $*"
+  local ts; ts="$(date '+%H:%M:%S')"
+  local msg="$ts $*"
   redis-cli -u "$REDIS_URL" RPUSH update:log "$msg" > /dev/null 2>&1 || true
   echo "$msg" >> "$LOG_FILE"
 }
