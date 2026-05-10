@@ -10,7 +10,7 @@ BACKEND_DIR="$REPO_ROOT/backend"
 FRONTEND_DIR="$REPO_ROOT/frontend"
 LOG_FILE="/tmp/ngtt-update-$(date +%s).log"
 
-trap 'finish "failed"' ERR
+trap 'finish "failed"; rm -rf "${AUTO_WORK_DIR:-}"' ERR
 trap 'log "Interrupted"; finish "failed"; exit 1' SIGTERM SIGINT
 
 log() {
