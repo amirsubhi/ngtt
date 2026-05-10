@@ -22,7 +22,7 @@ log() {
 
 finish() {
   local final_status="$1"
-  redis-cli -u "$REDIS_URL" SET update:status "$final_status" > /dev/null 2>&1 || true
+  redis-cli -u "$REDIS_URL" SET update:status "$final_status" EX 1800 > /dev/null 2>&1 || true
   redis-cli -u "$REDIS_URL" DEL update:lock                   > /dev/null 2>&1 || true
 }
 
