@@ -47,4 +47,5 @@ export const config = {
   cookieSecure: optional('COOKIE_SECURE', '') === 'true',
 
   githubRepo: optional('GITHUB_REPO', ''),
+  backupPath: optional('BACKUP_PATH', ''),
 };
