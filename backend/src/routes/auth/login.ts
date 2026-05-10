@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { verify as verifyOTP } from 'otplib';
 import { queryOne, execute } from '../../lib/db';
+import { redis } from '../../lib/redis';
 import { verifyTurnstile } from '../../lib/turnstile';
 import { ValidationError, UnauthorizedError, ForbiddenError, AppError } from '../../lib/errors';
 import { config } from '../../lib/config';
@@ -102,6 +103,13 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
 
     if (user.two_factor_enabled) {
       if (!totp_code) return reply.status(200).send({ requires_2fa: true });
+
+      const totpKey = `totp_attempts:${user.id}`;
+      const attempts = parseInt(await redis.get(totpKey) ?? '0', 10);
+      if (attempts >= 5) {
+        throw new AppError('Too many 2FA attempts — try again in 15 minutes', 429, 'TOTP_LOCKED');
+      }
+
       let plainSecret = '';
       if (user.two_factor_secret) {
         try { plainSecret = decrypt(user.two_factor_secret); } catch { plainSecret = user.two_factor_secret; }
@@ -121,7 +129,12 @@ export async function loginRoute(app: FastifyInstance): Promise<void> {
           await execute('UPDATE user_backup_codes SET used = TRUE WHERE id = ?', [backup.id]);
         }
       }
-      if (!validTotp && !validBackup) throw new UnauthorizedError('Invalid 2FA code');
+      if (!validTotp && !validBackup) {
+        const n = await redis.incr(totpKey);
+        if (n === 1) await redis.expire(totpKey, 15 * 60);
+        throw new UnauthorizedError('Invalid 2FA code');
+      }
+      await redis.del(totpKey);
     }
 
     await execute('UPDATE users SET failed_login_count = 0, locked_until = NULL, last_seen_at = NOW() WHERE id = ?', [user.id]);
