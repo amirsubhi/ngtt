@@ -77,42 +77,6 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     return reply.send({ ok: true });
   });
 
-  // 10l — Categories
-  app.get('/api/admin/categories', { preHandler: [authenticate, requireStaff] }, async (_req, reply) => {
-    return reply.send({ categories: await query('SELECT * FROM categories ORDER BY display_order') });
-  });
-
-  app.post('/api/admin/categories', { preHandler: preAdmin }, async (req, reply) => {
-    const parsed = z.object({
-      name: z.string().min(1).max(100),
-      slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
-      icon: z.string().max(50).optional(),
-      display_order: z.number().int().default(0),
-    }).safeParse(req.body);
-    if (!parsed.success) throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
-    await execute(
-      'INSERT INTO categories (name, slug, icon, display_order) VALUES (?,?,?,?)',
-      [parsed.data.name, parsed.data.slug, parsed.data.icon ?? null, parsed.data.display_order],
-    );
-    return reply.status(201).send({ ok: true });
-  });
-
-  app.put<{ Params: { id: string } }>('/api/admin/categories/:id', { preHandler: preAdmin }, async (req, reply) => {
-    const id = parseInt(req.params.id, 10);
-    const parsed = z.object({ name: z.string().optional(), icon: z.string().optional(), display_order: z.number().int().optional(), is_active: z.boolean().optional() }).safeParse(req.body);
-    if (!parsed.success) throw new ValidationError('Invalid input');
-    if (parsed.data.name) await execute('UPDATE categories SET name=? WHERE id=?', [parsed.data.name, id]);
-    if (parsed.data.icon !== undefined) await execute('UPDATE categories SET icon=? WHERE id=?', [parsed.data.icon, id]);
-    if (parsed.data.display_order !== undefined) await execute('UPDATE categories SET display_order=? WHERE id=?', [parsed.data.display_order, id]);
-    if (parsed.data.is_active !== undefined) await execute('UPDATE categories SET is_active=? WHERE id=?', [parsed.data.is_active, id]);
-    return reply.send({ ok: true });
-  });
-
-  app.delete<{ Params: { id: string } }>('/api/admin/categories/:id', { preHandler: preAdmin }, async (req, reply) => {
-    await execute('DELETE FROM categories WHERE id=?', [parseInt(req.params.id, 10)]);
-    return reply.send({ ok: true });
-  });
-
   // 10l — Tags
   app.get('/api/admin/tags', { preHandler: [authenticate, requireStaff] }, async (_req, reply) => {
     return reply.send({ tags: await query('SELECT * FROM tags ORDER BY usage_count DESC') });
