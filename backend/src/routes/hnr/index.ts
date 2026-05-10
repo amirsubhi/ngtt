@@ -45,8 +45,8 @@ export const hnrRoutes: FastifyPluginAsync = async app => {
        JOIN users u ON u.id = h.user_id
        WHERE h.status = ?
        ORDER BY h.seed_deadline_at ASC
-       LIMIT 50 OFFSET ?`,
-      [status, offset],
+       LIMIT 50 OFFSET ${offset}`,
+      [status],
     );
     return reply.send({ hnr: rows, page });
   });

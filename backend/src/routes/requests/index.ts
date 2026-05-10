@@ -49,7 +49,6 @@ export const requestRoutes: FastifyPluginAsync = async app => {
     else if (filled === '0' || filled === undefined) { conditions.push('r.is_filled = FALSE'); }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    params.push(50, offset);
 
     const rows = await query<RequestRow>(
       `SELECT r.id, r.title, r.description, r.bounty_flux, r.is_filled,
@@ -59,7 +58,7 @@ export const requestRoutes: FastifyPluginAsync = async app => {
        LEFT JOIN categories c ON c.id = r.category_id
        ${where}
        ORDER BY r.bounty_flux DESC, r.created_at DESC
-       LIMIT ? OFFSET ?`,
+       LIMIT 50 OFFSET ${offset}`,
       params,
     );
     return reply.send({ requests: rows, page });

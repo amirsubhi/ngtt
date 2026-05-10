@@ -152,7 +152,6 @@ export const apiRoutes: FastifyPluginAsync = async app => {
       }
     }
 
-    params.push(limit, offset);
     const where = conditions.join(' AND ');
     const torrents = await query<{
       id: number; name: string; info_hash: string; size: number;
@@ -161,7 +160,7 @@ export const apiRoutes: FastifyPluginAsync = async app => {
     }>(
       `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.created_at, t.imdb_id, c.slug AS category_slug
        FROM torrents t JOIN categories c ON c.id = t.category_id WHERE ${where}
-       ORDER BY t.created_at DESC LIMIT ? OFFSET ?`,
+       ORDER BY t.created_at DESC LIMIT ${limit} OFFSET ${offset}`,
       params,
     );
 
@@ -268,11 +267,10 @@ ${items.join('\n')}
     const params: (string | number)[] = [];
     if (q.q) { conditions.push('MATCH(t.name) AGAINST(? IN BOOLEAN MODE)'); params.push(`${q.q}*`); }
     if (q.category) { conditions.push('c.slug = ?'); params.push(q.category); }
-    params.push(50, offset);
     const torrents = await query<{ id: number; name: string; info_hash: string; size: number; is_freeleech: boolean; created_at: string; category_name: string }>(
       `SELECT t.id, t.name, t.info_hash, t.size, t.is_freeleech, t.created_at, c.label AS category_name
        FROM torrents t JOIN categories c ON c.id = t.category_id WHERE ${conditions.join(' AND ')}
-       ORDER BY t.created_at DESC LIMIT ? OFFSET ?`, params,
+       ORDER BY t.created_at DESC LIMIT 50 OFFSET ${offset}`, params,
     );
     return reply.send({ torrents, page, download_base: `${baseUrl}/dl/${user.passkey}` });
   });

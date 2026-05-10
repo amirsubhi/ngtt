@@ -36,7 +36,6 @@ export const rssRoutes: FastifyPluginAsync = async app => {
     if (q.category) { conditions.push('c.slug = ?'); params.push(q.category); }
     if (q.freeleech === '1') { conditions.push('t.is_freeleech = TRUE'); }
 
-    params.push(50);
     const where = conditions.join(' AND ');
     const torrents = await query<{
       id: number; name: string; description: string | null;
@@ -44,7 +43,7 @@ export const rssRoutes: FastifyPluginAsync = async app => {
     }>(
       `SELECT t.id, t.name, t.description, t.size, t.is_freeleech, t.created_at, c.label AS category_name
        FROM torrents t JOIN categories c ON c.id = t.category_id WHERE ${where}
-       ORDER BY t.created_at DESC LIMIT ?`,
+       ORDER BY t.created_at DESC LIMIT 50`,
       params,
     );
 

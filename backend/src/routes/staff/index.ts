@@ -125,8 +125,8 @@ export const staffRoutes: FastifyPluginAsync = async app => {
               g.name AS group_name, g.color AS group_color
        FROM users u JOIN user_groups g ON g.id=u.group_id
        WHERE u.is_deleted=FALSE AND (u.username LIKE ? OR u.email LIKE ?)
-       ORDER BY u.created_at DESC LIMIT 50 OFFSET ?`,
-      [like, like, offset],
+       ORDER BY u.created_at DESC LIMIT 50 OFFSET ${offset}`,
+      [like, like],
     );
     return reply.send({ users: rows, page });
   });
@@ -358,8 +358,7 @@ export const staffRoutes: FastifyPluginAsync = async app => {
     const rows = await query(
       `SELECT l.id, l.action, l.target_type, l.target_id, l.metadata, l.created_at,
               u.username FROM audit_logs l LEFT JOIN users u ON u.id=l.user_id
-       ORDER BY l.created_at DESC LIMIT 50 OFFSET ?`,
-      [offset],
+       ORDER BY l.created_at DESC LIMIT 50 OFFSET ${offset}`,
     );
     return reply.send({ logs: rows, page });
   });
