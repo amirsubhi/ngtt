@@ -49,6 +49,44 @@ log "Previous ref: $PREV_REF"
 log "Full log: $LOG_FILE"
 
 run_step "Fetching tags..."          git -C "$REPO_ROOT" fetch --tags
+
+# --- Pre-update auto-backup (db + env, inline, no extra lock) ---
+AUTO_BACKUP_DIR="$REPO_ROOT/../backups"
+AUTO_BACKUP_FILE="$AUTO_BACKUP_DIR/ngtt-backup-$(date +%Y%m%dT%H%M%S).tar.gz"
+AUTO_WORK_DIR="$(mktemp -d)"
+
+log "=== Pre-update backup (db + env) ==="
+mkdir -p "$AUTO_BACKUP_DIR"
+
+if [ -n "${DATABASE_URL:-}" ] && command -v mysqldump > /dev/null 2>&1; then
+  DB_USER="$(echo "$DATABASE_URL" | sed -E 's#mysql://([^:]+):.*#\1#')"
+  DB_PASS="$(echo "$DATABASE_URL" | sed -E 's#mysql://[^:]+:([^@]+)@.*#\1#')"
+  DB_HOST="$(echo "$DATABASE_URL" | sed -E 's#mysql://[^@]+@([^:/]+).*#\1#')"
+  DB_PORT="$(echo "$DATABASE_URL" | sed -E 's#mysql://[^@]+@[^:]+:([0-9]+)/.*#\1#')"
+  DB_NAME="$(echo "$DATABASE_URL" | sed -E 's#mysql://[^/]+/([^?]+).*#\1#')"
+  MYSQL_PWD="$DB_PASS" mysqldump \
+    --single-transaction --quick \
+    -u "$DB_USER" -h "$DB_HOST" -P "$DB_PORT" "$DB_NAME" \
+    | gzip > "$AUTO_WORK_DIR/db.sql.gz" 2>>"$LOG_FILE"
+  log "  db done ($(du -sh "$AUTO_WORK_DIR/db.sql.gz" | cut -f1))"
+else
+  log "  mysqldump not available — skipping db backup"
+fi
+
+mkdir -p "$AUTO_WORK_DIR/env"
+[ -f "$REPO_ROOT/backend/.env"        ] && cp "$REPO_ROOT/backend/.env"        "$AUTO_WORK_DIR/env/backend.env"
+[ -f "$REPO_ROOT/frontend/.env.local" ] && cp "$REPO_ROOT/frontend/.env.local" "$AUTO_WORK_DIR/env/frontend.env.local"
+
+printf '{"version":"1","created_at":"%s","components":"db,env","ngtt_origin":"RazgrizMY"}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$AUTO_WORK_DIR/manifest.json"
+
+tar -czf "$AUTO_BACKUP_FILE" -C "$AUTO_WORK_DIR" . 2>>"$LOG_FILE"
+chmod 600 "$AUTO_BACKUP_FILE"
+rm -rf "$AUTO_WORK_DIR"
+log "Pre-update backup saved: $(basename "$AUTO_BACKUP_FILE")"
+log "=== Pre-update backup done ==="
+# --- End pre-update backup ---
+
 run_step "Checking out $TARGET_TAG..." git -C "$REPO_ROOT" checkout "$TARGET_TAG"
 
 # Watermark check — ensures this is NGTT code, not an impersonating repo
