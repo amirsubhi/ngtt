@@ -65,6 +65,9 @@ export async function buildApp() {
         message: err.message,
       });
     }
+    if ((err as { statusCode?: number }).statusCode === 429) {
+      return reply.status(429).send({ error: 'RATE_LIMITED', message: (err as Error).message });
+    }
     logger.error(err, 'unhandled error');
     return reply.status(500).send({ error: 'INTERNAL_ERROR', message: 'Internal server error' });
   });
