@@ -103,17 +103,19 @@ export const adminUpdateRoutes: FastifyPluginAsync = async app => {
       throw new ValidationError(`${tag} is not the current latest GitHub Release`);
     }
 
-    // Acquire Redis lock
-    const locked = await redis.set('update:lock', '1', 'EX', 600, 'NX');
+    // Acquire Redis lock — 1800s covers cold-install deploys (npm ci × 2 + builds + migrate + pm2 reload)
+    const locked = await redis.set('update:lock', '1', 'EX', 1800, 'NX');
     if (locked === null) {
       return reply.status(409).send({ error: 'UPDATE_IN_PROGRESS', message: 'An update is already running' });
     }
 
     const prevRef = getCurrentRef();
 
-    // Clear previous log and set status before spawning
+    // Clear previous log and set status before spawning.
+    // TTL of 1800s is a safety net: if the script crashes before writing its final
+    // status, this key would otherwise persist forever and block future updates.
     await redis.del('update:log');
-    await redis.set('update:status', 'running');
+    await redis.set('update:status', 'running', 'EX', 1800);
 
     await audit(req.user.id, 'update_apply', { tag, prevRef });
 
@@ -122,6 +124,13 @@ export const adminUpdateRoutes: FastifyPluginAsync = async app => {
       detached: true,
       stdio:    'ignore',
       env: { ...process.env, REDIS_URL: config.redisUrl, REPO_ROOT },
+    });
+    // Attach error listener before unref() so launch failures (e.g. missing script)
+    // clear the lock and status rather than leaving them permanently set.
+    child.on('error', async (err: Error) => {
+      await redis.set('update:status', 'failed');
+      await redis.rpush('update:log', `FATAL: failed to start update script — ${err.message}`);
+      await redis.del('update:lock');
     });
     child.unref();
 
