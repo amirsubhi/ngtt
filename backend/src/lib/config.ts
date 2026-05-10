@@ -45,4 +45,6 @@ export const config = {
   minAnnounceInterval: parseInt(optional('MIN_ANNOUNCE_INTERVAL', '900'), 10),
 
   cookieSecure: optional('COOKIE_SECURE', '') === 'true',
+
+  githubRepo: optional('GITHUB_REPO', ''),
 };

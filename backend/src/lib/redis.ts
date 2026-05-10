@@ -45,3 +45,7 @@ export async function keys(pattern: string): Promise<string[]> {
 export async function incr(key: string): Promise<number> {
   return redis.incr(key);
 }
+
+export async function rPush(key: string, ...values: string[]): Promise<void> {
+  await redis.rpush(key, ...values);
+}
