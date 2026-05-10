@@ -31,6 +31,7 @@ import { homeRoutes } from './routes/home';
 import { categoriesRoutes } from './routes/categories';
 import { adminCategoriesRoutes } from './routes/admin/categories';
 import { adminUpdateRoutes } from './routes/admin/update';
+import { adminBackupRoutes } from './routes/admin/backup';
 import { updateLastSeen } from './middleware/lastSeen';
 import { registerRateLimiter } from './middleware/rateLimiter';
 
@@ -93,6 +94,7 @@ export async function buildApp() {
   await app.register(publicRoutes);
   await app.register(adminRoutes);
   await app.register(adminUpdateRoutes);
+  await app.register(adminBackupRoutes);
   await app.register(apiRoutes);
   await app.register(rssRoutes);
   await app.register(requestRoutes);
