@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import {
   DndContext,
   closestCenter,
@@ -320,6 +321,7 @@ function CategoryModal({
 
 export default function AdminCategoriesPage() {
   const router = useRouter();
+  const locale = useLocale();
   const [categories, setCategories] = useState<Category[]>([]);
   const [editTarget, setEditTarget] = useState<Category | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -336,10 +338,11 @@ export default function AdminCategoriesPage() {
       setCategories(data);
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 403) {
-        router.push('/login');
+        const loc = locale === 'en' ? '' : `/${locale}`;
+        router.push(`${loc}/login`);
       }
     }
-  }, [router]);
+  }, [router, locale]);
 
   useEffect(() => { void load(); }, [load]);
 

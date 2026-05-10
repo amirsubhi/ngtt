@@ -71,7 +71,7 @@ export async function browseRoutes(app: FastifyInstance): Promise<void> {
 
     const conditions: string[] = [
       "t.status = 'approved'",
-      `(c.browse_min_group = 'all' OR (c.browse_min_group = 'user' AND ? IN ('user','power','staff','admin','moderator')) OR (c.browse_min_group = 'power' AND ? IN ('power','staff','admin')) OR (c.browse_min_group = 'staff' AND ? IN ('staff','admin')))`,
+      `(c.browse_min_group = 'all' OR (c.browse_min_group = 'user' AND ? IN ('newbie','member','power-user','vip','uploader','moderator','admin')) OR (c.browse_min_group = 'power' AND ? IN ('power-user','vip','uploader','moderator','admin')) OR (c.browse_min_group = 'staff' AND ? IN ('moderator','admin')))`,
     ];
     const params: unknown[] = [groupSlug, groupSlug, groupSlug];
     let needsMediainfo = false;
@@ -199,9 +199,9 @@ export async function browseRoutes(app: FastifyInstance): Promise<void> {
        JOIN categories c ON t.category_id = c.id
        WHERE t.name LIKE CONCAT(?, '%') AND t.status = 'approved'
          AND (c.browse_min_group = 'all'
-           OR (c.browse_min_group = 'user'  AND ? IN ('user','power','staff','admin','moderator'))
-           OR (c.browse_min_group = 'power' AND ? IN ('power','staff','admin'))
-           OR (c.browse_min_group = 'staff' AND ? IN ('staff','admin')))
+           OR (c.browse_min_group = 'user'  AND ? IN ('newbie','member','power-user','vip','uploader','moderator','admin'))
+           OR (c.browse_min_group = 'power' AND ? IN ('power-user','vip','uploader','moderator','admin'))
+           OR (c.browse_min_group = 'staff' AND ? IN ('moderator','admin')))
        LIMIT 8`,
       [q, groupSlug, groupSlug, groupSlug],
     );

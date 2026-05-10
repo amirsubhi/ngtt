@@ -121,15 +121,18 @@ export async function adminCategoriesRoutes(app: FastifyInstance): Promise<void>
     if (!existing) throw new NotFoundError('Category not found');
 
     const d = parsed.data;
-    if (d.label !== undefined)          await execute('UPDATE categories SET label = ? WHERE id = ?', [d.label, id]);
-    if (d.slug !== undefined)           await execute('UPDATE categories SET slug = ? WHERE id = ?', [d.slug, id]);
-    if (d.icon !== undefined)           await execute('UPDATE categories SET icon = ? WHERE id = ?', [d.icon, id]);
-    if (d.color !== undefined)          await execute('UPDATE categories SET color = ? WHERE id = ?', [d.color, id]);
-    if (d.sortOrder !== undefined)      await execute('UPDATE categories SET sort_order = ? WHERE id = ?', [d.sortOrder, id]);
-    if (d.enabled !== undefined)        await execute('UPDATE categories SET enabled = ? WHERE id = ?', [d.enabled ? 1 : 0, id]);
-    if (d.uploadMinGroup !== undefined) await execute('UPDATE categories SET upload_min_group = ? WHERE id = ?', [d.uploadMinGroup, id]);
-    if (d.browseMinGroup !== undefined) await execute('UPDATE categories SET browse_min_group = ? WHERE id = ?', [d.browseMinGroup, id]);
-    if (d.subcats !== undefined)        await execute('UPDATE categories SET subcats = ? WHERE id = ?', [JSON.stringify(d.subcats), id]);
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+    if (d.label !== undefined)          { sets.push('label = ?');           vals.push(d.label); }
+    if (d.slug !== undefined)           { sets.push('slug = ?');            vals.push(d.slug); }
+    if (d.icon !== undefined)           { sets.push('icon = ?');            vals.push(d.icon); }
+    if (d.color !== undefined)          { sets.push('color = ?');           vals.push(d.color); }
+    if (d.sortOrder !== undefined)      { sets.push('sort_order = ?');      vals.push(d.sortOrder); }
+    if (d.enabled !== undefined)        { sets.push('enabled = ?');         vals.push(d.enabled ? 1 : 0); }
+    if (d.uploadMinGroup !== undefined) { sets.push('upload_min_group = ?'); vals.push(d.uploadMinGroup); }
+    if (d.browseMinGroup !== undefined) { sets.push('browse_min_group = ?'); vals.push(d.browseMinGroup); }
+    if (d.subcats !== undefined)        { sets.push('subcats = ?');          vals.push(JSON.stringify(d.subcats)); }
+    if (sets.length > 0) await execute(`UPDATE categories SET ${sets.join(', ')} WHERE id = ?`, [...vals, id]);
 
     await invalidateCache();
     return reply.send({ ok: true });
