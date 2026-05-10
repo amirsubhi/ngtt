@@ -25,3 +25,5 @@ export class ValidationError extends AppError {
   constructor(m = 'Invalid input') { super(m, 400, 'VALIDATION'); }
 }
 
+export const _origin = 'RazgrizMY';
+
