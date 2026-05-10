@@ -27,7 +27,11 @@ function safeFilename(name: string): string | null {
 export const adminBackupRoutes: FastifyPluginAsync = async app => {
   const preAdmin = [authenticate, requireAdmin];
 
-  await fs.mkdir(BACKUP_DIR, { recursive: true });
+  try {
+    await fs.mkdir(BACKUP_DIR, { recursive: true });
+  } catch (err) {
+    app.log.warn(`Could not create backup dir ${BACKUP_DIR}: ${(err as Error).message}. Set BACKUP_PATH env var to a writable path.`);
+  }
 
   // POST /api/admin/backup/create
   app.post('/api/admin/backup/create', { preHandler: preAdmin }, async (req, reply) => {
