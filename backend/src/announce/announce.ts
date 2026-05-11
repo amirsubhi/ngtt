@@ -1,17 +1,20 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { encode } from 'bencodec';
-import { query, queryOne } from '../lib/db';
+import { query, queryOne, execute } from '../lib/db';
 import { redis } from '../lib/redis';
 import { statsQueue, jobsQueue } from '../lib/queues';
 import { logger } from '../lib/logger';
 import { config } from '../lib/config';
 import { announceRateLimit } from '../middleware/rateLimiter';
-import { updatePeer, removePeer, getPeers, getSeederCount, getLeecherCount } from './peers';
+import { updatePeer, removePeer, getSwarmData } from './peers';
 import { compactPeers } from './bencode-compact';
 
-const USER_CACHE_TTL = 300; // 5 min
+const USER_CACHE_TTL = 300; // 5 min — ban endpoint deletes this key immediately on ban
+const TORRENT_CACHE_TTL = 60; // 1 min — invalidate on edit/takedown
 const BANNED_CLIENT_CACHE_KEY = 'banned_clients_cache';
 const BANNED_CLIENT_CACHE_TTL = 300;
+
+const VALID_EVENTS = new Set(['started', 'completed', 'stopped', '']);
 
 interface AnnounceUser {
   id: number;
@@ -29,6 +32,12 @@ interface AnnounceTorrent {
 
 function failure(msg: string): Buffer {
   return Buffer.from(encode({ 'failure reason': msg }));
+}
+
+// F-5: Guard against NaN/negative from client query params
+function parseIntParam(val: string | undefined, def: number): number {
+  const n = parseInt(val ?? String(def), 10);
+  return Number.isFinite(n) && n >= 0 ? n : def;
 }
 
 // Parse raw binary info_hash from the request URL (percent-encoded Latin-1 bytes)
@@ -59,11 +68,20 @@ async function getUserByPasskey(passkey: string): Promise<AnnounceUser | null> {
   return user;
 }
 
+// F-4: Cache torrent metadata — changes rarely; 60s TTL is safe
 async function getTorrentByHash(infoHash: string): Promise<AnnounceTorrent | null> {
-  return queryOne<AnnounceTorrent>(
+  const cacheKey = `torrent:meta:${infoHash}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) return JSON.parse(cached) as AnnounceTorrent;
+
+  const torrent = await queryOne<AnnounceTorrent>(
     'SELECT id, status, is_freeleech, uploader_id FROM torrents WHERE info_hash = ? LIMIT 1',
     [infoHash],
   );
+  if (torrent) {
+    await redis.setex(cacheKey, TORRENT_CACHE_TTL, JSON.stringify(torrent));
+  }
+  return torrent;
 }
 
 async function isClientBanned(peerIdPrefix: string): Promise<boolean> {
@@ -118,12 +136,13 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
       }
 
       const peerId = query_['peer_id'];
-      const port = parseInt(query_['port'] ?? '0', 10);
-      const uploaded = parseInt(query_['uploaded'] ?? '0', 10);
-      const downloaded = parseInt(query_['downloaded'] ?? '0', 10);
-      const left = parseInt(query_['left'] ?? '0', 10);
-      const event = query_['event'] ?? '';
-      const numwant = Math.min(parseInt(query_['numwant'] ?? '50', 10), 200);
+      const port = parseIntParam(query_['port'], 0);
+      const uploaded = parseIntParam(query_['uploaded'], 0);
+      const downloaded = parseIntParam(query_['downloaded'], 0);
+      const left = parseIntParam(query_['left'], 0);
+      // F-7: whitelist event values — reject anything outside the spec
+      const event = VALID_EVENTS.has(query_['event'] ?? '') ? (query_['event'] ?? '') : '';
+      const numwant = Math.min(parseIntParam(query_['numwant'], 50), 200);
       const compact = query_['compact'] !== '0';
       const ip = req.ip.split(',')[0].trim();
 
@@ -131,31 +150,31 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         return reply.send(failure('missing required params'));
       }
 
-      // 2. User lookup
+      // User lookup
       const user = await getUserByPasskey(passkey);
       if (!user) return reply.send(failure('passkey not found'));
 
-      // 3. Ban check
+      // Ban check
       if (user.is_banned) return reply.send(failure('user is banned'));
 
-      // 5. Torrent lookup
+      // Torrent lookup (F-4: cached)
       const torrent = await getTorrentByHash(infoHash);
       if (!torrent || torrent.status !== 'approved') {
         return reply.send(failure('torrent not found or not approved'));
       }
 
-      // 6. Client ban check
+      // Client ban check
       if (await isClientBanned(peerId.slice(0, 8))) {
         return reply.send(failure('client is banned'));
       }
 
-      // 7. Anti-cheat: speed spike (never block — just queue signal)
+      // Anti-cheat: speed spike detection (fire-and-forget)
       const prevRaw = await redis.hget(`peers:${infoHash}`, peerId);
       if (prevRaw) {
         const prev = JSON.parse(prevRaw) as { uploaded: number; updated_at: number };
         const uploadedDelta = uploaded - prev.uploaded;
         const timeDelta = (Date.now() - prev.updated_at) / 1000;
-        if (timeDelta > 0) {
+        if (timeDelta > 0 && uploadedDelta > 0) {
           const speedBps = (uploadedDelta * 8) / timeDelta;
           if (speedBps > 1_000_000_000) {
             void jobsQueue.add('flag-cheat', {
@@ -172,31 +191,35 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         }
       }
 
-      // Compute deltas vs previous announce (or from-zero for first announce)
-      const prev = prevRaw ? JSON.parse(prevRaw) as { uploaded: number; downloaded: number } : { uploaded: 0, downloaded: 0 };
-      const uploadedDelta = Math.max(0, uploaded - prev.uploaded);
+      // F-1: When there's no previous Redis state (first announce OR TTL expired), use
+      // the current cumulative values as the baseline so the delta is 0 rather than
+      // awarding the entire cumulative total as a fresh delta.
+      const prev = prevRaw
+        ? JSON.parse(prevRaw) as { uploaded: number; downloaded: number }
+        : { uploaded: uploaded, downloaded: downloaded };
+      const uploadedDelta   = Math.max(0, uploaded   - prev.uploaded);
       const downloadedDelta = Math.max(0, downloaded - prev.downloaded);
 
-      // 8. Effective download (freeleech)
+      // Effective download (freeleech)
       const globalFreeleech = (await getSiteSetting('global_freeleech')) === 'true';
       const freeleech = globalFreeleech || torrent.is_freeleech || await isPersonalFreeleech(user.id, torrent.id);
       const effectiveDownload = freeleech ? 0 : downloadedDelta;
 
-      // 9. Update peer in Redis
+      // Update peer in Redis
       if (event !== 'stopped') {
         await updatePeer(infoHash, peerId, {
           ip, port,
           uploaded, downloaded, left,
           seeder: left === 0,
           user_id: user.id,
+          peer_id: peerId,
           updated_at: Date.now(),
         });
       } else {
-        // 10. Remove peer on stopped
         await removePeer(infoHash, peerId);
       }
 
-      // 11. Queue stats (never await)
+      // Queue stat write (never await — keep announce path lean)
       void statsQueue.add('write-stats', {
         user_id: user.id,
         torrent_id: torrent.id,
@@ -208,8 +231,7 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
         ip,
       });
 
-      // 12. Seeding — fire H&R update on every seeder announce to accumulate time;
-      // H&R record is only created on event=completed (see hnr-update job)
+      // H&R accumulation and snatch record
       if (left === 0) {
         void jobsQueue.add('hnr-update', {
           user_id: user.id,
@@ -219,27 +241,20 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
           completed: event === 'completed',
         });
         if (event === 'completed') {
-          // Upsert snatch record once
-          void import('../lib/db').then(({ execute }) =>
-            execute(
-              'INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)',
-              [user.id, torrent.id],
-            ).catch(err => logger.error(err, 'snatch upsert failed')),
-          );
+          // F-6: use already-imported execute directly — no dynamic import needed
+          void execute(
+            'INSERT IGNORE INTO torrent_snatches (user_id, torrent_id) VALUES (?, ?)',
+            [user.id, torrent.id],
+          ).catch(err => logger.error(err, 'snatch upsert failed'));
         }
       }
 
-      // 13-14. Collect peers for response; count from full swarm (not capped list)
-      const [allPeers, seeders, leechers] = await Promise.all([
-        getPeers(infoHash, numwant),
-        getSeederCount(infoHash),
-        getLeecherCount(infoHash),
-      ]);
+      // Single HGETALL pass for all swarm data (P-1)
+      const { peers: allPeers, seeders, leechers } = await getSwarmData(infoHash, numwant);
 
-      const announceInterval = parseInt((await getSiteSetting('announce_interval')) ?? String(config.announceInterval), 10);
-      const minInterval = parseInt((await getSiteSetting('min_announce_interval')) ?? String(config.minAnnounceInterval), 10);
+      const announceInterval = parseIntParam(await getSiteSetting('announce_interval') ?? undefined, config.announceInterval);
+      const minInterval = parseIntParam(await getSiteSetting('min_announce_interval') ?? undefined, config.minAnnounceInterval);
 
-      // 15. Return bencoded response
       const response: Record<string, unknown> = {
         interval: announceInterval,
         'min interval': minInterval,
@@ -250,8 +265,9 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
       if (compact) {
         response['peers'] = compactPeers(allPeers);
       } else {
+        // F-8: use the actual peer_id reported by the client, not the internal user_id
         response['peers'] = allPeers.map(p => ({
-          'peer id': p.user_id,
+          'peer id': p.peer_id,
           ip: p.ip,
           port: p.port,
         }));

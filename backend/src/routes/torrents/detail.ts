@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { query, queryOne, execute } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { NotFoundError } from '../../lib/errors';
-import { getPeers, getSeederCount, getLeecherCount } from '../../announce/peers';
+import { getSwarmData } from '../../announce/peers';
 
 interface TorrentDetail {
   id: number;
@@ -62,19 +62,19 @@ export async function detailRoutes(app: FastifyInstance): Promise<void> {
       // Increment view count (non-blocking)
       void execute('UPDATE torrents SET view_count = view_count + 1 WHERE id = ?', [id]);
 
-      const [files, mediainfo, screenshots, tags, peers, bookmarked, thanked, subtitleCount, reseedReq] = await Promise.all([
+      const [files, mediainfo, screenshots, tags, swarm, bookmarked, thanked, subtitleCount, reseedReq] = await Promise.all([
         query<{ path: string; size: number }>('SELECT path, size FROM torrent_files WHERE torrent_id = ? ORDER BY path', [id]),
         queryOne<MediaInfo>('SELECT video_codec, resolution, hdr, frame_rate, audio_codec, audio_channels, container, source, duration_mins FROM torrent_mediainfo WHERE torrent_id = ?', [id]),
         query<{ id: number; url: string; display_order: number }>('SELECT id, url, display_order FROM torrent_screenshots WHERE torrent_id = ? ORDER BY display_order', [id]),
         query<{ id: number; name: string; slug: string; color: string }>('SELECT tg.id, tg.name, tg.slug, tg.color FROM tags tg JOIN torrent_tags tt ON tt.tag_id = tg.id WHERE tt.torrent_id = ?', [id]),
-        getPeers(torrent.info_hash, 100),
+        getSwarmData(torrent.info_hash, 100),
         queryOne<{ user_id: number }>('SELECT user_id FROM torrent_bookmarks WHERE user_id = ? AND torrent_id = ? LIMIT 1', [req.user.id, id]),
         queryOne<{ user_id: number }>('SELECT user_id FROM torrent_thanks WHERE user_id = ? AND torrent_id = ? LIMIT 1', [req.user.id, id]),
         queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM subtitles WHERE torrent_id = ?', [id]),
         queryOne<{ id: number }>('SELECT id FROM reseed_requests WHERE torrent_id = ? AND requested_by = ? LIMIT 1', [id, req.user.id]),
       ]);
 
-      const [seeders, leechers] = await Promise.all([getSeederCount(torrent.info_hash), getLeecherCount(torrent.info_hash)]);
+      const { peers, seeders, leechers } = swarm;
 
       return reply.send({
         ...torrent,

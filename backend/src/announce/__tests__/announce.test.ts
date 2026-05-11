@@ -9,7 +9,7 @@ describe('compactPeers', () => {
     const peers: PeerData[] = [{
       ip: '1.2.3.4', port: 6881,
       uploaded: 0, downloaded: 0, left: 0,
-      seeder: true, user_id: 1, updated_at: Date.now(),
+      seeder: true, user_id: 1, peer_id: '-AZ2060-000000000001', updated_at: Date.now(),
     }];
     const buf = compactPeers(peers);
     expect(buf.length).toBe(6);
@@ -22,8 +22,8 @@ describe('compactPeers', () => {
 
   it('encodes multiple peers into 6*n bytes', () => {
     const peers: PeerData[] = [
-      { ip: '10.0.0.1', port: 1000, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 1, updated_at: Date.now() },
-      { ip: '192.168.1.1', port: 2000, uploaded: 0, downloaded: 0, left: 0, seeder: false, user_id: 2, updated_at: Date.now() },
+      { ip: '10.0.0.1', port: 1000, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 1, peer_id: '-AZ2060-000000000001', updated_at: Date.now() },
+      { ip: '192.168.1.1', port: 2000, uploaded: 0, downloaded: 0, left: 0, seeder: false, user_id: 2, peer_id: '-AZ2060-000000000002', updated_at: Date.now() },
     ];
     const buf = compactPeers(peers);
     expect(buf.length).toBe(12);
@@ -33,8 +33,8 @@ describe('compactPeers', () => {
 
   it('skips IPv6 peers', () => {
     const peers: PeerData[] = [
-      { ip: '::1', port: 6881, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 1, updated_at: Date.now() },
-      { ip: '1.2.3.4', port: 6881, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 2, updated_at: Date.now() },
+      { ip: '::1', port: 6881, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 1, peer_id: '-AZ2060-000000000001', updated_at: Date.now() },
+      { ip: '1.2.3.4', port: 6881, uploaded: 0, downloaded: 0, left: 0, seeder: true, user_id: 2, peer_id: '-AZ2060-000000000002', updated_at: Date.now() },
     ];
     const buf = compactPeers(peers);
     expect(buf.length).toBe(6); // only IPv4 peer encoded
@@ -91,13 +91,13 @@ describe('getPeers stale filtering', () => {
     const freshPeer: PeerData = {
       ip: '1.2.3.4', port: 6881,
       uploaded: 0, downloaded: 0, left: 0,
-      seeder: true, user_id: 1,
+      seeder: true, user_id: 1, peer_id: '-AZ2060-000000000001',
       updated_at: now - 1000, // 1 second ago
     };
     const stalePeer: PeerData = {
       ip: '5.6.7.8', port: 6882,
       uploaded: 0, downloaded: 0, left: 0,
-      seeder: false, user_id: 2,
+      seeder: false, user_id: 2, peer_id: '-AZ2060-000000000002',
       updated_at: now - (PEER_TTL + 60) * 1000, // over 45 min ago
     };
 

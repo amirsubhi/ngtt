@@ -47,9 +47,10 @@ export async function writeAnnounceStats(data: WriteStatsPayload): Promise<void>
     }
   }
 
+  // F-13: log effectiveUpload so forensic audits can reconcile against users.uploaded
   await execute(
-    `INSERT INTO announce_stats (user_id, torrent_id, uploaded_delta, downloaded_delta, is_freeleech, event, peer_id, ip_address)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [user_id, torrent_id, uploaded_delta, downloaded_delta, is_freeleech, event, peer_id, ip],
+    `INSERT INTO announce_stats (user_id, torrent_id, uploaded_delta, effective_uploaded_delta, downloaded_delta, is_freeleech, event, peer_id, ip_address)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [user_id, torrent_id, uploaded_delta, effectiveUpload, downloaded_delta, is_freeleech, event, peer_id, ip],
   );
 }

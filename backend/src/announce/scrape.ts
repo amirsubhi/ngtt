@@ -1,11 +1,13 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { encode } from 'bencodec';
-import { queryOne } from '../lib/db';
+import { query, queryOne } from '../lib/db';
 import { redis } from '../lib/redis';
 import { logger } from '../lib/logger';
-import { getSeederCount, getLeecherCount } from './peers';
+import { announceRateLimit } from '../middleware/rateLimiter';
+import { getSwarmData } from './peers';
 
 const USER_CACHE_TTL = 300;
+const MAX_SCRAPE_HASHES = 50;
 
 function failure(msg: string): Buffer {
   return Buffer.from(encode({ 'failure reason': msg }));
@@ -23,12 +25,13 @@ function parseInfoHashes(rawUrl: string): string[] {
     } catch {
       // skip malformed
     }
+    if (hashes.length >= MAX_SCRAPE_HASHES) break;
   }
   return hashes;
 }
 
 export async function scrapeRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/scrape/:passkey', async (req: FastifyRequest<{ Params: { passkey: string } }>, reply: FastifyReply) => {
+  app.get('/scrape/:passkey', { config: announceRateLimit.config }, async (req: FastifyRequest<{ Params: { passkey: string } }>, reply: FastifyReply) => {
     reply.header('Content-Type', 'text/plain');
 
     try {
@@ -53,19 +56,34 @@ export async function scrapeRoutes(app: FastifyInstance): Promise<void> {
       const hashes = parseInfoHashes(rawUrl);
       if (hashes.length === 0) return reply.send(failure('no info_hash'));
 
-      const files: Record<string, unknown> = {};
-      for (const hash of hashes) {
-        const [complete, incomplete] = await Promise.all([
-          getSeederCount(hash),
-          getLeecherCount(hash),
-        ]);
-        const row = await queryOne<{ times_completed: number }>(
-          `SELECT COUNT(*) AS times_completed FROM torrent_snatches
-           WHERE torrent_id = (SELECT id FROM torrents WHERE info_hash = ? LIMIT 1)`,
-          [hash],
+      // Batch torrent lookup + snatch counts — 2 queries total regardless of hash count
+      const torrentRows = await query<{ info_hash: string; id: number }>(
+        `SELECT info_hash, id FROM torrents WHERE info_hash IN (${hashes.map(() => '?').join(',')})`,
+        hashes,
+      );
+      const torrentIdByHash = new Map(torrentRows.map(r => [r.info_hash, r.id]));
+      const torrentIds = torrentRows.map(r => r.id);
+
+      const snatchMap = new Map<number, number>();
+      if (torrentIds.length > 0) {
+        const snatchRows = await query<{ torrent_id: number; cnt: number }>(
+          `SELECT torrent_id, COUNT(*) AS cnt FROM torrent_snatches WHERE torrent_id IN (${torrentIds.map(() => '?').join(',')}) GROUP BY torrent_id`,
+          torrentIds,
         );
-        files[hash] = { complete, incomplete, downloaded: row?.times_completed ?? 0 };
+        for (const row of snatchRows) snatchMap.set(row.torrent_id, Number(row.cnt));
       }
+
+      // Parallel Redis reads — all independent
+      const files: Record<string, unknown> = {};
+      await Promise.all(hashes.map(async hash => {
+        const { seeders, leechers } = await getSwarmData(hash, 0);
+        const torrentId = torrentIdByHash.get(hash);
+        files[hash] = {
+          complete: seeders,
+          incomplete: leechers,
+          downloaded: torrentId !== undefined ? (snatchMap.get(torrentId) ?? 0) : 0,
+        };
+      }));
 
       return reply.send(Buffer.from(encode({ files })));
     } catch (err) {
