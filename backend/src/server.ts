@@ -28,6 +28,7 @@ import { apiRoutes } from './routes/api/index';
 import { rssRoutes } from './routes/rss/index';
 import { requestRoutes } from './routes/requests/index';
 import { homeRoutes } from './routes/home';
+import { statsRoutes } from './routes/stats';
 import { categoriesRoutes } from './routes/categories';
 import { adminCategoriesRoutes } from './routes/admin/categories';
 import { adminUpdateRoutes } from './routes/admin/update';
@@ -99,6 +100,7 @@ export async function buildApp() {
   await app.register(rssRoutes);
   await app.register(requestRoutes);
   await app.register(homeRoutes);
+  await app.register(statsRoutes);
   await app.register(categoriesRoutes);
   await app.register(adminCategoriesRoutes, { prefix: '/api/admin' });
 

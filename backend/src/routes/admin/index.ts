@@ -47,7 +47,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
       name: z.string().min(1).max(100),
       description: z.string().max(1000).optional(),
       cost: z.number().positive(),
-      type: z.enum(['invite_token', 'freeleech_token', 'upload_credit', 'username_change']),
+      type: z.enum(['invite_token', 'freeleech_token', 'upload_credit', 'username_change', 'clean_hnr']),
       value: z.number().int().nonnegative().default(1),
       display_order: z.number().int().default(0),
     }).safeParse(req.body);
@@ -154,6 +154,36 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     await execute('UPDATE site_settings SET value=? WHERE `key`=?', [url, 'site_favicon_url']);
     await audit(req.user.id, 'setting_update', { key: 'site_favicon_url', value: url });
     return reply.send({ ok: true, url });
+  });
+
+  // Upload events (double upload, global freeleech)
+  app.get('/api/admin/events', { preHandler: preAdmin }, async (_req, reply) => {
+    const events = await query(
+      'SELECT e.*, u.username AS created_by_username FROM upload_events e LEFT JOIN users u ON u.id=e.created_by ORDER BY e.starts_at DESC LIMIT 50',
+    );
+    return reply.send({ events });
+  });
+
+  app.post('/api/admin/events', { preHandler: preAdmin }, async (req, reply) => {
+    const parsed = z.object({
+      name:      z.string().min(1).max(100),
+      type:      z.enum(['double_upload', 'freeleech_global']),
+      starts_at: z.string().datetime(),
+      ends_at:   z.string().datetime(),
+    }).safeParse(req.body);
+    if (!parsed.success) throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid input');
+    if (parsed.data.ends_at <= parsed.data.starts_at) throw new ValidationError('ends_at must be after starts_at');
+    await execute(
+      'INSERT INTO upload_events (name, type, starts_at, ends_at, created_by) VALUES (?,?,?,?,?)',
+      [parsed.data.name, parsed.data.type, parsed.data.starts_at, parsed.data.ends_at, req.user.id],
+    );
+    await audit(req.user.id, 'event_create', { name: parsed.data.name, type: parsed.data.type });
+    return reply.status(201).send({ ok: true });
+  });
+
+  app.delete<{ Params: { id: string } }>('/api/admin/events/:id', { preHandler: preAdmin }, async (req, reply) => {
+    await execute('DELETE FROM upload_events WHERE id=?', [parseInt(req.params.id, 10)]);
+    return reply.send({ ok: true });
   });
 
   // 10n — IP bans

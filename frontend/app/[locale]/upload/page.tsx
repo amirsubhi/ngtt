@@ -23,6 +23,7 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token') ?? '';
@@ -162,37 +163,52 @@ export default function UploadPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium">{t('tmdb_id')}</label>
-            <input
-              type="number"
-              value={tmdbId}
-              onChange={e => setTmdbId(e.target.value)}
-              className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="block text-sm font-medium">{t('imdb_id')}</label>
-            <input
-              type="text"
-              value={imdbId}
-              onChange={e => setImdbId(e.target.value)}
-              placeholder="tt1234567"
-              className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="block text-sm font-medium">{t('nfo')}</label>
-          <textarea
-            value={nfo}
-            onChange={e => setNfo(e.target.value)}
-            rows={8} maxLength={500000}
-            className="w-full rounded border border-current/20 bg-transparent px-3 py-2 font-mono text-xs focus:outline-none"
-            placeholder="Paste NFO content here…"
-          />
+        {/* Advanced section — metadata + NFO */}
+        <div className="border border-current/10 rounded">
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-current/5 rounded"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <span>Advanced (TMDB/IMDB IDs, NFO)</span>
+            <span className="text-xs">{showAdvanced ? '▲' : '▼'}</span>
+          </button>
+          {showAdvanced && (
+            <div className="px-4 pb-4 space-y-4 border-t border-current/10 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium">{t('tmdb_id')}</label>
+                  <input
+                    type="number"
+                    value={tmdbId}
+                    onChange={e => setTmdbId(e.target.value)}
+                    className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium">{t('imdb_id')}</label>
+                  <input
+                    type="text"
+                    value={imdbId}
+                    onChange={e => setImdbId(e.target.value)}
+                    placeholder="tt1234567"
+                    className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-sm font-medium">{t('nfo')}</label>
+                <textarea
+                  value={nfo}
+                  onChange={e => setNfo(e.target.value)}
+                  rows={8} maxLength={500000}
+                  className="w-full rounded border border-current/20 bg-transparent px-3 py-2 font-mono text-xs focus:outline-none"
+                  placeholder="Paste NFO content here…"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-sm text-red-500">{error}</p>}

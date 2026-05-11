@@ -9,6 +9,7 @@
     "upload": "Muat naik",
     "requests": "Permintaan",
     "bonus": "Bonus",
+    "stats": "Statistik",
     "settings": "Tetapan",
     "messages": "Mesej",
     "notifications": "Pemberitahuan",
@@ -18,7 +19,9 @@
     "register": "Daftar",
     "logout": "Log keluar",
     "theme_toggle": "Tukar tema",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "admin_panel": "Panel Admin",
+    "staff_panel": "Panel Kakitangan"
   },
   "auth": {
     "login": {
@@ -306,7 +309,21 @@
     "unban": "Batal haramkan",
     "warn": "Amaran",
     "pardon": "Maafkan",
-    "search_users": "Cari pengguna…"
+    "search_users": "Cari pengguna…",
+    "nav": {
+      "group_overview": "Gambaran",
+      "group_queues": "Giliran",
+      "group_users": "Pengguna",
+      "group_enforcement": "Penguatkuasaan",
+      "dashboard": "Papan Pemuka",
+      "torrents": "Giliran Torrent",
+      "reports": "Laporan",
+      "dmca": "DMCA",
+      "helpdesk": "Meja Bantuan",
+      "users": "Pengurusan Pengguna",
+      "hnr": "Penjejak H&R",
+      "logs": "Log Audit"
+    }
   },
   "common": {
     "loading": "Memuatkan…",
@@ -328,5 +345,21 @@
     "connecting": "Menyambung…",
     "banned": "Anda diharamkan daripada kotak sembang.",
     "empty": "Tiada mesej lagi."
+  },
+  "admin": {
+    "nav": {
+      "group_site": "Laman",
+      "group_security": "Keselamatan",
+      "group_system": "Sistem",
+      "settings": "Tetapan",
+      "categories": "Kategori",
+      "pages": "Halaman",
+      "flux_store": "Kedai Flux",
+      "ip_bans": "Sekatan IP",
+      "clients": "Klien Disekat",
+      "backup": "Sandaran",
+      "update": "Kemaskini",
+      "events": "Acara"
+    }
   }
 }

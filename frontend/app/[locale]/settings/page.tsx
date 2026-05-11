@@ -18,6 +18,8 @@ const LOCALES = [
 
 type Tab = 'appearance' | 'privacy' | 'notifications' | 'security' | 'integrations' | 'danger';
 
+interface Keys { passkey: string; api_key: string | null; api_enabled: boolean; rss_key: string }
+
 interface Settings {
   theme: string;
   locale: string;
@@ -58,6 +60,9 @@ export default function SettingsPage() {
   const [osPassword, setOsPassword] = useState('');
   const [osError, setOsError] = useState('');
 
+  const [keys, setKeys] = useState<Keys | null>(null);
+  const [keyLoading, setKeyLoading] = useState('');
+
   // Delete account
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -68,6 +73,9 @@ export default function SettingsPage() {
     if (!t) { router.push('/login'); return; }
     api.get<Settings>('/api/users/me/settings', t)
       .then(s => setSettings(s))
+      .catch(() => {});
+    api.get<Keys>('/api/users/me/keys', t)
+      .then(setKeys)
       .catch(() => {});
   }, [router]);
 
@@ -249,8 +257,98 @@ export default function SettingsPage() {
 
       {/* Security */}
       {tab === 'security' && (
-        <div className="space-y-6">
-          <div className="space-y-2">
+        <div className="space-y-8">
+          {/* Passkey / Announce URL */}
+          <div className="space-y-3 p-4 rounded border border-current/10">
+            <h2 className="font-medium">Announce URL</h2>
+            <p className="text-xs opacity-50">Use this URL in your torrent client. Keep it private.</p>
+            {keys ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/announce/${keys.passkey}`} className={inputCls + ' font-mono text-xs'} />
+                  <button onClick={() => navigator.clipboard.writeText(`${window.location.origin}/announce/${keys.passkey}`)}
+                    className="rounded border border-current/20 px-3 py-2 text-xs hover:border-current/40 shrink-0">Copy</button>
+                </div>
+                <button disabled={keyLoading === 'passkey'} onClick={async () => {
+                  if (!confirm('Regenerate your announce URL? Your torrent client will stop seeding until you update it with the new URL.')) return;
+                  setKeyLoading('passkey');
+                  const res = await api.post<{ passkey: string }>('/api/users/me/keys/passkey', {}, token).catch(() => null);
+                  if (res) setKeys(prev => prev ? { ...prev, passkey: res.passkey } : prev);
+                  setKeyLoading('');
+                }} className="text-xs text-red-400 hover:text-red-300 disabled:opacity-50">
+                  {keyLoading === 'passkey' ? 'Regenerating…' : 'Regenerate passkey'}
+                </button>
+              </div>
+            ) : <p className="text-xs opacity-40">Loading…</p>}
+          </div>
+
+          {/* API Key */}
+          <div className="space-y-3 p-4 rounded border border-current/10">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium">API / Torznab Key</h2>
+              {keys && (
+                <button disabled={keyLoading === 'apitoggle'} onClick={async () => {
+                  setKeyLoading('apitoggle');
+                  const res = await api.post<{ api_enabled: boolean }>('/api/users/me/keys/api/toggle', {}, token).catch(() => null);
+                  if (res) setKeys(prev => prev ? { ...prev, api_enabled: res.api_enabled } : prev);
+                  setKeyLoading('');
+                }} className={`text-xs px-2 py-1 rounded border ${keys.api_enabled ? 'border-green-500/40 text-green-400' : 'border-current/20 opacity-50'} hover:opacity-80 disabled:opacity-40`}>
+                  {keys.api_enabled ? 'Enabled' : 'Disabled'}
+                </button>
+              )}
+            </div>
+            <p className="text-xs opacity-50">Used for Torznab feeds (autobrr, Prowlarr) and direct API access.</p>
+            {keys ? (
+              <div className="space-y-2">
+                {keys.api_key ? (
+                  <>
+                    <div className="flex gap-2">
+                      <input readOnly value={keys.api_key} className={inputCls + ' font-mono text-xs'} />
+                      <button onClick={() => navigator.clipboard.writeText(keys.api_key!)}
+                        className="rounded border border-current/20 px-3 py-2 text-xs hover:border-current/40 shrink-0">Copy</button>
+                    </div>
+                    <p className="text-xs opacity-40">Torznab URL: {typeof window !== 'undefined' ? window.location.origin : ''}/api/torznab?apikey={keys.api_key}</p>
+                  </>
+                ) : (
+                  <p className="text-xs opacity-50">No API key generated yet.</p>
+                )}
+                <button disabled={keyLoading === 'api'} onClick={async () => {
+                  setKeyLoading('api');
+                  const res = await api.post<{ api_key: string; api_enabled: boolean }>('/api/users/me/keys/api', {}, token).catch(() => null);
+                  if (res) setKeys(prev => prev ? { ...prev, api_key: res.api_key, api_enabled: res.api_enabled } : prev);
+                  setKeyLoading('');
+                }} className="text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                  {keyLoading === 'api' ? 'Generating…' : keys.api_key ? 'Regenerate API key' : 'Generate API key'}
+                </button>
+              </div>
+            ) : <p className="text-xs opacity-40">Loading…</p>}
+          </div>
+
+          {/* RSS Key */}
+          <div className="space-y-3 p-4 rounded border border-current/10">
+            <h2 className="font-medium">RSS Feed Key</h2>
+            <p className="text-xs opacity-50">Authenticated RSS feed URL for your torrent client or reader.</p>
+            {keys ? (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/rss/${keys.rss_key}`} className={inputCls + ' font-mono text-xs'} />
+                  <button onClick={() => navigator.clipboard.writeText(`${window.location.origin}/rss/${keys.rss_key}`)}
+                    className="rounded border border-current/20 px-3 py-2 text-xs hover:border-current/40 shrink-0">Copy</button>
+                </div>
+                <button disabled={keyLoading === 'rss'} onClick={async () => {
+                  setKeyLoading('rss');
+                  const res = await api.post<{ rss_key: string }>('/api/users/me/keys/rss', {}, token).catch(() => null);
+                  if (res) setKeys(prev => prev ? { ...prev, rss_key: res.rss_key } : prev);
+                  setKeyLoading('');
+                }} className="text-xs text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                  {keyLoading === 'rss' ? 'Regenerating…' : 'Regenerate RSS key'}
+                </button>
+              </div>
+            ) : <p className="text-xs opacity-40">Loading…</p>}
+          </div>
+
+          {/* Username change */}
+          <div className="space-y-3 p-4 rounded border border-current/10">
             <h2 className="font-medium">{t('username_change_title')}</h2>
             <p className="text-sm opacity-50">{t('username_change_cost')}</p>
             <form onSubmit={handleUsernameChange} className="space-y-3">

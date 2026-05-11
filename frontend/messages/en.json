@@ -9,6 +9,7 @@
     "upload": "Upload",
     "requests": "Requests",
     "bonus": "Bonus",
+    "stats": "Stats",
     "settings": "Settings",
     "messages": "Messages",
     "notifications": "Notifications",
@@ -18,7 +19,9 @@
     "register": "Register",
     "logout": "Logout",
     "theme_toggle": "Toggle theme",
-    "language": "Language"
+    "language": "Language",
+    "admin_panel": "Admin Panel",
+    "staff_panel": "Staff Panel"
   },
   "auth": {
     "login": {
@@ -306,7 +309,21 @@
     "unban": "Unban",
     "warn": "Warn",
     "pardon": "Pardon",
-    "search_users": "Search users…"
+    "search_users": "Search users…",
+    "nav": {
+      "group_overview": "Overview",
+      "group_queues": "Queues",
+      "group_users": "Users",
+      "group_enforcement": "Enforcement",
+      "dashboard": "Dashboard",
+      "torrents": "Torrent Queue",
+      "reports": "Reports",
+      "dmca": "DMCA",
+      "helpdesk": "Helpdesk",
+      "users": "User Management",
+      "hnr": "H&R Tracker",
+      "logs": "Audit Logs"
+    }
   },
   "common": {
     "loading": "Loading…",
@@ -328,5 +345,21 @@
     "connecting": "Connecting…",
     "banned": "You are banned from the shoutbox.",
     "empty": "No messages yet."
+  },
+  "admin": {
+    "nav": {
+      "group_site": "Site",
+      "group_security": "Security",
+      "group_system": "System",
+      "settings": "Settings",
+      "categories": "Categories",
+      "pages": "Pages",
+      "flux_store": "Flux Store",
+      "ip_bans": "IP Bans",
+      "clients": "Banned Clients",
+      "backup": "Backup",
+      "update": "Update",
+      "events": "Events"
+    }
   }
 }

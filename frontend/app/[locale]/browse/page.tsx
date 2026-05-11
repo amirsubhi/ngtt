@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { SkeletonRow, Skeleton } from '@/components/Skeleton';
+import { EmptyState } from '@/components/EmptyState';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -391,22 +393,34 @@ export default function BrowsePage() {
                 <thead>
                   <tr className="border-b border-current/10 text-xs" style={{ color: 'var(--text-muted)' }}>
                     <th className="w-8 p-2 text-left">Cat</th>
-                    <th className="p-2 text-left">Name</th>
-                    <th className="p-2 text-right">Size</th>
-                    <th className="p-2 text-right">Seeds</th>
-                    <th className="p-2 text-right">Leech</th>
-                    <th className="p-2 text-right">Snatched</th>
-                    <th className="p-2 text-right">Age</th>
-                    <th className="p-2 text-left">Uploader</th>
-                    <th className="p-2 text-center w-8">DL</th>
+                    {(['name', 'size', 'seeders', null, 'snatched', 'newest'] as const).map((sortKey, i) => {
+                      const labels = ['Name', 'Size', 'Seeds', 'Leech', 'Snatched', 'Age'];
+                      const aligns = ['text-left', 'text-right', 'text-right', 'text-right', 'text-right', 'text-right'];
+                      const active = sortKey && sort === sortKey;
+                      return sortKey ? (
+                        <th key={i} className={`p-2 ${aligns[i]} cursor-pointer select-none whitespace-nowrap hover:opacity-100 ${active ? 'opacity-100' : 'opacity-60'}`}
+                          onClick={() => push({ sort: sortKey })}>
+                          {labels[i]}{active ? ' ↓' : ''}
+                        </th>
+                      ) : (
+                        <th key={i} className={`p-2 ${aligns[i]} opacity-60`}>{labels[i]}</th>
+                      );
+                    })}
+                    <th className="p-2 text-left opacity-60">Uploader</th>
+                    <th className="p-2 text-center w-8 opacity-60">DL</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {loading && (
-                    <tr><td colSpan={9} className="p-8 text-center opacity-50">Loading…</td></tr>
-                  )}
+                  {loading && Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={9} />)}
                   {!loading && results.length === 0 && (
-                    <tr><td colSpan={9} className="p-8 text-center opacity-50">No results</td></tr>
+                    <tr><td colSpan={9}>
+                      <EmptyState
+                        icon="🔍"
+                        title="No torrents found"
+                        description="Try adjusting your filters or search query."
+                        action={{ label: 'Clear filters', onClick: clearAll }}
+                      />
+                    </td></tr>
                   )}
                   {results.map(t => (
                     <tr key={t.id} className="border-b border-current/5 hover:bg-current/5">
@@ -445,8 +459,19 @@ export default function BrowsePage() {
           {/* Card view */}
           {viewMode === 'card' && (
             <div className="p-4 grid grid-cols-2 gap-4 flex-1">
-              {loading && <p className="col-span-2 text-center opacity-50 py-8">Loading…</p>}
-              {!loading && results.length === 0 && <p className="col-span-2 text-center opacity-50 py-8">No results</p>}
+              {loading && Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded border border-current/10 p-4 space-y-3" style={{ backgroundColor: 'var(--bg-surface)' }}>
+                  <Skeleton height="h-3" width="w-24" />
+                  <Skeleton height="h-4" width="w-full" />
+                  <Skeleton height="h-3" width="w-3/4" />
+                  <Skeleton height="h-3" width="w-1/2" />
+                </div>
+              ))}
+              {!loading && results.length === 0 && (
+                <div className="col-span-2">
+                  <EmptyState icon="🔍" title="No torrents found" description="Try adjusting your filters." action={{ label: 'Clear filters', onClick: clearAll }} />
+                </div>
+              )}
               {results.map(t => (
                 <Link
                   key={t.id}

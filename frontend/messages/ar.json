@@ -9,6 +9,7 @@
     "upload": "رفع",
     "requests": "الطلبات",
     "bonus": "المكافآت",
+    "stats": "الإحصائيات",
     "settings": "الإعدادات",
     "messages": "الرسائل",
     "notifications": "الإشعارات",
@@ -18,7 +19,9 @@
     "register": "التسجيل",
     "logout": "تسجيل الخروج",
     "theme_toggle": "تبديل السمة",
-    "language": "اللغة"
+    "language": "اللغة",
+    "admin_panel": "لوحة المشرف",
+    "staff_panel": "لوحة الفريق"
   },
   "auth": {
     "login": {
@@ -306,7 +309,21 @@
     "unban": "رفع الحظر",
     "warn": "تحذير",
     "pardon": "عفو",
-    "search_users": "بحث عن مستخدمين…"
+    "search_users": "بحث عن مستخدمين…",
+    "nav": {
+      "group_overview": "نظرة عامة",
+      "group_queues": "الطوابير",
+      "group_users": "المستخدمون",
+      "group_enforcement": "التطبيق",
+      "dashboard": "لوحة القيادة",
+      "torrents": "قائمة انتظار التورنت",
+      "reports": "التقارير",
+      "dmca": "DMCA",
+      "helpdesk": "الدعم الفني",
+      "users": "إدارة المستخدمين",
+      "hnr": "تتبع H&R",
+      "logs": "سجلات التدقيق"
+    }
   },
   "common": {
     "loading": "جارٍ التحميل…",
@@ -328,5 +345,21 @@
     "connecting": "جارٍ الاتصال…",
     "banned": "أنت محظور من صندوق الدردشة.",
     "empty": "لا توجد رسائل بعد."
+  },
+  "admin": {
+    "nav": {
+      "group_site": "الموقع",
+      "group_security": "الأمان",
+      "group_system": "النظام",
+      "settings": "الإعدادات",
+      "categories": "الفئات",
+      "pages": "الصفحات",
+      "flux_store": "متجر فلوكس",
+      "ip_bans": "حظر IP",
+      "clients": "العملاء المحظورون",
+      "backup": "نسخ احتياطي",
+      "update": "تحديث",
+      "events": "الفعاليات"
+    }
   }
 }

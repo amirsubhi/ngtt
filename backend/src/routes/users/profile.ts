@@ -3,6 +3,10 @@ import { query, queryOne } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { NotFoundError } from '../../lib/errors';
 
+interface WarningRow {
+  id: number; reason: string; type: string; created_at: string; expires_at: string | null;
+}
+
 interface PublicProfile {
   id: number;
   username: string;
@@ -25,6 +29,14 @@ export async function profileRoutes(app: FastifyInstance): Promise<void> {
     );
     if (!user) throw new NotFoundError('User not found');
     return reply.send(user);
+  });
+
+  app.get('/api/users/me/warnings', { preHandler: [authenticate] }, async (req, reply) => {
+    const warnings = await query<WarningRow>(
+      'SELECT id, reason, type, created_at, expires_at FROM user_warnings WHERE user_id = ? ORDER BY created_at DESC LIMIT 20',
+      [req.user.id],
+    );
+    return reply.send({ warnings });
   });
 
   app.get('/api/users/:username', { preHandler: [authenticate] }, async (req, reply) => {

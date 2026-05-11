@@ -9,6 +9,7 @@
     "upload": "上传",
     "requests": "请求",
     "bonus": "积分",
+    "stats": "统计",
     "settings": "设置",
     "messages": "消息",
     "notifications": "通知",
@@ -18,7 +19,9 @@
     "register": "注册",
     "logout": "退出",
     "theme_toggle": "切换主题",
-    "language": "语言"
+    "language": "语言",
+    "admin_panel": "管理面板",
+    "staff_panel": "员工面板"
   },
   "auth": {
     "login": {
@@ -306,7 +309,21 @@
     "unban": "解封",
     "warn": "警告",
     "pardon": "赦免",
-    "search_users": "搜索用户…"
+    "search_users": "搜索用户…",
+    "nav": {
+      "group_overview": "概览",
+      "group_queues": "队列",
+      "group_users": "用户",
+      "group_enforcement": "执法",
+      "dashboard": "仪表板",
+      "torrents": "种子队列",
+      "reports": "举报",
+      "dmca": "DMCA",
+      "helpdesk": "帮助台",
+      "users": "用户管理",
+      "hnr": "H&R 追踪",
+      "logs": "审计日志"
+    }
   },
   "common": {
     "loading": "加载中…",
@@ -328,5 +345,21 @@
     "connecting": "连接中…",
     "banned": "您已被禁止使用聊天框。",
     "empty": "暂无消息。"
+  },
+  "admin": {
+    "nav": {
+      "group_site": "站点",
+      "group_security": "安全",
+      "group_system": "系统",
+      "settings": "设置",
+      "categories": "分类",
+      "pages": "页面",
+      "flux_store": "Flux 商店",
+      "ip_bans": "IP 封禁",
+      "clients": "封禁客户端",
+      "backup": "备份",
+      "update": "更新",
+      "events": "活动"
+    }
   }
 }

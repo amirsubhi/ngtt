@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { api } from '@/lib/api';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 interface Post {
   id: number;
@@ -74,10 +75,12 @@ export default function ForumTopicPage({ params }: { params: { category: string;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
-      <div>
-        <Link href={`/${locale}/forum/${category}`} className="text-sm opacity-50 hover:opacity-70">{t('back')}</Link>
-        {topicData && <h1 className="text-xl font-bold mt-1">{topicData.title}</h1>}
-      </div>
+      <Breadcrumb crumbs={[
+        { label: 'Forum', href: '/forum' },
+        { label: category, href: `/forum/${category}` },
+        ...(topicData ? [{ label: topicData.title }] : []),
+      ]} />
+      {topicData && <h1 className="text-xl font-bold">{topicData.title}</h1>}
 
       <div className="space-y-4">
         {posts.map(post => (

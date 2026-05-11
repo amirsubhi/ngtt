@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 interface ProfileData {
   id: number;
@@ -41,6 +42,14 @@ interface HnrRow {
   status: 'active' | 'resolved' | 'pardoned' | 'expired';
 }
 
+interface WarningRow {
+  id: number;
+  reason: string;
+  warned_by_username: string;
+  created_at: string;
+  expires_at: string | null;
+}
+
 function formatBytes(bytes: number): string {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -57,6 +66,7 @@ export default function UserProfilePage({ params }: { params: { username: string
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [hnrList, setHnrList] = useState<HnrRow[]>([]);
+  const [warnings, setWarnings] = useState<WarningRow[]>([]);
   const [tab, setTab] = useState<Tab>('uploads');
   const [error, setError] = useState('');
   const [isSelf, setIsSelf] = useState(false);
@@ -88,6 +98,9 @@ export default function UserProfilePage({ params }: { params: { username: string
         api.get<{ hnr: HnrRow[] }>('/api/users/me/hnr', token)
           .then(d => setHnrList(d.hnr))
           .catch(() => {});
+        api.get<{ warnings: WarningRow[] }>('/api/users/me/warnings', token)
+          .then(d => setWarnings(d.warnings))
+          .catch(() => {});
       }
     } catch { /* non-standard token */ }
   }, [profile, params.username]);
@@ -115,6 +128,7 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
+      <Breadcrumb crumbs={[{ label: 'Members', href: '/members' }, { label: profile.username }]} />
       {/* Header */}
       <div className="flex gap-6 items-start">
         {profile.avatar_url
@@ -205,6 +219,22 @@ export default function UserProfilePage({ params }: { params: { username: string
             </div>
           ))}
           {hnrList.length === 0 && <p className="opacity-40 text-sm">{t('hnr_empty')}</p>}
+        </div>
+      )}
+
+      {/* Warnings — only visible to self */}
+      {isSelf && warnings.length > 0 && (
+        <div className="mt-6 space-y-2">
+          <h3 className="text-sm font-semibold text-red-400">Active Warnings</h3>
+          {warnings.map(w => (
+            <div key={w.id} className="rounded border border-red-500/20 bg-red-500/5 px-4 py-3 space-y-1">
+              <p className="text-sm">{w.reason}</p>
+              <p className="text-xs opacity-50">
+                by {w.warned_by_username} · {new Date(w.created_at).toLocaleDateString()}
+                {w.expires_at && ` · expires ${new Date(w.expires_at).toLocaleDateString()}`}
+              </p>
+            </div>
+          ))}
         </div>
       )}
     </div>

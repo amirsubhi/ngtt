@@ -4,7 +4,7 @@ import { withTransaction, queryOne } from '../../lib/db';
 import { AppError } from '../../lib/errors';
 import { ResultSetHeader } from 'mysql2';
 
-const ITEM_TYPES = ['invite_token', 'freeleech_token', 'upload_credit', 'username_change'] as const;
+const ITEM_TYPES = ['invite_token', 'freeleech_token', 'upload_credit', 'username_change', 'clean_hnr'] as const;
 type ItemType = (typeof ITEM_TYPES)[number];
 
 interface StoreItem {
@@ -63,6 +63,17 @@ export const fluxPurchaseRoutes: FastifyPluginAsync = async app => {
           case 'username_change':
             await conn.execute('UPDATE users SET username_change_credits = username_change_credits + 1 WHERE id = ?', [userId]);
             break;
+          case 'clean_hnr': {
+            const toClean = item.value > 0 ? item.value : 1;
+            await conn.execute(
+              `UPDATE hit_and_runs SET status = 'pardoned'
+               WHERE user_id = ? AND status = 'active'
+               ORDER BY created_at ASC
+               LIMIT ${toClean}`,
+              [userId],
+            );
+            break;
+          }
         }
 
         const [[balRow]] = await conn.execute<any[]>(

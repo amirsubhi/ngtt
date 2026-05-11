@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 interface TorrentFile { path: string; size: number }
 interface Screenshot { id: number; url: string }
@@ -329,6 +330,11 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
+      <Breadcrumb crumbs={[
+        { label: 'Browse', href: '/browse' },
+        { label: torrent.category_name },
+        { label: torrent.name },
+      ]} />
       {/* Header */}
       <div className="flex gap-6">
         {torrent.poster_url && (
