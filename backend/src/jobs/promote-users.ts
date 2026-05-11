@@ -50,6 +50,11 @@ export async function promoteUsers(): Promise<void> {
         title: 'Congratulations! You have been promoted to Power User.',
         url: '/settings',
       });
+      void jobsQueue.add('send-email', {
+        to_user_id: user.id,
+        template: 'promotion',
+        vars: { group_name: 'Power User' },
+      });
       promoted++;
       logger.info({ user_id: user.id }, 'User promoted to Power User');
     }

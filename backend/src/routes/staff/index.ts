@@ -78,6 +78,14 @@ export const staffRoutes: FastifyPluginAsync = async app => {
       body: `"${torrent.name}" has been approved.`,
       url: `/torrent/${torrentId}`,
     });
+    void jobsQueue.add('send-email', {
+      to_user_id: torrent.uploader_id,
+      template: 'torrent-approved',
+      vars: {
+        torrent_name: torrent.name,
+        torrent_url: `/torrent/${torrentId}`,
+      },
+    });
     const safeName = torrent.name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     void emitSystemShoutbox(`🎉 New torrent approved: <a href="/torrent/${torrentId}">${safeName}</a>`);
     await audit(req.user.id, 'torrent_approve', 'torrent', torrentId);
@@ -162,7 +170,7 @@ export const staffRoutes: FastifyPluginAsync = async app => {
       [userId, req.user.id, parsed.data.reason, parsed.data.type, parsed.data.expires_at ?? null],
     );
     void jobsQueue.add('send-notif', { user_id: userId, title: 'Warning Issued', body: parsed.data.reason, url: '/support' });
-    void jobsQueue.add('send-email', { to_user_id: userId, subject: 'NGTT Warning', body: parsed.data.reason });
+    void jobsQueue.add('send-email', { to_user_id: userId, template: 'staff-warning', vars: { reason: parsed.data.reason } });
     await audit(req.user.id, 'user_warn', 'user', userId, { type: parsed.data.type, reason: parsed.data.reason });
     return reply.send({ ok: true });
   });

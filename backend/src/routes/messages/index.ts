@@ -91,6 +91,20 @@ export const messagesRoutes: FastifyPluginAsync = async app => {
       url: `/messages/${msgId}`,
     });
 
+    // Email notification — only if receiver opted in
+    const prefs = await queryOne<{ email_pm_received: boolean }>(
+      'SELECT email_pm_received FROM user_preferences WHERE user_id = ? LIMIT 1',
+      [receiver.id],
+    );
+    if (prefs?.email_pm_received) {
+      const preview = body.length > 120 ? `${body.slice(0, 120)}…` : body;
+      void jobsQueue.add('send-email', {
+        to_user_id: receiver.id,
+        template: 'pm-notification',
+        vars: { sender_username: req.user.username, preview },
+      });
+    }
+
     // Real-time PM alert if receiver is connected
     try {
       getIo().of('/ws').to(`user:${receiver.id}`).emit('pm-alert', {

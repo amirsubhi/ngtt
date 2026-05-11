@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import crypto from 'crypto';
 import { query, queryOne, execute, executeInsert, executeAffected } from '../lib/db';
-import { sendMail } from '../lib/mail';
+import { jobsQueue } from '../lib/queues';
 import { authenticate } from '../middleware/auth';
 import { ValidationError, AppError, ForbiddenError } from '../lib/errors';
 import { config } from '../lib/config';
@@ -71,12 +71,15 @@ export async function inviteRoutes(app: FastifyInstance): Promise<void> {
     );
     if (affected === 0) throw new ForbiddenError('No invite tokens remaining');
 
-    await sendMail(
-      email,
-      `${sender.username} invited you to NGTT`,
-      `<p>You've been invited to join NGTT by ${sender.username}.</p>
-       <p>Click <a href="${config.frontendUrl}/register/${token}">here</a> to create your account. This invite expires in 7 days.</p>`,
-    );
+    void jobsQueue.add('send-email', {
+      to: email,
+      template: 'invite',
+      locale: 'en',
+      vars: {
+        sender_username: sender.username,
+        invite_link: `${config.frontendUrl}/register/${token}`,
+      },
+    });
 
     return reply.status(201).send({ id: inviteId, token });
   });
