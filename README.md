@@ -30,10 +30,15 @@ NGTT sits in the space between classic XBTIT-style simplicity and the modern pol
 - **Announce & Scrape** — Redis-first peer storage (`HSET` per torrent), O(1) lookups, async stat writes via BullMQ — the response path never waits
 - **Ratio Enforcement** — Upload/download tracking with per-group grace periods and download slot limits
 - **Hit & Run System** — Seeding time tracking, automated warnings, escalating bans
-- **RSS & Torznab Feeds** — Full compatibility with the *arr ecosystem
+- **RSS & Torznab Feeds** — Full compatibility with the *arr ecosystem (autobrr, Prowlarr)
+- **Key Management** — Users can regenerate their passkey (announce URL), API/Torznab key, and RSS key from Settings at any time; passkey regeneration immediately invalidates the old announce URL
+- **Site Statistics** — Dedicated `/stats` page: site totals, top uploaders, top ratio holders, most-snatched torrents
 
 ### Economy
-- **Flux (FLX)** — Bonus currency earned through seeding time and quality uploads. Atomic SQL balance updates (no read-then-write races). Built-in store for spending.
+- **Flux (FLX)** — Bonus currency earned through seeding time and quality uploads. Atomic SQL balance updates (no read-then-write races)
+- **Flux Store** — Admin-configurable items: upload bonus, H&R pardon, invite tokens
+- **Gifting** — Users can send FLX directly to any other user with an optional note
+- **Upload Events** — Admin-scheduled double-upload and global freeleech periods; active state cached in Redis (60s TTL) so the announce path is never blocked by a DB query
 
 ### Community
 - **Real-time Shoutbox** — Socket.io with Redis adapter; broadcasts correctly across all PM2 cluster workers
@@ -75,6 +80,8 @@ Seven CSS-variable themes, user-selectable without a page reload:
 - Warning system, ban management, full audit log
 - Feature flags — enable or disable entire sections site-wide with no redeploy
 - Automatic promotion rules (class upgrades based on ratio, upload, and age)
+- Admin sidebar with full navigation: Site · Security · System sections
+- Upload Events manager — schedule double-upload or freeleech windows with start/end times
 
 ---
 
@@ -273,7 +280,10 @@ ngtt/
 │   └── migrations/            # Numbered SQL files, applied by npm run migrate
 ├── frontend/
 │   ├── app/[locale]/          # Next.js App Router pages (all under locale segment)
-│   ├── components/            # Shared UI components
+│   │   ├── admin/             # Admin panel (sidebar layout + settings/events/backup/…)
+│   │   ├── staff/             # Staff panel (sidebar layout + queues/users/enforcement)
+│   │   └── stats/             # Public site statistics page
+│   ├── components/            # Shared UI: Navbar · Breadcrumb · Skeleton · EmptyState · …
 │   ├── messages/              # i18n JSON  (en · zh-CN · es · pt-BR · ar · ms-MY)
 │   └── styles/                # Global CSS + 7 theme definitions
 ├── shared/

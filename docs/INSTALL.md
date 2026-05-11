@@ -187,9 +187,12 @@ After the first deploy, complete these steps in order:
 - [ ] Visit `https://ngtt.com/api/health` — expect `{"status":"ok"}`
 - [ ] Log in with the admin account created during installation
 - [ ] Open **Admin → Site Settings** — configure site name, invite-only mode, announce interval
+- [ ] Open **Admin → Flux Store** — add at least one purchasable item (upload bonus, H&R pardon, invite)
+- [ ] Open **Admin → Events** — optionally schedule a welcome double-upload event
 - [ ] Send a test email from **Admin → Email Test**
 - [ ] Upload one test torrent and verify announce works with a real torrent client
 - [ ] Confirm `/var/log/ngtt/` logs are being written by PM2 and cron
+- [ ] Confirm `/stats` page loads and shows site totals
 
 ---
 
