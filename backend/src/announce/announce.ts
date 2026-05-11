@@ -7,7 +7,7 @@ import { logger } from '../lib/logger';
 import { config } from '../lib/config';
 import { announceRateLimit } from '../middleware/rateLimiter';
 import { updatePeer, removePeer, getSwarmData } from './peers';
-import { compactPeers } from './bencode-compact';
+import { compactPeers, compactPeers6 } from './bencode-compact';
 
 const USER_CACHE_TTL = 300; // 5 min — ban endpoint deletes this key immediately on ban
 const TORRENT_CACHE_TTL = 60; // 1 min — invalidate on edit/takedown
@@ -100,10 +100,11 @@ async function isClientBanned(peerIdPrefix: string): Promise<boolean> {
 }
 
 async function isPersonalFreeleech(userId: number, torrentId: number): Promise<boolean> {
+  // `used` column is never set to TRUE — freeleech is unlimited within the 24-hour window
   const row = await queryOne<{ id: number }>(
     `SELECT id FROM personal_freeleech
      WHERE user_id = ? AND (torrent_id = ? OR torrent_id IS NULL)
-       AND expires_at > NOW() AND used = FALSE LIMIT 1`,
+       AND expires_at > NOW() LIMIT 1`,
     [userId, torrentId],
   );
   return row !== null;
@@ -264,6 +265,9 @@ export async function announceRoutes(app: FastifyInstance): Promise<void> {
 
       if (compact) {
         response['peers'] = compactPeers(allPeers);
+        // F-3/BEP 7: include peers6 when IPv6 peers exist so IPv6-only clients can connect
+        const p6 = compactPeers6(allPeers);
+        if (p6.length > 0) response['peers6'] = p6;
       } else {
         // F-8: use the actual peer_id reported by the client, not the internal user_id
         response['peers'] = allPeers.map(p => ({

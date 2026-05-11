@@ -57,6 +57,7 @@ export async function scrapeRoutes(app: FastifyInstance): Promise<void> {
       if (hashes.length === 0) return reply.send(failure('no info_hash'));
 
       // Batch torrent lookup + snatch counts — 2 queries total regardless of hash count
+      // Unknown hashes are silently omitted from files{} (downloaded: 0) per BEP 48 spec
       const torrentRows = await query<{ info_hash: string; id: number }>(
         `SELECT info_hash, id FROM torrents WHERE info_hash IN (${hashes.map(() => '?').join(',')})`,
         hashes,

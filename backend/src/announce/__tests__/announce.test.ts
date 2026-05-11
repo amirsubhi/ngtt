@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { compactPeers } from '../bencode-compact';
+import { compactPeers, compactPeers6 } from '../bencode-compact';
 import type { PeerData } from '../peers';
 
 // ---------- bencode-compact ----------
@@ -42,6 +42,36 @@ describe('compactPeers', () => {
 
   it('returns empty buffer for empty input', () => {
     expect(compactPeers([]).length).toBe(0);
+  });
+});
+
+// ---------- compactPeers6 (BEP 7) ----------
+
+describe('compactPeers6', () => {
+  const base: Omit<PeerData, 'ip'> = {
+    port: 6881, uploaded: 0, downloaded: 0, left: 0,
+    seeder: true, user_id: 1, peer_id: '-AZ2060-000000000001', updated_at: Date.now(),
+  };
+
+  it('encodes a single IPv6 peer into 18 bytes', () => {
+    const buf = compactPeers6([{ ...base, ip: '2001:db8::1' }]);
+    expect(buf.length).toBe(18);
+    expect(buf.readUInt16BE(16)).toBe(6881);
+  });
+
+  it('encodes :: (all-zeros) correctly', () => {
+    const buf = compactPeers6([{ ...base, ip: '::' }]);
+    expect(buf.length).toBe(18);
+    expect(buf.subarray(0, 16).every(b => b === 0)).toBe(true);
+  });
+
+  it('skips IPv4 peers', () => {
+    const buf = compactPeers6([{ ...base, ip: '1.2.3.4' }, { ...base, ip: '2001:db8::1' }]);
+    expect(buf.length).toBe(18); // only IPv6 peer
+  });
+
+  it('returns empty buffer for empty input', () => {
+    expect(compactPeers6([]).length).toBe(0);
   });
 });
 
