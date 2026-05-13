@@ -114,7 +114,7 @@ async function getSiteSetting(key: string): Promise<string | null> {
   const cacheKey = `site_setting:${key}`;
   const cached = await redis.get(cacheKey);
   if (cached) return cached;
-  const row = await queryOne<{ value: string }>('SELECT value FROM site_settings WHERE key = ? LIMIT 1', [key]);
+  const row = await queryOne<{ value: string }>('SELECT value FROM site_settings WHERE `key` = ? LIMIT 1', [key]);
   if (row) {
     await redis.setex(cacheKey, 60, row.value);
     return row.value;

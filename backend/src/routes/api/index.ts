@@ -303,8 +303,9 @@ ${items.join('\n')}
   app.get('/api/v1/user/me', async (req, reply) => {
     const user = await resolveV1User(req);
     const row = await queryOne(
-      `SELECT u.id, u.username, u.uploaded, u.downloaded, u.ratio, u.created_at, u.last_seen_at,
-              g.name AS group_name
+      `SELECT u.id, u.username, u.uploaded, u.downloaded,
+              CASE WHEN u.downloaded = 0 THEN NULL ELSE ROUND(u.uploaded / u.downloaded, 3) END AS ratio,
+              u.created_at, u.last_seen_at, g.name AS group_name
        FROM users u JOIN user_groups g ON g.id=u.group_id WHERE u.id = ?`, [user.id],
     );
     return reply.send(row);

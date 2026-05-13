@@ -47,7 +47,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
       name: z.string().min(1).max(100),
       description: z.string().max(1000).optional(),
       cost: z.number().positive(),
-      type: z.enum(['invite_token', 'freeleech_token', 'upload_credit', 'username_change', 'clean_hnr']),
+      type: z.enum(['invite_token', 'freeleech_token', 'upload_credit', 'username_change']),
       value: z.number().int().nonnegative().default(1),
       display_order: z.number().int().default(0),
     }).safeParse(req.body);
