@@ -15,16 +15,18 @@ cd "$APP"
 # Pull latest code
 git pull --ff-only origin main
 
-# Backend — install (prod only), build, migrate
+# Backend — install all deps (devDeps needed for tsc), build, migrate, then prune
 cd "$APP/backend"
-npm ci --omit=dev
+npm ci
 npm run build
 npm run migrate
+npm prune --omit=dev
 
-# Frontend — install (prod only), build
+# Frontend — install all deps (devDeps needed for next build), build, then prune
 cd "$APP/frontend"
-npm ci --omit=dev
+npm ci
 npm run build
+npm prune --omit=dev
 
 # Zero-downtime reload
 cd "$APP"
