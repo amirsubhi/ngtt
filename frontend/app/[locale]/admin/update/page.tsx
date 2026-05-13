@@ -34,6 +34,7 @@ function authHeaders() {
 
 export default function AdminUpdatePage() {
   const [info, setInfo]         = useState<UpdateStatus | null>(null);
+  const [loadError, setLoadError] = useState('');
   const [progress, setProgress] = useState<Progress | null>(null);
   const [applying, setApplying] = useState(false);
   const [error, setError]       = useState('');
@@ -43,9 +44,15 @@ export default function AdminUpdatePage() {
   const fetchStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/update/status', { headers: authHeaders() });
-      if (!res.ok) return;
+      if (!res.ok) {
+        setLoadError(`API error ${res.status}: ${res.statusText}`);
+        return;
+      }
+      setLoadError('');
       setInfo(await res.json() as UpdateStatus);
-    } catch { /* network error — leave existing state */ }
+    } catch (err) {
+      setLoadError(`Network error: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }, []);
 
   const fetchProgress = useCallback(async () => {
@@ -127,7 +134,10 @@ export default function AdminUpdatePage() {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-2xl font-bold mb-6">System Update</h1>
-        <p className="opacity-50 text-sm">Loading...</p>
+        {loadError
+          ? <p className="text-sm text-red-500">{loadError}</p>
+          : <p className="opacity-50 text-sm">Loading...</p>
+        }
       </div>
     );
   }
