@@ -119,8 +119,8 @@ export const subtitleRoutes: FastifyPluginAsync = async app => {
               [fluxReward, req.user.id],
             );
             await conn.execute(
-              "INSERT INTO flux_transactions (user_id, amount, source, reference_id) VALUES (?, ?, 'subtitle_upload', ?)",
-              [req.user.id, fluxReward, subtitleId],
+              "INSERT INTO flux_transactions (user_id, amount, type, source, description) VALUES (?, ?, 'earn', 'subtitle_upload', ?)",
+              [req.user.id, fluxReward, `Subtitle upload reward #${subtitleId}`],
             );
           }
         }
@@ -363,8 +363,8 @@ export const subtitleRoutes: FastifyPluginAsync = async app => {
           // Award 5 FLX per synced subtitle
           await conn.execute('UPDATE users SET flux = flux + 5 WHERE id = ?', [req.user.id]);
           await conn.execute(
-            "INSERT INTO flux_transactions (user_id, amount, source, reference_id) VALUES (?, 5, 'os_sync', ?)",
-            [req.user.id, newSubId],
+            "INSERT INTO flux_transactions (user_id, amount, type, source, description) VALUES (?, 5, 'earn', 'os_sync', ?)",
+            [req.user.id, `OpenSubtitles sync #${newSubId}`],
           );
         });
         syncedCount++;

@@ -107,8 +107,8 @@ export const requestRoutes: FastifyPluginAsync = async app => {
           [req.user.id, title, description ?? null, category_id ?? null, bounty_flux],
         );
         await conn.execute(
-          "INSERT INTO flux_transactions (user_id, amount, source, reference_id) VALUES (?, ?, 'request_bounty', ?)",
-          [req.user.id, -bounty_flux, ins.insertId],
+          "INSERT INTO flux_transactions (user_id, amount, type, source, description) VALUES (?, ?, 'spend', 'request_bounty', ?)",
+          [req.user.id, -bounty_flux, `Bounty for request #${ins.insertId}`],
         );
       });
     } else {
@@ -171,8 +171,8 @@ export const requestRoutes: FastifyPluginAsync = async app => {
               [request.bounty_flux, req.user.id],
             );
             await conn.execute(
-              "INSERT INTO flux_transactions (user_id, amount, source, reference_id) VALUES (?,?,'request_filled',?)",
-              [req.user.id, request.bounty_flux, requestId],
+              "INSERT INTO flux_transactions (user_id, amount, type, source, description) VALUES (?,?,'earn','request_filled',?)",
+              [req.user.id, request.bounty_flux, `Bounty from request #${requestId}`],
             );
           }
         }
