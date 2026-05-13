@@ -19,6 +19,7 @@ export function Footer({ text }: Props) {
         ))}
       </div>
       {text.trim() && <p>{text}</p>}
+      <p>Powered by NGTT</p>
     </footer>
   );
 }
