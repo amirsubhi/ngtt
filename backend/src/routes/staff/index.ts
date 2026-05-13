@@ -145,7 +145,7 @@ export const staffRoutes: FastifyPluginAsync = async app => {
     const userId = parseInt(req.params.id, 10);
     const user = await queryOne(
       `SELECT u.id, u.username, u.email, u.is_banned, u.ban_reason, u.uploaded, u.downloaded,
-              CASE WHEN u.downloaded = 0 THEN NULL ELSE ROUND(u.uploaded / u.downloaded, 3) END AS ratio,
+              CASE WHEN u.downloaded = 0 THEN NULL ELSE CAST(ROUND(u.uploaded / u.downloaded, 3) AS DOUBLE) END AS ratio,
               u.created_at, u.last_seen_at, g.name AS group_name, g.color AS group_color, g.id AS group_id
        FROM users u JOIN user_groups g ON g.id=u.group_id WHERE u.id=?`, [userId],
     );

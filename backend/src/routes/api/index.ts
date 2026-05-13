@@ -304,7 +304,7 @@ ${items.join('\n')}
     const user = await resolveV1User(req);
     const row = await queryOne(
       `SELECT u.id, u.username, u.uploaded, u.downloaded,
-              CASE WHEN u.downloaded = 0 THEN NULL ELSE ROUND(u.uploaded / u.downloaded, 3) END AS ratio,
+              CASE WHEN u.downloaded = 0 THEN NULL ELSE CAST(ROUND(u.uploaded / u.downloaded, 3) AS DOUBLE) END AS ratio,
               u.created_at, u.last_seen_at, g.name AS group_name
        FROM users u JOIN user_groups g ON g.id=u.group_id WHERE u.id = ?`, [user.id],
     );
