@@ -76,7 +76,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   async function switchLocale(newLocale: string) {
     setShowLang(false);
     const token = localStorage.getItem('access_token') ?? '';
-    if (token) api.post('/api/users/me/settings', { locale: newLocale }, token).catch(() => {});
+    if (token) api.put('/api/users/me/settings', { locale: newLocale }, token).catch(() => {});
     const hasPrefix = NON_DEFAULT_LOCALES.some(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`);
     const stripped = hasPrefix ? pathname.replace(/^\/[^/]+/, '') || '/' : pathname;
     const newPath = newLocale === 'en' ? stripped : `/${newLocale}${stripped === '/' ? '' : stripped}`;
@@ -87,7 +87,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     setTheme(next);
     setShowTheme(false);
     const token = localStorage.getItem('access_token') ?? '';
-    if (token) api.post('/api/users/me/settings', { theme: next }, token).catch(() => {});
+    if (token) api.put('/api/users/me/settings', { theme: next }, token).catch(() => {});
   }
 
   const isStaff = user && ['staff', 'admin', 'moderator'].includes(user.group_slug);

@@ -95,7 +95,7 @@ export default function SettingsPage() {
     if (!token) return;
     if (partial.theme) setTheme(partial.theme);
     try {
-      await api.post('/api/users/me/settings', partial, token);
+      await api.put('/api/users/me/settings', partial, token);
       setSettings(prev => ({ ...prev, ...partial }));
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);

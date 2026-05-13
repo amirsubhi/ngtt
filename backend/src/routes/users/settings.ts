@@ -4,7 +4,7 @@ import { queryOne, execute } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { ValidationError } from '../../lib/errors';
 
-const VALID_THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand'] as const;
+const VALID_THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand', 'cobalt'] as const;
 const VALID_LOCALES = ['en', 'zh-CN', 'es', 'pt-BR', 'ar', 'ms-MY'] as const;
 
 const SettingsSchema = z.object({
