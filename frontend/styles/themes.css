@@ -117,3 +117,20 @@
   --danger: #b91c1c;
   --warning: #b45309;
 }
+
+/* Cobalt — deep navy + electric blue, inspired by CID WMS palette */
+[data-theme="cobalt"] {
+  --bg-base:     #06013A;
+  --bg-surface:  #0c0760;
+  --bg-elevated: #130e82;
+  --accent:      #1800E7;
+  --accent-hover:#1400bf;
+  --text-primary:#e8edff;
+  --text-muted:  #8892B0;
+  --text-subtle: #2e3470;
+  --border:      #1c1870;
+  --border-focus:#1800E7;
+  --success:     #00C48C;
+  --danger:      #E03131;
+  --warning:     #FF7A00;
+}

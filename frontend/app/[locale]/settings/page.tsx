@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { api, ApiError } from '@/lib/api';
 
-const THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand'] as const;
+const THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand', 'cobalt'] as const;
 const LOCALES = [
   { value: 'en', label: 'English' },
   { value: 'zh-CN', label: '中文' },
