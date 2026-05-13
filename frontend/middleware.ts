@@ -5,7 +5,7 @@ import { routing } from './i18n/routing';
 const intlMiddleware = createMiddleware(routing);
 
 const NON_DEFAULT_LOCALES = ['ms-MY', 'zh-CN', 'es', 'pt-BR', 'ar'];
-const PUBLIC_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/p', '/verify-email'];
 
 function stripLocale(pathname: string): string {
   for (const locale of NON_DEFAULT_LOCALES) {
