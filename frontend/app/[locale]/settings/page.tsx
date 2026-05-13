@@ -7,6 +7,18 @@ import { useTheme } from 'next-themes';
 import { api, ApiError } from '@/lib/api';
 
 const THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand', 'cobalt'] as const;
+type Theme = typeof THEMES[number];
+
+const SWATCHES: Record<Theme, { bg: string; accent: string }> = {
+  void:   { bg: '#111111', accent: '#3b82f6' },
+  pulse:  { bg: '#181818', accent: '#06b6d4' },
+  cipher: { bg: '#161b22', accent: '#10b981' },
+  nebula: { bg: '#13131f', accent: '#8b5cf6' },
+  ember:  { bg: '#1a1710', accent: '#f97316' },
+  lumen:  { bg: '#f8fafc', accent: '#6366f1' },
+  sand:   { bg: '#f3f0e8', accent: '#d97706' },
+  cobalt: { bg: '#0c0760', accent: '#1800E7' },
+};
 const LOCALES = [
   { value: 'en', label: 'English' },
   { value: 'zh-CN', label: '中文' },
@@ -174,13 +186,28 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <div className="space-y-2">
             <label className="block text-sm font-medium">{t('theme')}</label>
-            <div className="flex flex-wrap gap-2">
-              {THEMES.map(th => (
-                <button key={th} onClick={() => save({ theme: th })}
-                  className={`px-4 py-2 rounded border text-sm capitalize transition-colors ${(theme ?? settings.theme) === th ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-current/20 hover:border-current/40'}`}>
-                  {th}
-                </button>
-              ))}
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              {THEMES.map(th => {
+                const s = SWATCHES[th];
+                const active = (theme ?? settings.theme) === th;
+                return (
+                  <button
+                    key={th}
+                    onClick={() => save({ theme: th })}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-colors hover:border-current/40"
+                    style={{ borderColor: active ? s.accent : 'rgba(128,128,128,0.2)', background: active ? `${s.accent}18` : 'transparent' }}
+                  >
+                    <span
+                      className="w-10 h-10 rounded-md overflow-hidden flex"
+                      style={{ outline: active ? `2px solid ${s.accent}` : 'none', outlineOffset: '2px' }}
+                    >
+                      <span className="w-1/2 h-full" style={{ background: s.bg }} />
+                      <span className="w-1/2 h-full" style={{ background: s.accent }} />
+                    </span>
+                    <span className="text-xs capitalize opacity-70 leading-none">{th}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="space-y-2">
