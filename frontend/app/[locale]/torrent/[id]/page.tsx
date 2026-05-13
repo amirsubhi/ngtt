@@ -341,7 +341,7 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
           <img src={torrent.poster_url} alt={torrent.name} className="w-36 rounded object-cover flex-shrink-0" />
         )}
         <div className="flex-1 space-y-2">
-          <h1 className="text-2xl font-bold">{torrent.name}</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{torrent.name}</h1>
           <div className="flex flex-wrap gap-4 text-sm opacity-60">
             <span>{t('uploader')}: <Link href={`/user/${torrent.uploader_username}`} className="hover:underline">{torrent.uploader_username}</Link></span>
             <span>{t('added')}: {new Date(torrent.created_at).toLocaleDateString()}</span>

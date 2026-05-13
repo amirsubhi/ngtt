@@ -23,7 +23,7 @@ export default async function VerifyEmailPage({ params }: Props) {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm text-center space-y-4">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <p className={ok ? 'text-green-500' : 'text-red-500'}>
           {ok ? t('success') : t('error')}
         </p>

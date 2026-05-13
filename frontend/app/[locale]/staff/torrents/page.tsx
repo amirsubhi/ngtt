@@ -49,7 +49,7 @@ export default function StaffTorrentsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-4">
-      <h1 className="text-2xl font-bold">Torrent Approval Queue</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Torrent Approval Queue</h1>
       {torrents.length === 0 && <p className="opacity-40 text-sm">No pending torrents.</p>}
       <div className="space-y-2">
         {torrents.map(t => (

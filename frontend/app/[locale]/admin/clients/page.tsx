@@ -27,10 +27,10 @@ export default function AdminClientsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Banned Clients</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Banned Clients</h1>
 
       <div className="border border-current/10 rounded p-4 space-y-3 text-sm">
-        <h2 className="font-semibold">Add Client</h2>
+        <h2 className="text-lg font-semibold">Add Client</h2>
         <div className="flex flex-wrap gap-2">
           <input placeholder="Peer ID prefix (8 chars)" maxLength={8} value={form.peer_id_prefix}
             onChange={e => setForm(f => ({...f, peer_id_prefix: e.target.value}))}

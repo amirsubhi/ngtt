@@ -167,7 +167,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-6">{t('title')}</h1>
 
       {/* Tab bar */}
       <div className="border-b border-current/10 flex flex-wrap gap-1 mb-6">

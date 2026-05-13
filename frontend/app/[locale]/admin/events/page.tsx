@@ -86,7 +86,7 @@ export default function AdminEventsPage() {
 
       {/* Create form */}
       <div className="rounded-lg border border-current/10 p-6 space-y-4">
-        <h2 className="font-semibold">Create Event</h2>
+        <h2 className="text-lg font-semibold">Create Event</h2>
         <form onSubmit={handleCreate} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">

@@ -57,7 +57,7 @@ export default function StaffUsersPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-4">
-      <h1 className="text-2xl font-bold">User Management</h1>
+      <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
       <div className="flex gap-2">
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()}
           placeholder="Search username or email…"

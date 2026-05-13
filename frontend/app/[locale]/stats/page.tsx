@@ -36,11 +36,11 @@ export default function StatsPage() {
   }, [router]);
 
   const cardCls = 'rounded-lg border border-current/10 p-4';
-  const thCls = 'text-left text-xs font-semibold uppercase tracking-wide pb-2 opacity-50';
+  const thCls = 'text-left text-xs font-semibold uppercase tracking-widest pb-2 opacity-60';
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-5xl space-y-8">
-      <h1 className="text-2xl font-bold">Site Statistics</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Site Statistics</h1>
 
       {/* Totals */}
       <div className="grid grid-cols-3 gap-4">
@@ -52,15 +52,15 @@ export default function StatsPage() {
         )) : stats ? (
           <>
             <div className={cardCls + ' text-center'}>
-              <p className="text-xs opacity-50 uppercase tracking-wide mb-1">Torrents</p>
+              <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Torrents</p>
               <p className="text-3xl font-bold">{stats.totals.total_torrents.toLocaleString()}</p>
             </div>
             <div className={cardCls + ' text-center'}>
-              <p className="text-xs opacity-50 uppercase tracking-wide mb-1">Members</p>
+              <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Members</p>
               <p className="text-3xl font-bold">{stats.totals.total_users.toLocaleString()}</p>
             </div>
             <div className={cardCls + ' text-center'}>
-              <p className="text-xs opacity-50 uppercase tracking-wide mb-1">Total Size</p>
+              <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Total Size</p>
               <p className="text-3xl font-bold">{formatBytes(Number(stats.totals.total_size))}</p>
             </div>
           </>
@@ -70,7 +70,7 @@ export default function StatsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Uploaders */}
         <div className={cardCls}>
-          <h2 className="font-semibold mb-4">Top Uploaders</h2>
+          <h2 className="text-lg font-semibold mb-4">Top Uploaders</h2>
           {loading ? <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} height="h-4" />)}</div>
             : !stats?.topUploaders.length ? <EmptyState icon="📤" title="No data yet" />
             : (
@@ -97,7 +97,7 @@ export default function StatsPage() {
 
         {/* Top Ratio Holders */}
         <div className={cardCls}>
-          <h2 className="font-semibold mb-4">Top Ratio</h2>
+          <h2 className="text-lg font-semibold mb-4">Top Ratio</h2>
           {loading ? <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} height="h-4" />)}</div>
             : !stats?.topRatio.length ? <EmptyState icon="⚖️" title="No data yet" />
             : (
@@ -128,7 +128,7 @@ export default function StatsPage() {
 
       {/* Most Snatched */}
       <div className={cardCls}>
-        <h2 className="font-semibold mb-4">Most Snatched Torrents</h2>
+        <h2 className="text-lg font-semibold mb-4">Most Snatched Torrents</h2>
         {loading ? <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} height="h-4" />)}</div>
           : !stats?.topSnatched.length ? <EmptyState icon="🔽" title="No downloads yet" />
           : (

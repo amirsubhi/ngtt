@@ -32,7 +32,7 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">{page.title}</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-6">{page.title}</h1>
       <div className="prose prose-invert max-w-none text-sm leading-relaxed whitespace-pre-wrap opacity-90">
         {page.body}
       </div>

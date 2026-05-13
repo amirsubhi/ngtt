@@ -51,7 +51,7 @@ export default function RequestsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Torrent Requests</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Torrent Requests</h1>
         <Link href="/requests/new"
           className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-white hover:opacity-90">
           + New Request

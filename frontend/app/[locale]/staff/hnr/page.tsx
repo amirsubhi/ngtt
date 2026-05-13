@@ -31,7 +31,7 @@ export default function StaffHnrPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-4">
       <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">H&R Management</h1>
+        <h1 className="text-3xl font-bold tracking-tight">H&R Management</h1>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="border border-current/20 rounded bg-transparent px-2 py-1 text-sm">
           {['active','expired','resolved','pardoned'].map(s => <option key={s} value={s}>{s}</option>)}

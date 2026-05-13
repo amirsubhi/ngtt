@@ -189,7 +189,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Latest uploads */}
           <div className="lg:col-span-2 space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">Latest Uploads</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Latest Uploads</h2>
             <div className="rounded border border-current/10 divide-y divide-current/5 overflow-hidden"
               style={{ backgroundColor: 'var(--bg-surface)' }}>
               {data && data.newest_torrents.length === 0 && (
@@ -231,7 +231,7 @@ export default function HomePage() {
 
           {/* News */}
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">News</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">News</h2>
             <div className="space-y-3">
               {data && data.news.length === 0 && (
                 <p className="text-sm opacity-40">No news yet.</p>

@@ -32,10 +32,10 @@ export default function AdminFluxStorePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Flux Store Items</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Flux Store Items</h1>
 
       <div className="border border-current/10 rounded p-4 space-y-3 text-sm">
-        <h2 className="font-semibold">Add Item</h2>
+        <h2 className="text-lg font-semibold">Add Item</h2>
         <div className="grid grid-cols-2 gap-2">
           <input placeholder="Name" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
             className="border border-current/20 rounded bg-transparent px-2 py-1 col-span-2" />

@@ -168,11 +168,11 @@ export default function AdminBackupPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-8">
-      <h1 className="text-2xl font-bold">Backup</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Backup</h1>
 
       {/* Component selector */}
       <div className="border border-current/10 rounded p-4 space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">What to back up</h2>
+        <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">What to back up</h2>
         {ALL_COMPONENTS.map(c => (
           <label key={c} className="flex items-center gap-3 cursor-pointer select-none">
             <input
@@ -201,7 +201,7 @@ export default function AdminBackupPage() {
       {(running || progress) && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">Backup Log</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Backup Log</h2>
             {progress?.status === 'running' && (
               <span className="text-xs opacity-50 animate-pulse">● running</span>
             )}
@@ -220,7 +220,7 @@ export default function AdminBackupPage() {
       {/* Existing backups */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">
+          <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">
             Existing Backups
           </h2>
           <button onClick={fetchList} className="text-xs opacity-50 hover:opacity-80 underline">

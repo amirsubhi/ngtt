@@ -46,10 +46,10 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-8">
-      <h1 className="text-2xl font-bold">Admin Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
       {Object.entries(grouped).map(([cat, items]) => (
         <div key={cat} className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">{cat}</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">{cat}</h2>
           <div className="space-y-2">
             {items.map(s => (
               <div key={s.key} className="flex items-center justify-between gap-4 border border-current/10 rounded px-4 py-3">

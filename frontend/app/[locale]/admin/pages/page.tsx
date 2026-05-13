@@ -38,10 +38,10 @@ export default function AdminPagesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">Custom Pages</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Custom Pages</h1>
 
       <div className="border border-current/10 rounded p-4 space-y-3 text-sm">
-        <h2 className="font-semibold">{editing ? 'Edit Page' : 'New Page'}</h2>
+        <h2 className="text-lg font-semibold">{editing ? 'Edit Page' : 'New Page'}</h2>
         <div className="grid grid-cols-2 gap-2">
           <input placeholder="Title" value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))}
             className="border border-current/20 rounded bg-transparent px-2 py-1 col-span-2" />

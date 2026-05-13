@@ -45,7 +45,7 @@ export default function NewRequestPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-xl space-y-6">
-      <h1 className="text-2xl font-bold">New Torrent Request</h1>
+      <h1 className="text-3xl font-bold tracking-tight">New Torrent Request</h1>
 
       <div className="space-y-4">
         <div>

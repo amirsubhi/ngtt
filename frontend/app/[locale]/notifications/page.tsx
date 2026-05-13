@@ -48,7 +48,7 @@ export default function NotificationsPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('title')} {unread > 0 && <span className="text-sm bg-[var(--color-accent)] text-white rounded-full px-2 py-0.5 ml-2">{unread}</span>}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')} {unread > 0 && <span className="text-sm bg-[var(--color-accent)] text-white rounded-full px-2 py-0.5 ml-2">{unread}</span>}</h1>
         {unread > 0 && (
           <button onClick={markAllRead} className="text-sm opacity-60 hover:opacity-90">{t('mark_all_read')}</button>
         )}

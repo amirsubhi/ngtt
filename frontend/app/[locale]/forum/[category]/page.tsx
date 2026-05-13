@@ -62,7 +62,7 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
       <div className="flex items-center justify-between">
         <div>
           <Link href={`/${locale}/forum`} className="text-sm opacity-50 hover:opacity-70">{t('back')}</Link>
-          <h1 className="text-2xl font-bold mt-1">{catName}</h1>
+          <h1 className="text-3xl font-bold tracking-tight mt-1">{catName}</h1>
         </div>
       </div>
 

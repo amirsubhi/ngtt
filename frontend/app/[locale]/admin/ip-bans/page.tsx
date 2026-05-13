@@ -31,10 +31,10 @@ export default function AdminIpBansPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">IP Bans</h1>
+      <h1 className="text-3xl font-bold tracking-tight">IP Bans</h1>
 
       <div className="border border-current/10 rounded p-4 space-y-3 text-sm">
-        <h2 className="font-semibold">Ban IP Address</h2>
+        <h2 className="text-lg font-semibold">Ban IP Address</h2>
         <div className="flex flex-wrap gap-2">
           <input placeholder="IP address" value={form.ip_address} onChange={e => setForm(f => ({...f, ip_address: e.target.value}))}
             className="border border-current/20 rounded bg-transparent px-2 py-1 font-mono w-40" />

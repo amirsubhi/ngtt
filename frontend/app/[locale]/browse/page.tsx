@@ -310,7 +310,7 @@ export default function BrowsePage() {
           </div>
 
           <div>
-            <p className="font-medium mb-2 text-xs uppercase tracking-wide">Resolution</p>
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-60 mb-2">Resolution</p>
             {RESOLUTIONS.map(r => (
               <label key={r} className="flex items-center gap-2 cursor-pointer py-0.5">
                 <input type="checkbox" checked={res.includes(r)} onChange={() => toggleMulti('res', r, res)} className="accent-current" />
@@ -320,7 +320,7 @@ export default function BrowsePage() {
           </div>
 
           <div>
-            <p className="font-medium mb-2 text-xs uppercase tracking-wide">Source</p>
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-60 mb-2">Source</p>
             {SOURCES.map(s => (
               <label key={s} className="flex items-center gap-2 cursor-pointer py-0.5">
                 <input type="checkbox" checked={src.includes(s)} onChange={() => toggleMulti('src', s, src)} className="accent-current" />
@@ -330,7 +330,7 @@ export default function BrowsePage() {
           </div>
 
           <div>
-            <p className="font-medium mb-2 text-xs uppercase tracking-wide">Year</p>
+            <p className="text-xs font-semibold uppercase tracking-widest opacity-60 mb-2">Year</p>
             <div className="flex flex-wrap gap-1">
               {YEARS.map(y => (
                 <button

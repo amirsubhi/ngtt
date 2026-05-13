@@ -133,7 +133,7 @@ export default function AdminUpdatePage() {
   if (!info) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6">System Update</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-6">System Update</h1>
         {loadError
           ? <p className="text-sm text-red-500">{loadError}</p>
           : <p className="opacity-50 text-sm">Loading...</p>
@@ -145,7 +145,7 @@ export default function AdminUpdatePage() {
   if (!info.configured) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-2xl font-bold mb-6">System Update</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-6">System Update</h1>
         <p className="text-sm opacity-70">
           {info.message ?? 'Set GITHUB_REPO=owner/repo in backend/.env to enable in-app updates.'}
         </p>
@@ -158,7 +158,7 @@ export default function AdminUpdatePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold">System Update</h1>
+      <h1 className="text-3xl font-bold tracking-tight">System Update</h1>
 
       <div className="border border-current/10 rounded p-4 space-y-2">
         <div className="flex justify-between text-sm">
@@ -187,7 +187,7 @@ export default function AdminUpdatePage() {
 
       {info.latest?.body && (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">Release Notes</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Release Notes</h2>
           <pre className="text-xs opacity-70 whitespace-pre-wrap border border-current/10 rounded p-4 max-h-48 overflow-y-auto">
             {info.latest.body}
           </pre>
@@ -220,7 +220,7 @@ export default function AdminUpdatePage() {
       {(isRunning || progress) && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wider opacity-50">Update Log</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Update Log</h2>
             {isRunning && progress?.status === 'running' && (
               <span className="text-xs opacity-50 animate-pulse">● running</span>
             )}

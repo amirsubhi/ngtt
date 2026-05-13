@@ -23,7 +23,7 @@ export default function StaffReportsPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl space-y-4">
       <div className="flex items-center gap-4">
-        <h1 className="text-2xl font-bold">Reports</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
         <select value={filter} onChange={e => setFilter(e.target.value)}
           className="border border-current/20 rounded bg-transparent px-2 py-1 text-sm">
           {['pending','resolved','dismissed'].map(s => <option key={s} value={s}>{s}</option>)}

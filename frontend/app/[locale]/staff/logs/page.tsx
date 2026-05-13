@@ -18,7 +18,7 @@ export default function StaffLogsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl space-y-4">
-      <h1 className="text-2xl font-bold">Audit Log</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Audit Log</h1>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>

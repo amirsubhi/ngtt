@@ -106,7 +106,7 @@ export default function BonusPage() {
     <div className="container mx-auto px-4 py-6 max-w-3xl space-y-8">
       {/* Balance */}
       <div className="rounded-lg border border-current/10 p-6 text-center">
-        <p className="text-sm opacity-50 uppercase tracking-wide mb-1">{t('balance')}</p>
+        <p className="text-xs uppercase tracking-widest opacity-60 mb-1">{t('balance')}</p>
         {loadingData ? (
           <div className="flex justify-center mt-2"><Skeleton height="h-10" width="w-40" /></div>
         ) : (

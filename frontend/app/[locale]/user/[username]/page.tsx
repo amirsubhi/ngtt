@@ -112,7 +112,7 @@ export default function UserProfilePage({ params }: { params: { username: string
     return (
       <div className="container mx-auto px-4 py-12 text-center space-y-4">
         {profile.avatar_url && <img src={profile.avatar_url} alt={profile.username} className="w-24 h-24 rounded-full mx-auto object-cover" />}
-        <h1 className="text-2xl font-bold">{profile.username}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{profile.username}</h1>
         <span className="text-sm px-2 py-0.5 rounded" style={{ backgroundColor: `${profile.group_color}20`, color: profile.group_color }}>{profile.group_name}</span>
         <p className="opacity-50 text-sm">{t('private')}</p>
       </div>
@@ -137,7 +137,7 @@ export default function UserProfilePage({ params }: { params: { username: string
         }
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{profile.username}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{profile.username}</h1>
             <span className="text-xs px-2 py-0.5 rounded font-medium" style={{ backgroundColor: `${profile.group_color}20`, color: profile.group_color }}>{profile.group_name}</span>
           </div>
           {profile.about_me && <p className="text-sm opacity-70">{profile.about_me}</p>}

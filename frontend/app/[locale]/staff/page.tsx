@@ -37,7 +37,7 @@ export default function StaffDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8 max-w-5xl">
-      <h1 className="text-2xl font-bold">Staff Dashboard</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Staff Dashboard</h1>
 
       {!data ? (
         <p className="opacity-40">Loading…</p>

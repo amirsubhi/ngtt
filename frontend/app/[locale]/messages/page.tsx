@@ -65,7 +65,7 @@ export default function MessagesPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
         <button onClick={() => setComposing(c => !c)} className={btnCls}>{t('compose')}</button>
       </div>
 
