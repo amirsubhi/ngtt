@@ -79,8 +79,18 @@ export const newsRoutes: FastifyPluginAsync = async app => {
     return reply.send({ pages });
   });
 
-  // GET /api/pages/:slug
+  // GET /api/pages/:slug — authenticated
   app.get<{ Params: { slug: string } }>('/api/pages/:slug', { preHandler: [authenticate] }, async (req, reply) => {
+    const { slug } = req.params as { slug: string };
+    const page = await queryOne(
+      'SELECT title, slug, body FROM custom_pages WHERE slug = ? AND is_published = TRUE', [slug],
+    );
+    if (!page) throw new NotFoundError('Page not found');
+    return reply.send(page);
+  });
+
+  // GET /api/public/pages/:slug — no auth (terms, dmca, support must be visible pre-login)
+  app.get<{ Params: { slug: string } }>('/api/public/pages/:slug', async (req, reply) => {
     const { slug } = req.params as { slug: string };
     const page = await queryOne(
       'SELECT title, slug, body FROM custom_pages WHERE slug = ? AND is_published = TRUE', [slug],
