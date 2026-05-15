@@ -46,7 +46,7 @@ export default function StaffDashboard() {
           {cards.map(c => (
             <Link key={c.label} href={c.href}
               className="border border-current/10 rounded-lg p-4 hover:bg-current/5 transition-colors space-y-1">
-              <div className={`text-3xl font-bold ${c.warn ? 'text-[var(--color-accent)]' : ''}`}>{c.value}</div>
+              <div className="text-3xl font-bold" style={c.warn ? { color: 'var(--accent)' } : undefined}>{c.value}</div>
               <div className="text-sm opacity-60">{c.label}</div>
             </Link>
           ))}
@@ -61,7 +61,8 @@ export default function StaffDashboard() {
           </Link>
         ))}
         <Link href="/admin/settings"
-          className="border border-[var(--color-accent)]/30 rounded px-3 py-2 text-sm text-center hover:bg-current/5">
+          className="rounded px-3 py-2 text-sm text-center hover:bg-current/5"
+          style={{ border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)' }}>
           Admin Settings
         </Link>
       </div>
