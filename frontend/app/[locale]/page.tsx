@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 interface Stats {
   torrent_count: number;
@@ -169,20 +170,29 @@ export default function HomePage() {
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-10">
 
         {/* Stats grid — authenticated only */}
-        {authed === true && stats && (
+        {authed === true && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Torrents', value: formatNum(stats.torrent_count) },
-              { label: 'Members', value: formatNum(stats.user_count) },
-              { label: 'Uploaded', value: formatBytes(stats.total_uploaded) },
-              { label: 'Downloaded', value: formatBytes(stats.total_downloaded) },
-            ].map(s => (
-              <div key={s.label} className="rounded border border-current/10 p-4 text-center"
-                style={{ backgroundColor: 'var(--bg-surface)' }}>
-                <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</div>
-                <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{s.label}</div>
-              </div>
-            ))}
+            {stats
+              ? [
+                  { label: 'Torrents', value: formatNum(stats.torrent_count) },
+                  { label: 'Members', value: formatNum(stats.user_count) },
+                  { label: 'Uploaded', value: formatBytes(stats.total_uploaded) },
+                  { label: 'Downloaded', value: formatBytes(stats.total_downloaded) },
+                ].map(s => (
+                  <div key={s.label} className="rounded border border-current/10 p-4 text-center"
+                    style={{ backgroundColor: 'var(--bg-surface)' }}>
+                    <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{s.value}</div>
+                    <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{s.label}</div>
+                  </div>
+                ))
+              : Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded border border-current/10 p-4 text-center"
+                    style={{ backgroundColor: 'var(--bg-surface)' }}>
+                    <div className="flex justify-center mb-2"><Skeleton height="h-6" width="w-16" /></div>
+                    <div className="flex justify-center"><Skeleton height="h-3" width="w-12" /></div>
+                  </div>
+                ))
+            }
           </div>
         )}
 
@@ -192,6 +202,18 @@ export default function HomePage() {
             <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Latest Uploads</h2>
             <div className="rounded border border-current/10 divide-y divide-current/5 overflow-hidden"
               style={{ backgroundColor: 'var(--bg-surface)' }}>
+              {!data && Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <Skeleton height="h-4" width="w-3/4" />
+                    <Skeleton height="h-3" width="w-1/3" />
+                  </div>
+                  <div className="space-y-1 shrink-0">
+                    <Skeleton height="h-3" width="w-6" />
+                    <Skeleton height="h-3" width="w-6" />
+                  </div>
+                </div>
+              ))}
               {data && data.newest_torrents.length === 0 && (
                 <p className="p-4 text-sm opacity-40">No torrents yet.</p>
               )}
@@ -233,6 +255,13 @@ export default function HomePage() {
           <div className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">News</h2>
             <div className="space-y-3">
+              {!data && Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded border border-current/10 p-4 space-y-2"
+                  style={{ backgroundColor: 'var(--bg-surface)' }}>
+                  <Skeleton height="h-4" width="w-full" />
+                  <Skeleton height="h-3" width="w-24" />
+                </div>
+              ))}
               {data && data.news.length === 0 && (
                 <p className="text-sm opacity-40">No news yet.</p>
               )}
