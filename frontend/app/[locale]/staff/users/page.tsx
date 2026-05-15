@@ -62,7 +62,7 @@ export default function StaffUsersPage() {
         <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()}
           placeholder="Search username or email…"
           className="flex-1 border border-current/20 rounded bg-transparent px-3 py-2 text-sm" />
-        <button onClick={search} className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">Search</button>
+        <button onClick={search} className="px-4 py-2 rounded text-white text-sm" style={{ backgroundColor: 'var(--accent)' }}>Search</button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">

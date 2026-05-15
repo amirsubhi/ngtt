@@ -154,7 +154,7 @@ export default function SettingsPage() {
   }
 
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
-  const btnCls = 'rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
+  const btnCls = 'rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'appearance', label: t('tab_appearance') },
@@ -173,7 +173,11 @@ export default function SettingsPage() {
       <div className="border-b border-current/10 flex flex-wrap gap-1 mb-6">
         {tabs.map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-4 py-2 text-sm border-b-2 transition-colors ${tab === key ? 'border-[var(--color-accent)]' : 'border-transparent opacity-50 hover:opacity-70'}`}>
+            className="px-4 py-2 text-sm border-b-2 transition-colors"
+            style={{
+              borderBottomColor: tab === key ? 'var(--accent)' : 'transparent',
+              opacity: tab === key ? 1 : 0.5,
+            }}>
             {label}
           </button>
         ))}
@@ -221,7 +225,11 @@ export default function SettingsPage() {
             <div className="flex gap-3">
               {(['table', 'card'] as const).map(v => (
                 <button key={v} onClick={() => save({ browse_view: v })}
-                  className={`px-4 py-2 rounded border text-sm capitalize ${settings.browse_view === v ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' : 'border-current/20'}`}>
+                  className="px-4 py-2 rounded border text-sm capitalize transition-colors"
+                  style={{
+                    borderColor: settings.browse_view === v ? 'var(--accent)' : 'rgba(128,128,128,0.2)',
+                    backgroundColor: settings.browse_view === v ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'transparent',
+                  }}>
                   {v === 'table' ? t('view_table') : t('view_card')}
                 </button>
               ))}
@@ -385,7 +393,7 @@ export default function SettingsPage() {
               <input type="password" value={usernamePassword} onChange={e => setUsernamePassword(e.target.value)}
                 placeholder={t('confirm_password')} required className={inputCls} />
               {usernameError && <p className="text-sm text-red-500">{usernameError}</p>}
-              <button type="submit" className={btnCls}>{t('change_username')}</button>
+              <button type="submit" className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>{t('change_username')}</button>
             </form>
           </div>
         </div>
@@ -411,7 +419,7 @@ export default function SettingsPage() {
               <input type="password" value={osPassword} onChange={e => setOsPassword(e.target.value)}
                 placeholder={t('os_password')} required className={inputCls} />
               {osError && <p className="text-sm text-red-500">{osError}</p>}
-              <button type="submit" className={btnCls}>{t('os_connect')}</button>
+              <button type="submit" className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>{t('os_connect')}</button>
             </form>
           )}
         </div>
@@ -422,7 +430,7 @@ export default function SettingsPage() {
         <div className="space-y-8">
           <div className="space-y-3 p-4 border border-current/10 rounded">
             <h2 className="font-medium">{t('export_data')}</h2>
-            <a href="/api/users/me/export" download className={btnCls} style={{ display: 'inline-block' }}>
+            <a href="/api/users/me/export" download className={btnCls} style={{ display: 'inline-block', backgroundColor: 'var(--accent)' }}>
               {t('export_data')}
             </a>
           </div>

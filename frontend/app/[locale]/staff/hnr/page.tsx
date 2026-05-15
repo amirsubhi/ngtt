@@ -69,7 +69,7 @@ export default function StaffHnrPage() {
               className="w-full border border-current/20 rounded bg-transparent px-3 py-2 text-sm" />
             <div className="flex gap-2 justify-end">
               <button onClick={() => setPardonId(null)} className="px-4 py-2 rounded border border-current/20 text-sm">Cancel</button>
-              <button onClick={pardon} className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">Pardon</button>
+              <button onClick={pardon} className="px-4 py-2 rounded text-white text-sm" style={{ backgroundColor: 'var(--accent)' }}>Pardon</button>
             </div>
           </div>
         </div>

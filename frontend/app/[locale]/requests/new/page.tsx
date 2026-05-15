@@ -89,7 +89,8 @@ export default function NewRequestPage() {
           <button onClick={() => router.push('/requests')}
             className="px-4 py-2 rounded border border-current/20 text-sm">Cancel</button>
           <button onClick={submit} disabled={submitting}
-            className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm disabled:opacity-40">
+            className="px-4 py-2 rounded text-white text-sm disabled:opacity-40"
+            style={{ backgroundColor: 'var(--accent)' }}>
             {submitting ? 'Posting…' : 'Post Request'}
           </button>
         </div>

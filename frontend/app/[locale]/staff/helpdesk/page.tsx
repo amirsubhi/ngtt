@@ -85,7 +85,8 @@ export default function StaffHelpdeskPage() {
             </div>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {selected.replies.map(r => (
-                <div key={r.id} className={`text-sm rounded p-2 ${r.is_staff ? 'bg-[var(--color-accent)]/10' : 'bg-current/5'}`}>
+                <div key={r.id} className="text-sm rounded p-2"
+                  style={{ backgroundColor: r.is_staff ? 'color-mix(in srgb, var(--accent) 10%, transparent)' : 'rgba(128,128,128,0.07)' }}>
                   <div className="text-xs opacity-50 mb-1">{r.username} {r.is_staff && '(staff)'} · {new Date(r.created_at).toLocaleDateString()}</div>
                   <p className="whitespace-pre-wrap">{r.body}</p>
                 </div>
@@ -94,7 +95,7 @@ export default function StaffHelpdeskPage() {
             <textarea value={reply} onChange={e => setReply(e.target.value)} rows={3} placeholder="Reply…"
               className="w-full border border-current/20 rounded bg-transparent px-3 py-2 text-sm" />
             <button onClick={sendReply}
-              className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">Send Reply</button>
+              className="px-4 py-2 rounded text-white text-sm" style={{ backgroundColor: 'var(--accent)' }}>Send Reply</button>
           </div>
         )}
       </div>

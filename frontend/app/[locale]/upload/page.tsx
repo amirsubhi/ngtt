@@ -114,7 +114,7 @@ export default function UploadPage() {
             accept=".torrent,application/x-bittorrent"
             onChange={handleFileChange}
             required
-            className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-[var(--color-accent)] file:px-3 file:py-1 file:text-white file:text-sm cursor-pointer"
+            className="w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-[var(--accent)] file:px-3 file:py-1 file:text-white file:text-sm cursor-pointer"
           />
         </div>
 
@@ -216,7 +216,8 @@ export default function UploadPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: 'var(--accent)' }}
         >
           {loading ? '…' : t('submit')}
         </button>

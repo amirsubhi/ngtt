@@ -99,7 +99,8 @@ export default function BonusPage() {
     }
   }
 
-  const btnCls = 'rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
+  const btnCls = 'rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
+  const btnStyle = { backgroundColor: 'var(--accent)' };
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
 
   return (
@@ -145,11 +146,12 @@ export default function BonusPage() {
                 {item.description && <p className="text-sm opacity-60 mt-1">{item.description}</p>}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-[var(--color-accent)]">{item.cost} FLX</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--accent)' }}>{item.cost} FLX</span>
                 <button
                   onClick={() => { setConfirming(item); setError(''); setSuccess(''); }}
                   disabled={balance !== null && balance < item.cost}
                   className={btnCls}
+                  style={btnStyle}
                 >
                   {t('buy')}
                 </button>
@@ -170,7 +172,7 @@ export default function BonusPage() {
               <button onClick={() => setConfirming(null)} className="flex-1 rounded border border-current/20 px-4 py-2 text-sm hover:border-current/40">
                 {t('cancel')}
               </button>
-              <button onClick={() => purchase(confirming)} disabled={purchasing} className={`flex-1 ${btnCls}`}>
+              <button onClick={() => purchase(confirming)} disabled={purchasing} className={`flex-1 ${btnCls}`} style={btnStyle}>
                 {purchasing ? t('purchasing') : t('confirm_buy')}
               </button>
             </div>
@@ -190,7 +192,7 @@ export default function BonusPage() {
             placeholder="Note (optional)" maxLength={200} className={inputCls} />
           {giftError && <p className="text-sm text-red-500">{giftError}</p>}
           {giftSuccess && <p className="text-sm text-green-500">{giftSuccess}</p>}
-          <button type="submit" disabled={gifting} className={btnCls}>
+          <button type="submit" disabled={gifting} className={btnCls} style={btnStyle}>
             {gifting ? 'Sending…' : 'Send Gift'}
           </button>
         </form>
