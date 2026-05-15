@@ -64,6 +64,7 @@ export const newsRoutes: FastifyPluginAsync = async app => {
       'INSERT INTO news (title, slug, body, author_id, is_pinned) VALUES (?, ?, ?, ?, ?)',
       [title, slug, body, req.user.id, is_pinned],
     );
+    void redis.del('news:list:1').catch(() => {});
     return reply.status(201).send({ id, slug });
   });
 
@@ -83,6 +84,7 @@ export const newsRoutes: FastifyPluginAsync = async app => {
       if (title) await execute('UPDATE news SET title = ? WHERE id = ?', [title, newsId]);
       if (body) await execute('UPDATE news SET body = ? WHERE id = ?', [body, newsId]);
       if (is_pinned !== undefined) await execute('UPDATE news SET is_pinned = ? WHERE id = ?', [is_pinned, newsId]);
+      void redis.del('news:list:1').catch(() => {});
       return reply.send({ ok: true });
     },
   );
@@ -149,6 +151,9 @@ export const newsRoutes: FastifyPluginAsync = async app => {
       if (title) await execute('UPDATE custom_pages SET title = ? WHERE id = ?', [title, pageId]);
       if (body) await execute('UPDATE custom_pages SET body = ? WHERE id = ?', [body, pageId]);
       if (is_published !== undefined) await execute('UPDATE custom_pages SET is_published = ? WHERE id = ?', [is_published, pageId]);
+      // Slug needed to target the specific cache key — fetch it
+      const updated = await queryOne<{ slug: string }>('SELECT slug FROM custom_pages WHERE id = ?', [pageId]);
+      if (updated) void redis.del(`page:public:${updated.slug}`).catch(() => {});
       return reply.send({ ok: true });
     },
   );

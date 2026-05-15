@@ -6,6 +6,7 @@ import path from 'path';
 import { query, queryOne, execute } from '../../lib/db';
 import { authenticate, requireAdmin, requireStaff } from '../../middleware/auth';
 import { NotFoundError, ValidationError } from '../../lib/errors';
+import { redis } from '../../lib/redis';
 
 async function audit(userId: number, action: string, meta?: object): Promise<void> {
   await execute(
@@ -33,6 +34,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     if (!setting) throw new NotFoundError('Setting not found');
     await execute('UPDATE site_settings SET value=? WHERE `key`=?', [parsed.data.value, parsed.data.key]);
     await audit(req.user.id, 'setting_update', { key: parsed.data.key, value: parsed.data.value });
+    void redis.del('public:settings').catch(() => {});
     return reply.send({ ok: true });
   });
 
@@ -56,6 +58,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
       'INSERT INTO flux_store_items (name, description, cost, type, value, display_order) VALUES (?,?,?,?,?,?)',
       [parsed.data.name, parsed.data.description ?? null, parsed.data.cost, parsed.data.type, parsed.data.value, parsed.data.display_order],
     );
+    void redis.del('flux:store').catch(() => {});
     return reply.status(201).send({ ok: true });
   });
 
@@ -75,11 +78,13 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     if (cost !== undefined) await execute('UPDATE flux_store_items SET cost=? WHERE id=?', [cost, id]);
     if (is_active !== undefined) await execute('UPDATE flux_store_items SET is_active=? WHERE id=?', [is_active, id]);
     if (display_order !== undefined) await execute('UPDATE flux_store_items SET display_order=? WHERE id=?', [display_order, id]);
+    void redis.del('flux:store').catch(() => {});
     return reply.send({ ok: true });
   });
 
   app.delete<{ Params: { id: string } }>('/api/admin/flux-store/:id', { preHandler: preAdmin }, async (req, reply) => {
     await execute('DELETE FROM flux_store_items WHERE id=?', [parseInt(req.params.id, 10)]);
+    void redis.del('flux:store').catch(() => {});
     return reply.send({ ok: true });
   });
 
@@ -139,6 +144,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     const url = '/uploads/branding/logo.webp';
     await execute('UPDATE site_settings SET value=? WHERE `key`=?', [url, 'site_logo_url']);
     await audit(req.user.id, 'setting_update', { key: 'site_logo_url', value: url });
+    void redis.del('public:settings').catch(() => {});
     return reply.send({ ok: true, url });
   });
 
@@ -153,6 +159,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     const url = '/uploads/branding/favicon.webp';
     await execute('UPDATE site_settings SET value=? WHERE `key`=?', [url, 'site_favicon_url']);
     await audit(req.user.id, 'setting_update', { key: 'site_favicon_url', value: url });
+    void redis.del('public:settings').catch(() => {});
     return reply.send({ ok: true, url });
   });
 
