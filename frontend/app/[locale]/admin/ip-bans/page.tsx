@@ -25,6 +25,7 @@ export default function AdminIpBansPage() {
   }
 
   async function remove(id: number) {
+    if (!confirm('Remove this IP ban?')) return;
     await api.delete(`/api/admin/ip-bans/${id}`, getToken());
     load();
   }
@@ -42,7 +43,7 @@ export default function AdminIpBansPage() {
             className="border border-current/20 rounded bg-transparent px-2 py-1 flex-1" />
           <input type="datetime-local" value={form.expires_at} onChange={e => setForm(f => ({...f, expires_at: e.target.value}))}
             className="border border-current/20 rounded bg-transparent px-2 py-1 text-xs" />
-          <button onClick={add} className="px-4 py-1 rounded bg-[var(--color-accent)] text-white">Ban</button>
+          <button onClick={add} className="px-4 py-1 rounded text-white" style={{ backgroundColor: 'var(--accent)' }}>Ban</button>
         </div>
       </div>
 

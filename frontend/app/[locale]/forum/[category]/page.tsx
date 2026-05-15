@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 interface Topic {
   id: number;
@@ -28,6 +29,7 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
   const [topics, setTopics] = useState<Topic[]>([]);
   const [catName, setCatName] = useState('');
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
   const [posting, setPosting] = useState(false);
@@ -39,10 +41,12 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     const tok = localStorage.getItem('access_token') ?? '';
     api.get<{ category: { name: string }; topics: Topic[] }>(`/api/forum/categories/${category}/topics?page=${page}`, tok)
       .then(d => { setCatName(d.category.name); setTopics(d.topics); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [category, page]);
 
   async function createTopic() {
@@ -55,23 +59,35 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
   }
 
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
-  const btnCls = 'rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <Link href={`/${locale}/forum`} className="text-sm opacity-50 hover:opacity-70">{t('back')}</Link>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">{catName}</h1>
+          <h1 className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>
+            {catName || <span className="opacity-30">Loading...</span>}
+          </h1>
         </div>
       </div>
 
-      <div className="space-y-2">
-        {topics.map(topic => (
+      <div className="space-y-1">
+        {loading && Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex items-center justify-between py-2 border-b border-current/5 px-1">
+            <Skeleton height="h-3" width="w-64" />
+            <Skeleton height="h-3" width="w-24" />
+          </div>
+        ))}
+        {!loading && topics.map(topic => (
           <div key={topic.id} className="flex items-center justify-between py-2 border-b border-current/5">
             <div className="flex items-center gap-2 min-w-0">
-              {topic.is_pinned && <span className="text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)] px-1.5 py-0.5 rounded">PIN</span>}
-              {topic.is_locked && <span className="text-xs bg-current/10 px-1.5 py-0.5 rounded opacity-50">LOCK</span>}
+              {topic.is_pinned && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 15%, transparent)', color: 'var(--accent)' }}>
+                  PIN
+                </span>
+              )}
+              {topic.is_locked && <span className="text-[10px] bg-current/10 px-1.5 py-0.5 rounded opacity-50">LOCK</span>}
               <Link href={`/${locale}/forum/${category}/${topic.slug}`} className="text-sm hover:underline truncate">
                 {topic.title}
               </Link>
@@ -81,7 +97,7 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
             </div>
           </div>
         ))}
-        {topics.length === 0 && <p className="opacity-40 text-sm">{t('no_topics')}</p>}
+        {!loading && topics.length === 0 && <p className="opacity-40 text-sm">{t('no_topics')}</p>}
       </div>
 
       <div className="flex gap-3 justify-center">
@@ -94,7 +110,11 @@ export default function ForumCategoryPage({ params }: { params: { category: stri
           <h2 className="font-medium text-sm">{t('new_topic')}</h2>
           <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder={t('topic_title')} className={inputCls} />
           <textarea value={newBody} onChange={e => setNewBody(e.target.value)} placeholder={t('topic_body')} rows={4} className={inputCls} />
-          <button onClick={createTopic} disabled={posting} className={btnCls}>{t('post_topic')}</button>
+          <button onClick={createTopic} disabled={posting}
+            className="rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: 'var(--accent)' }}>
+            {t('post_topic')}
+          </button>
         </div>
       )}
     </div>

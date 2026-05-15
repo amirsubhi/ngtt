@@ -1,6 +1,10 @@
 import { FastifyPluginAsync } from 'fastify';
 import { query, queryOne } from '../lib/db';
 import { authenticate } from '../middleware/auth';
+import { redis } from '../lib/redis';
+
+const HOME_CACHE_KEY = 'home:data';
+const HOME_TTL = 60;
 
 interface HomeTorrent {
   id: number;
@@ -29,6 +33,9 @@ interface HomeBirthday {
 
 export const homeRoutes: FastifyPluginAsync = async app => {
   app.get('/api/home', { preHandler: [authenticate] }, async (_req, reply) => {
+    const cached = await redis.get(HOME_CACHE_KEY);
+    if (cached) return reply.send(JSON.parse(cached) as object);
+
     const [stats, newsRows, torrentRows, birthdayRows] = await Promise.all([
       queryOne<{
         torrent_count: number;
@@ -68,11 +75,13 @@ export const homeRoutes: FastifyPluginAsync = async app => {
       ),
     ]);
 
-    return reply.send({
+    const result = {
       stats: stats ?? { torrent_count: 0, user_count: 0, total_uploaded: 0, total_downloaded: 0 },
       news: newsRows,
       newest_torrents: torrentRows,
       birthdays: birthdayRows,
-    });
+    };
+    await redis.set(HOME_CACHE_KEY, JSON.stringify(result), 'EX', HOME_TTL);
+    return reply.send(result);
   });
 };

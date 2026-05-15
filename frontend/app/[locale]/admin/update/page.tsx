@@ -204,7 +204,8 @@ export default function AdminUpdatePage() {
           <button
             onClick={handleApply}
             disabled={applying || !canApply}
-            className="px-4 py-2 rounded bg-[var(--color-accent)] text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ backgroundColor: 'var(--accent)' }}
           >
             Update to {info.latest!.tag}
           </button>

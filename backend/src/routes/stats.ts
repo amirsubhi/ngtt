@@ -1,9 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { query, queryOne } from '../lib/db';
 import { authenticate } from '../middleware/auth';
+import { redis } from '../lib/redis';
+
+const STATS_CACHE_KEY = 'site:stats';
+const STATS_TTL = 300; // 5 minutes
 
 export async function statsRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/stats', { preHandler: [authenticate] }, async (_req, reply) => {
+    const cached = await redis.get(STATS_CACHE_KEY);
+    if (cached) return reply.send(JSON.parse(cached) as object);
+
     const [totals, topUploaders, topSnatched, topRatio] = await Promise.all([
       // Site totals
       queryOne<{ total_torrents: number; total_users: number; total_size: string }>(
@@ -46,6 +53,8 @@ export async function statsRoutes(app: FastifyInstance): Promise<void> {
       ),
     ]);
 
-    return reply.send({ totals, topUploaders, topSnatched, topRatio });
+    const result = { totals, topUploaders, topSnatched, topRatio };
+    await redis.set(STATS_CACHE_KEY, JSON.stringify(result), 'EX', STATS_TTL);
+    return reply.send(result);
   });
 }

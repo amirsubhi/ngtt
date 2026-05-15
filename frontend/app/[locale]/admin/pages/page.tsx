@@ -27,6 +27,7 @@ export default function AdminPagesPage() {
   }
 
   async function remove(id: number) {
+    if (!confirm('Delete this page?')) return;
     await api.delete(`/api/admin/pages/${id}`, getToken());
     load();
   }
@@ -60,7 +61,7 @@ export default function AdminPagesPage() {
           <div className="flex gap-2 ml-auto">
             {editing && <button onClick={() => { setEditing(null); setForm({ title:'', slug:'', body:'', show_in_nav: false, display_order: 0 }); }}
               className="px-4 py-2 rounded border border-current/20 text-sm">Cancel</button>}
-            <button onClick={save} className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">
+            <button onClick={save} className="px-4 py-2 rounded text-white text-sm" style={{ backgroundColor: 'var(--accent)' }}>
               {editing ? 'Update' : 'Create'}
             </button>
           </div>
@@ -71,7 +72,12 @@ export default function AdminPagesPage() {
         {pages.map(p => (
           <div key={p.id} className="border border-current/10 rounded p-3 flex items-center justify-between gap-4 text-sm">
             <div>
-              <div className="font-medium">{p.title}</div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{p.title}</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${p.is_published ? 'bg-green-500/20 text-green-400' : 'bg-current/10 opacity-50'}`}>
+                  {p.is_published ? 'published' : 'draft'}
+                </span>
+              </div>
               <div className="text-xs opacity-50">/{p.slug}{p.show_in_nav ? ' · nav' : ''}</div>
             </div>
             <div className="flex gap-2">

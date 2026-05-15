@@ -162,7 +162,7 @@ export default function BonusPage() {
       {/* Confirmation dialog */}
       {confirming && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="rounded-lg border border-current/20 bg-[var(--color-bg)] p-6 space-y-4 max-w-sm w-full">
+          <div className="rounded-lg border border-current/20 p-6 space-y-4 max-w-sm w-full" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <h3 className="font-semibold">{t('confirm_title')}</h3>
             <p className="text-sm opacity-70">{t('confirm_body', { name: confirming.name, cost: confirming.cost })}</p>
             {error && <p className="text-sm text-red-500">{error}</p>}

@@ -26,6 +26,7 @@ export default function AdminFluxStorePage() {
   }
 
   async function remove(id: number) {
+    if (!confirm('Delete this item?')) return;
     await api.delete(`/api/admin/flux-store/${id}`, getToken());
     load();
   }
@@ -48,7 +49,7 @@ export default function AdminFluxStorePage() {
             {['invite_token','freeleech_token','upload_credit','username_change'].map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
-        <button onClick={create} className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">Add Item</button>
+        <button onClick={create} className="px-4 py-2 rounded text-white text-sm" style={{ backgroundColor: 'var(--accent)' }}>Add Item</button>
       </div>
 
       <div className="space-y-2">
@@ -56,6 +57,7 @@ export default function AdminFluxStorePage() {
           <div key={item.id} className={`border border-current/10 rounded p-3 flex items-center justify-between gap-4 text-sm ${!item.is_active ? 'opacity-50' : ''}`}>
             <div>
               <div className="font-medium">{item.name}</div>
+              {item.description && <div className="text-xs opacity-60">{item.description}</div>}
               <div className="text-xs opacity-50">{item.type} · {item.cost} FLX</div>
             </div>
             <div className="flex gap-2">

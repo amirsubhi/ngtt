@@ -21,6 +21,7 @@ export default function AdminClientsPage() {
   }
 
   async function remove(id: number) {
+    if (!confirm('Remove this client?')) return;
     await api.delete(`/api/admin/clients/${id}`, getToken());
     load();
   }
@@ -41,7 +42,7 @@ export default function AdminClientsPage() {
           <input placeholder="Reason (optional)" value={form.reason}
             onChange={e => setForm(f => ({...f, reason: e.target.value}))}
             className="border border-current/20 rounded bg-transparent px-2 py-1 flex-1" />
-          <button onClick={add} className="px-4 py-1 rounded bg-[var(--color-accent)] text-white">Add</button>
+          <button onClick={add} className="px-4 py-1 rounded text-white" style={{ backgroundColor: 'var(--accent)' }}>Add</button>
         </div>
       </div>
 

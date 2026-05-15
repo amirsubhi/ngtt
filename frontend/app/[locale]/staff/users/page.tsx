@@ -109,7 +109,7 @@ export default function StaffUsersPage() {
 
       {showWarn && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[var(--color-bg)] border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3">
+          <div className="border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <h2 className="font-semibold">Issue Warning</h2>
             <textarea value={warnReason} onChange={e => setWarnReason(e.target.value)} rows={3} placeholder="Reason…"
               className="w-full border border-current/20 rounded bg-transparent px-3 py-2 text-sm" />
@@ -123,7 +123,7 @@ export default function StaffUsersPage() {
 
       {showBan && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[var(--color-bg)] border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3">
+          <div className="border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <h2 className="font-semibold">Ban User</h2>
             <textarea value={banReason} onChange={e => setBanReason(e.target.value)} rows={3} placeholder="Reason…"
               className="w-full border border-current/20 rounded bg-transparent px-3 py-2 text-sm" />

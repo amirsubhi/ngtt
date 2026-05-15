@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { Skeleton } from '@/components/Skeleton';
 
 interface ProfileData {
   id: number;
@@ -106,7 +107,26 @@ export default function UserProfilePage({ params }: { params: { username: string
   }, [profile, params.username]);
 
   if (error) return <div className="flex min-h-screen items-center justify-center opacity-60">{error}</div>;
-  if (!profile) return <div className="flex min-h-screen items-center justify-center opacity-40">Loading…</div>;
+  if (!profile) return (
+    <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
+      <div className="flex gap-6 items-start">
+        <Skeleton height="h-24" width="w-24" className="rounded-full flex-shrink-0" />
+        <div className="flex-1 space-y-3 pt-1">
+          <Skeleton height="h-8" width="w-48" />
+          <Skeleton height="h-4" width="w-64" />
+          <div className="grid grid-cols-4 gap-3 pt-1">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height="h-8" />)}
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-1 border-b border-current/10 pb-0">
+        {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height="h-9" width="w-24" className="rounded-none" />)}
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height="h-5" width={i % 2 === 0 ? 'w-full' : 'w-2/3'} />)}
+      </div>
+    </div>
+  );
 
   if (profile.private) {
     return (
@@ -158,7 +178,11 @@ export default function UserProfilePage({ params }: { params: { username: string
       <div className="border-b border-current/10 flex gap-1">
         {tabs.map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`px-4 py-2 text-sm border-b-2 transition-colors ${tab === key ? 'border-[var(--color-accent)]' : 'border-transparent opacity-50 hover:opacity-70'}`}>
+            className="px-4 py-2 text-sm border-b-2 transition-colors"
+            style={{
+              borderBottomColor: tab === key ? 'var(--accent)' : 'transparent',
+              opacity: tab === key ? 1 : 0.5,
+            }}>
             {label}
           </button>
         ))}

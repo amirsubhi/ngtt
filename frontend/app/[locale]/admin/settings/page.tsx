@@ -1,42 +1,29 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-
-interface Setting { key: string; value: string; type: string; category: string; label: string }
+import { TABS, JSON_KEYS, type Setting, type Tab } from './categories';
+import { SettingField } from './SettingField';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Setting[]>([]);
-  const [saved, setSaved] = useState<string | null>(null);
+  const [server, setServer] = useState<Record<string, string>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [jsonErrors, setJsonErrors] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('access_token') ?? '';
     api.get<{ settings: Setting[] }>('/api/admin/settings', token)
-      .then(d => setSettings(d.settings)).catch(() => {});
+      .then(d => {
+        const map: Record<string, string> = {};
+        for (const s of d.settings) map[s.key] = s.value;
+        setSettings(d.settings);
+        setServer(map);
+      }).catch(() => {});
   }, []);
-
-  async function save(key: string, value: string) {
-    const token = localStorage.getItem('access_token') ?? '';
-    await api.put('/api/admin/settings', { key, value }, token);
-    setSaved(key);
-    setTimeout(() => setSaved(null), 2000);
-  }
-
-  async function uploadImage(key: string, file: File) {
-    const token = localStorage.getItem('access_token') ?? '';
-    const endpoint = key === 'site_logo_url' ? '/api/admin/upload/logo' : '/api/admin/upload/favicon';
-    const form = new FormData();
-    form.append('file', file);
-    const res = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
-    if (!res.ok) return;
-    const data = await res.json() as { url: string };
-    setSettings(prev => prev.map(s => s.key === key ? { ...s, value: data.url } : s));
-    setSaved(key);
-    setTimeout(() => setSaved(null), 2000);
-  }
-
-  function handleChange(key: string, value: string) {
-    setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s));
-  }
 
   const grouped: Record<string, Setting[]> = {};
   for (const s of settings) {
@@ -44,45 +31,124 @@ export default function AdminSettingsPage() {
     grouped[s.category].push(s);
   }
 
+  const tabSettings = grouped[activeTab] ?? [];
+  const dirtyKeys = tabSettings
+    .map(s => s.key)
+    .filter(k => drafts[k] !== undefined && drafts[k] !== server[k]);
+  const hasDirty = dirtyKeys.length > 0;
+
+  function onChange(key: string, value: string) {
+    setDrafts(prev => ({ ...prev, [key]: value }));
+    if (jsonErrors[key]) setJsonErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
+  }
+
+  async function uploadImage(key: string, file: File) {
+    const token = localStorage.getItem('access_token') ?? '';
+    const endpoint = key === 'site_logo_url' ? '/api/admin/upload/logo' : '/api/admin/upload/favicon';
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+    if (!res.ok) return;
+    const data = await res.json() as { url: string };
+    setServer(prev => ({ ...prev, [key]: data.url }));
+    setToast('Image saved');
+    setTimeout(() => setToast(''), 3000);
+  }
+
+  async function saveTab() {
+    const newErrors: Record<string, string> = {};
+    for (const k of dirtyKeys) {
+      if (JSON_KEYS.has(k)) {
+        try { JSON.parse(drafts[k]); } catch { newErrors[k] = 'Invalid JSON'; }
+      }
+    }
+    if (Object.keys(newErrors).length) { setJsonErrors(newErrors); return; }
+    setJsonErrors({});
+    setSaving(true);
+    const token = localStorage.getItem('access_token') ?? '';
+    const snapshot = { ...drafts };
+    const results = await Promise.allSettled(
+      dirtyKeys.map(key => api.put('/api/admin/settings', { key, value: snapshot[key] }, token))
+    );
+    const failed: string[] = [];
+    results.forEach((r, i) => {
+      if (r.status === 'fulfilled') {
+        setServer(prev => ({ ...prev, [dirtyKeys[i]]: snapshot[dirtyKeys[i]] }));
+        setDrafts(prev => { const n = { ...prev }; delete n[dirtyKeys[i]]; return n; });
+      } else {
+        failed.push(dirtyKeys[i]);
+      }
+    });
+    setSaving(false);
+    setToast(failed.length ? `${failed.length} field(s) failed to save` : 'Saved');
+    setTimeout(() => setToast(''), 3000);
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Admin Settings</h1>
-      {Object.entries(grouped).map(([cat, items]) => (
-        <div key={cat} className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">{cat}</h2>
-          <div className="space-y-2">
-            {items.map(s => (
-              <div key={s.key} className="flex items-center justify-between gap-4 border border-current/10 rounded px-4 py-3">
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{s.label}</div>
-                  <div className="text-xs opacity-40 font-mono">{s.key}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {s.type === 'bool' ? (
-                    <select value={s.value} onChange={e => handleChange(s.key, e.target.value)}
-                      className="border border-current/20 rounded bg-transparent px-2 py-1 text-sm">
-                      <option value="true">Enabled</option>
-                      <option value="false">Disabled</option>
-                    </select>
-                  ) : (s.key === 'site_logo_url' || s.key === 'site_favicon_url') ? (
-                    <input type="file" accept="image/png,image/jpeg,image/webp"
-                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(s.key, f); }}
-                      className="text-xs w-40" />
-                  ) : (
-                    <input type={s.type === 'int' ? 'number' : 'text'} value={s.value}
-                      onChange={e => handleChange(s.key, e.target.value)}
-                      className="border border-current/20 rounded bg-transparent px-2 py-1 text-sm w-32" />
-                  )}
-                  <button onClick={() => save(s.key, s.value)}
-                    className="px-3 py-1 rounded bg-[var(--color-accent)] text-white text-xs">
-                    {saved === s.key ? '✓' : 'Save'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>
+        Site Settings
+      </h1>
+
+      <div className="border-b border-current/10 flex flex-wrap gap-1 mb-8">
+        {TABS.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => { setActiveTab(key); setJsonErrors({}); }}
+            className="px-4 py-2 text-sm transition-colors border-b-2 -mb-px"
+            style={{
+              borderBottomColor: activeTab === key ? 'var(--accent)' : 'transparent',
+              color: activeTab === key ? 'var(--text-primary)' : 'var(--text-muted)',
+              opacity: grouped[key] ? 1 : 0.3,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+        {tabSettings.map(s => (
+          <SettingField
+            key={s.key}
+            setting={s}
+            value={drafts[s.key] ?? server[s.key] ?? ''}
+            onChange={onChange}
+            onUpload={uploadImage}
+            error={jsonErrors[s.key]}
+          />
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between pt-6 border-t border-current/10 mt-8">
+        <span
+          className="text-xs"
+          style={{ color: 'var(--text-muted)', visibility: hasDirty ? 'visible' : 'hidden' }}
+        >
+          {dirtyKeys.length} unsaved change{dirtyKeys.length !== 1 ? 's' : ''}
+        </span>
+        <button
+          onClick={saveTab}
+          disabled={!hasDirty || saving}
+          className="px-4 py-2 rounded text-sm font-medium disabled:opacity-40 transition-opacity"
+          style={{ backgroundColor: 'var(--accent)', color: '#fff' }}
+        >
+          {saving ? 'Saving...' : 'Save changes'}
+        </button>
+      </div>
+
+      {toast && (
+        <div
+          className="fixed bottom-4 end-4 z-50 rounded border border-current/20 px-4 py-2 text-sm shadow-lg"
+          style={{ backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)' }}
+        >
+          {toast}
         </div>
-      ))}
+      )}
     </div>
   );
 }

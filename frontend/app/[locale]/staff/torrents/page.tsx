@@ -74,7 +74,7 @@ export default function StaffTorrentsPage() {
 
       {rejectId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[var(--color-bg)] border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3">
+          <div className="border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3" style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <h2 className="font-semibold">Reject Torrent</h2>
             <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)}
               placeholder="Reason for rejection…" rows={3}

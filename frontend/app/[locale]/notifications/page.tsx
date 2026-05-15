@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useTranslations, useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 interface Notification {
   id: number;
@@ -18,10 +18,10 @@ interface Notification {
 
 export default function NotificationsPage() {
   const t = useTranslations('notifications');
-  const locale = useLocale();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [token, setToken] = useState('');
 
   useEffect(() => {
@@ -30,7 +30,8 @@ export default function NotificationsPage() {
     if (!tok) { router.push('/login'); return; }
     api.get<{ notifications: Notification[]; unread_count: number }>('/api/notifications', tok)
       .then(d => { setNotifications(d.notifications); setUnread(d.unread_count); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [router]);
 
   async function markAllRead() {
@@ -48,16 +49,31 @@ export default function NotificationsPage() {
   return (
     <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')} {unread > 0 && <span className="text-sm bg-[var(--color-accent)] text-white rounded-full px-2 py-0.5 ml-2">{unread}</span>}</h1>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          {t('title')}
+          {unread > 0 && (
+            <span className="text-sm text-white rounded-full px-2 py-0.5 ml-2 align-middle"
+              style={{ backgroundColor: 'var(--accent)' }}>
+              {unread}
+            </span>
+          )}
+        </h1>
         {unread > 0 && (
           <button onClick={markAllRead} className="text-sm opacity-60 hover:opacity-90">{t('mark_all_read')}</button>
         )}
       </div>
 
       <div className="space-y-1">
-        {notifications.map(notif => (
+        {loading && Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="p-3 rounded-lg border border-current/10 space-y-1.5">
+            <Skeleton height="h-3" width="w-48" />
+            <Skeleton height="h-3" width="w-3/4" />
+          </div>
+        ))}
+        {!loading && notifications.map(notif => (
           <div key={notif.id}
-            className={`p-3 rounded-lg border transition-colors cursor-pointer ${notif.is_read ? 'border-current/5 opacity-60' : 'border-current/20 bg-[var(--color-accent)]/5'}`}
+            className={`p-3 rounded-lg border transition-colors cursor-pointer ${notif.is_read ? 'border-current/5 opacity-60' : 'border-current/20'}`}
+            style={!notif.is_read ? { backgroundColor: 'color-mix(in srgb, var(--accent) 5%, transparent)' } : {}}
             onClick={() => { if (!notif.is_read) markRead(notif.id); if (notif.url) router.push(notif.url); }}
           >
             <div className="flex justify-between items-start">
@@ -69,7 +85,7 @@ export default function NotificationsPage() {
             </div>
           </div>
         ))}
-        {notifications.length === 0 && <p className="opacity-40 text-sm">{t('empty')}</p>}
+        {!loading && notifications.length === 0 && <p className="opacity-40 text-sm">{t('empty')}</p>}
       </div>
     </div>
   );

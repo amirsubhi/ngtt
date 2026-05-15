@@ -71,7 +71,6 @@ export default function ForumTopicPage({ params }: { params: { category: string;
   }
 
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
-  const btnCls = 'rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50';
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl space-y-6">
@@ -113,7 +112,11 @@ export default function ForumTopicPage({ params }: { params: { category: string;
         <div className="border border-current/10 rounded-lg p-4 space-y-3">
           <h2 className="font-medium text-sm">{t('reply')}</h2>
           <textarea value={replyBody} onChange={e => setReplyBody(e.target.value)} placeholder={t('reply_placeholder')} rows={4} className={inputCls} />
-          <button onClick={submitReply} disabled={posting} className={btnCls}>{t('post_reply')}</button>
+          <button onClick={submitReply} disabled={posting}
+            className="rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            style={{ backgroundColor: 'var(--accent)' }}>
+            {t('post_reply')}
+          </button>
         </div>
       )}
       {topicData?.is_locked && <p className="text-sm opacity-50 text-center">{t('locked')}</p>}

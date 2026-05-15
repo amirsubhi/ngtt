@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
+import { Skeleton } from '@/components/Skeleton';
 
 interface Request {
   id: number; title: string; description: string | null;
@@ -9,14 +10,10 @@ interface Request {
   created_at: string; username: string; category_name: string | null;
 }
 
-function formatBytes(b: number) {
-  if (!b) return '0 FLX';
-  return `${b.toLocaleString()} FLX`;
-}
-
 export default function RequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'0' | '1'>('0');
   const [fillId, setFillId] = useState<number | null>(null);
   const [torrentIdInput, setTorrentIdInput] = useState('');
@@ -25,10 +22,11 @@ export default function RequestsPage() {
   function getToken() { return localStorage.getItem('access_token') ?? ''; }
 
   function load(p: number, f: string) {
+    setLoading(true);
     api.get<{ requests: Request[]; page: number }>(
       `/api/requests?page=${p}&filled=${f}`,
       getToken(),
-    ).then(d => { setRequests(d.requests); setPage(d.page); }).catch(() => {});
+    ).then(d => { setRequests(d.requests); setPage(d.page); }).catch(() => {}).finally(() => setLoading(false));
   }
 
   useEffect(() => load(1, filter), [filter]);
@@ -53,7 +51,8 @@ export default function RequestsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Torrent Requests</h1>
         <Link href="/requests/new"
-          className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-white hover:opacity-90">
+          className="rounded px-4 py-2 text-sm text-white hover:opacity-90"
+          style={{ backgroundColor: 'var(--accent)' }}>
           + New Request
         </Link>
       </div>
@@ -70,7 +69,14 @@ export default function RequestsPage() {
       </div>
 
       <div className="space-y-2">
-        {requests.map(r => (
+        {loading && Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="border border-current/10 rounded p-4 space-y-2">
+            <Skeleton height="h-4" width="w-64" />
+            <Skeleton height="h-3" width="w-48" />
+            <Skeleton height="h-3" width="w-3/4" />
+          </div>
+        ))}
+        {!loading && requests.map(r => (
           <div key={r.id} className="border border-current/10 rounded p-4 space-y-2">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
@@ -86,7 +92,7 @@ export default function RequestsPage() {
               </div>
               <div className="flex-shrink-0 text-right space-y-1">
                 {r.bounty_flux > 0 && (
-                  <div className="text-sm font-semibold text-[var(--color-accent)]">
+                  <div className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
                     {r.bounty_flux.toLocaleString()} FLX
                   </div>
                 )}
@@ -107,7 +113,7 @@ export default function RequestsPage() {
             </div>
           </div>
         ))}
-        {requests.length === 0 && <p className="opacity-40 text-sm">No requests.</p>}
+        {!loading && requests.length === 0 && <p className="opacity-40 text-sm">No requests.</p>}
       </div>
 
       <div className="flex gap-2">
@@ -121,7 +127,8 @@ export default function RequestsPage() {
 
       {fillId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-[var(--color-bg)] border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3">
+          <div className="border border-current/20 rounded-lg p-6 w-full max-w-md space-y-3"
+            style={{ backgroundColor: 'var(--bg-elevated)' }}>
             <h2 className="font-semibold">Fill Request</h2>
             <p className="text-sm opacity-70">Enter the torrent ID that fulfils this request.</p>
             <input
@@ -135,7 +142,8 @@ export default function RequestsPage() {
               <button onClick={() => setFillId(null)}
                 className="px-4 py-2 rounded border border-current/20 text-sm">Cancel</button>
               <button onClick={fill}
-                className="px-4 py-2 rounded bg-[var(--color-accent)] text-white text-sm">Fill</button>
+                className="px-4 py-2 rounded text-white text-sm"
+                style={{ backgroundColor: 'var(--accent)' }}>Fill</button>
             </div>
           </div>
         </div>

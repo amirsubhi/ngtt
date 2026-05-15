@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { Skeleton } from '@/components/Skeleton';
 
 interface TorrentFile { path: string; size: number }
 interface Screenshot { id: number; url: string }
@@ -120,7 +121,8 @@ function SubtitleUploadForm({ torrentId, token, onDone }: { torrentId: number; t
         className="w-full rounded border border-current/20 bg-transparent px-2 py-1 text-xs" />
       {error && <p className="text-red-500 text-xs">{error}</p>}
       <button onClick={handleUpload} disabled={!file || uploading}
-        className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-xs text-white disabled:opacity-40">
+        className="rounded px-3 py-1.5 text-xs text-white disabled:opacity-40"
+        style={{ backgroundColor: 'var(--accent)' }}>
         {uploading ? 'Uploading…' : 'Upload'}
       </button>
     </div>
@@ -317,7 +319,28 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
     return <div className="flex min-h-screen items-center justify-center opacity-60">{error}</div>;
   }
   if (!torrent) {
-    return <div className="flex min-h-screen items-center justify-center opacity-40">Loading…</div>;
+    return (
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        <div className="flex gap-6">
+          <Skeleton height="h-52" width="w-36" className="rounded flex-shrink-0" />
+          <div className="flex-1 space-y-3 pt-1">
+            <Skeleton height="h-8" width="w-3/4" />
+            <Skeleton height="h-4" width="w-1/2" />
+            <Skeleton height="h-4" width="w-1/3" />
+            <div className="flex gap-2 pt-2">
+              <Skeleton height="h-9" width="w-28" />
+              <Skeleton height="h-9" width="w-28" />
+              <Skeleton height="h-9" width="w-28" />
+            </div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} height="h-4" width={i % 3 === 0 ? 'w-full' : i % 3 === 1 ? 'w-3/4' : 'w-1/2'} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   const tabs: { key: Tab; label: string }[] = [
@@ -362,7 +385,9 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
           </div>
           {/* Actions */}
           <div className="flex flex-wrap gap-2 pt-2">
-            <button onClick={handleDownload} className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
+            <button onClick={handleDownload}
+              className="rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              style={{ backgroundColor: 'var(--accent)' }}>
               {t('download')}
             </button>
             <button
@@ -393,7 +418,11 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-4 py-2 text-sm border-b-2 transition-colors ${tab === key ? 'border-[var(--color-accent)] opacity-100' : 'border-transparent opacity-50 hover:opacity-70'}`}
+            className="px-4 py-2 text-sm border-b-2 transition-colors"
+            style={{
+              borderBottomColor: tab === key ? 'var(--accent)' : 'transparent',
+              opacity: tab === key ? 1 : 0.5,
+            }}
           >
             {label}
           </button>
@@ -422,7 +451,7 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {torrent.screenshots.map(s => (
             <a key={s.id} href={s.url} target="_blank" rel="noreferrer">
-              <img src={s.url} alt="Screenshot" className="rounded w-full object-cover aspect-video" />
+              <img src={s.url} alt="Screenshot" loading="lazy" className="rounded w-full object-cover aspect-video" />
             </a>
           ))}
           {torrent.screenshots.length === 0 && <p className="opacity-40 text-sm col-span-3">No screenshots.</p>}
