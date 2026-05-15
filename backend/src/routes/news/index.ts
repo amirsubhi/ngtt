@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query, queryOne, executeInsert, execute } from '../../lib/db';
 import { authenticate, requireStaff } from '../../middleware/auth';
 import { NotFoundError, ValidationError } from '../../lib/errors';
+import { redis } from '../../lib/redis';
 
 function slugify(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 250)
@@ -15,23 +16,36 @@ export const newsRoutes: FastifyPluginAsync = async app => {
     const rawPage = parseInt(((req.query as { page?: string }).page ?? '1'), 10);
     const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
     const offset = (page - 1) * 10;
+
+    const cacheKey = `news:list:${page}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) return reply.send(JSON.parse(cached) as object);
+
     const items = await query(
       `SELECT n.id, n.title, n.slug, n.is_pinned, n.published_at, u.username AS author
        FROM news n JOIN users u ON u.id = n.author_id
        ORDER BY n.is_pinned DESC, n.published_at DESC
        LIMIT 10 OFFSET ${offset}`,
     );
-    return reply.send({ news: items, page });
+    const result = { news: items, page };
+    await redis.set(cacheKey, JSON.stringify(result), 'EX', 60);
+    return reply.send(result);
   });
 
   // GET /api/news/:slug
   app.get<{ Params: { slug: string } }>('/api/news/:slug', { preHandler: [authenticate] }, async (req, reply) => {
     const { slug } = req.params as { slug: string };
+
+    const cacheKey = `news:article:${slug}`;
+    const cached = await redis.get(cacheKey);
+    if (cached) return reply.send(JSON.parse(cached) as object);
+
     const item = await queryOne(
       `SELECT n.*, u.username AS author FROM news n JOIN users u ON u.id = n.author_id WHERE n.slug = ?`,
       [slug],
     );
     if (!item) throw new NotFoundError('News article not found');
+    await redis.set(cacheKey, JSON.stringify(item), 'EX', 300);
     return reply.send(item);
   });
 
@@ -92,10 +106,16 @@ export const newsRoutes: FastifyPluginAsync = async app => {
   // GET /api/public/pages/:slug — no auth (terms, dmca, support must be visible pre-login)
   app.get<{ Params: { slug: string } }>('/api/public/pages/:slug', async (req, reply) => {
     const { slug } = req.params as { slug: string };
+
+    const cacheKey = `page:public:${slug}`;
+    const cachedPage = await redis.get(cacheKey);
+    if (cachedPage) return reply.send(JSON.parse(cachedPage) as object);
+
     const page = await queryOne(
       'SELECT title, slug, body FROM custom_pages WHERE slug = ? AND is_published = TRUE', [slug],
     );
     if (!page) throw new NotFoundError('Page not found');
+    await redis.set(cacheKey, JSON.stringify(page), 'EX', 300);
     return reply.send(page);
   });
 
