@@ -2,6 +2,9 @@ import { FastifyInstance } from 'fastify';
 import { query, queryOne } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
 import { NotFoundError } from '../../lib/errors';
+import { redis } from '../../lib/redis';
+
+const PROFILE_COUNTS_TTL = 60;
 
 interface WarningRow {
   id: number; reason: string; type: string; created_at: string; expires_at: string | null;
@@ -68,13 +71,37 @@ export async function profileRoutes(app: FastifyInstance): Promise<void> {
 
     const ratio = user.downloaded > 0 ? user.uploaded / user.downloaded : null;
 
-    const [uploadCount, thankCount, activeHnr, warnCount, snatchCount] = await Promise.all([
-      queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM torrents WHERE uploader_id = ? AND status = ?', [user.id, 'approved']),
-      queryOne<{ cnt: number }>('SELECT SUM(thank_count) AS cnt FROM torrents WHERE uploader_id = ?', [user.id]),
-      queryOne<{ cnt: number }>("SELECT COUNT(*) AS cnt FROM hit_and_runs WHERE user_id = ? AND status = 'active'", [user.id]),
-      queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM users WHERE id = ? AND warned = TRUE', [user.id]),
-      queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM torrent_snatches WHERE user_id = ?', [user.id]),
-    ]);
+    interface ProfileCounts {
+      upload_count: number;
+      thank_count_received: number;
+      active_hnr_count: number;
+      warned: boolean;
+      snatch_count: number;
+    }
+
+    const countsCacheKey = `profile:counts:${user.id}`;
+    const cachedCounts = await redis.get(countsCacheKey);
+    let counts: ProfileCounts;
+
+    if (cachedCounts) {
+      counts = JSON.parse(cachedCounts) as ProfileCounts;
+    } else {
+      const [uploadCount, thankCount, activeHnr, warnCount, snatchCount] = await Promise.all([
+        queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM torrents WHERE uploader_id = ? AND status = ?', [user.id, 'approved']),
+        queryOne<{ cnt: number }>('SELECT SUM(thank_count) AS cnt FROM torrents WHERE uploader_id = ?', [user.id]),
+        queryOne<{ cnt: number }>("SELECT COUNT(*) AS cnt FROM hit_and_runs WHERE user_id = ? AND status = 'active'", [user.id]),
+        queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM users WHERE id = ? AND warned = TRUE', [user.id]),
+        queryOne<{ cnt: number }>('SELECT COUNT(*) AS cnt FROM torrent_snatches WHERE user_id = ?', [user.id]),
+      ]);
+      counts = {
+        upload_count:        uploadCount?.cnt ?? 0,
+        thank_count_received: thankCount?.cnt ?? 0,
+        active_hnr_count:    activeHnr?.cnt ?? 0,
+        warned:              (warnCount?.cnt ?? 0) > 0,
+        snatch_count:        snatchCount?.cnt ?? 0,
+      };
+      await redis.set(countsCacheKey, JSON.stringify(counts), 'EX', PROFILE_COUNTS_TTL);
+    }
 
     return reply.send({
       id: user.id,
@@ -89,11 +116,7 @@ export async function profileRoutes(app: FastifyInstance): Promise<void> {
       about_me: user.about_me,
       created_at: user.created_at,
       last_seen_at: user.show_online_status ? user.last_seen_at : null,
-      upload_count: uploadCount?.cnt ?? 0,
-      thank_count_received: thankCount?.cnt ?? 0,
-      active_hnr_count: activeHnr?.cnt ?? 0,
-      warned: (warnCount?.cnt ?? 0) > 0,
-      snatch_count: snatchCount?.cnt ?? 0,
+      ...counts,
     });
   });
 

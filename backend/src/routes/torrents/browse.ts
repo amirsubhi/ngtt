@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { query, queryOne } from '../../lib/db';
 import { authenticate } from '../../middleware/auth';
-import { getSeederCount, getLeecherCount } from '../../announce/peers';
+import { getSwarmData } from '../../announce/peers';
 
 const SORT_MAP: Record<string, string> = {
   newest:   't.created_at DESC',
@@ -154,10 +154,7 @@ export async function browseRoutes(app: FastifyInstance): Promise<void> {
     const total = Number(countRow?.total ?? 0);
 
     const enriched = await Promise.all(rows.map(async t => {
-      const [seeders, leechers] = await Promise.all([
-        getSeederCount(t.info_hash),
-        getLeecherCount(t.info_hash),
-      ]);
+      const { seeders, leechers } = await getSwarmData(t.info_hash, 0);
       return {
         id:            t.id,
         name:          t.name,

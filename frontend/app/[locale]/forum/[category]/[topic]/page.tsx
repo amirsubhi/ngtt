@@ -86,7 +86,7 @@ export default function ForumTopicPage({ params }: { params: { category: string;
           <div key={post.id} className="border border-current/10 rounded-lg p-4">
             <div className="flex items-center gap-3 mb-3">
               {post.avatar_url
-                ? <img src={post.avatar_url} alt={post.username} className="w-8 h-8 rounded-full object-cover" />
+                ? <img src={post.avatar_url} alt={post.username} loading="lazy" className="w-8 h-8 rounded-full object-cover" />
                 : <div className="w-8 h-8 rounded-full bg-current/10 flex items-center justify-center text-xs font-bold opacity-40">{post.username[0]?.toUpperCase()}</div>
               }
               <span className="text-sm font-medium">{post.username}</span>
