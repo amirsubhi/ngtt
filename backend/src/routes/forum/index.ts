@@ -6,6 +6,7 @@ import { authenticate, requireStaff } from '../../middleware/auth';
 import { requireFeature } from '../../middleware/featureFlag';
 import { NotFoundError, ForbiddenError, ValidationError } from '../../lib/errors';
 import { jobsQueue } from '../../lib/queues';
+import { redis } from '../../lib/redis';
 
 const PAGE_SIZE = 25;
 
@@ -35,13 +36,19 @@ export const forumRoutes: FastifyPluginAsync = async app => {
 
   // GET /api/forum/categories
   app.get('/api/forum/categories', { preHandler: [ff, authenticate] }, async (_req, reply) => {
+    const cacheKey = 'forum:categories';
+    const cached = await redis.get(cacheKey);
+    if (cached) return reply.send(JSON.parse(cached) as object);
+
     const categories = await query(
       `SELECT id, name, slug, description, display_order, topic_count, post_count
        FROM forum_categories
        WHERE is_staff_only = FALSE
        ORDER BY display_order ASC`,
     );
-    return reply.send({ categories });
+    const result = { categories };
+    await redis.set(cacheKey, JSON.stringify(result), 'EX', 120);
+    return reply.send(result);
   });
 
   // GET /api/forum/categories/:slug/topics
