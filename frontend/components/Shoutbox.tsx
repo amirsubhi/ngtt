@@ -74,14 +74,15 @@ export function Shoutbox() {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full bg-[var(--color-accent)] text-white px-4 py-2 text-sm font-medium shadow-lg hover:opacity-90 z-40">
+        className="fixed bottom-4 right-4 rounded-full text-white px-4 py-2 text-sm font-medium shadow-lg hover:opacity-90 z-40"
+        style={{ backgroundColor: 'var(--accent)' }}>
         Shoutbox
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-0 right-4 w-80 bg-[var(--color-bg)] border border-current/20 rounded-t-lg shadow-xl z-40 flex flex-col" style={{ height: '360px' }}>
+    <div className="fixed bottom-0 right-4 w-80 border border-current/20 rounded-t-lg shadow-xl z-40 flex flex-col" style={{ height: '360px', backgroundColor: 'var(--bg-surface)' }}>
       <div className="flex items-center justify-between px-3 py-2 border-b border-current/10">
         <span className="text-sm font-medium">Shoutbox</span>
         <button onClick={() => setOpen(false)} className="text-xs opacity-50 hover:opacity-80">✕</button>
@@ -117,7 +118,8 @@ export function Shoutbox() {
               placeholder="Say something…" maxLength={500}
               className="flex-1 text-xs rounded border border-current/20 bg-transparent px-2 py-1 focus:outline-none focus:ring-1 focus:ring-current/30" />
             <button onClick={send}
-              className="rounded bg-[var(--color-accent)] text-white text-xs px-2 py-1 hover:opacity-90">
+              className="rounded text-white text-xs px-2 py-1 hover:opacity-90"
+              style={{ backgroundColor: 'var(--accent)' }}>
               Send
             </button>
           </div>
