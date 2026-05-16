@@ -407,7 +407,12 @@ Please include your username and a clear description of the issue.`);
   for (const pg of legalPages) {
     const [existing] = await conn.execute('SELECT id FROM custom_pages WHERE slug = ? LIMIT 1', [pg.slug]);
     if (existing.length > 0) {
-      note(`${pg.title} page already exists — skipping`);
+      // Always update — migrations seed placeholder markers; the installer fills in real values.
+      await conn.execute(
+        'UPDATE custom_pages SET title = ?, body = ?, is_published = TRUE WHERE slug = ?',
+        [pg.title, pg.body, pg.slug],
+      );
+      pass(`${pg.title} page updated  ${dim(`(/${pg.slug})`)}`);
     } else {
       await conn.execute(
         'INSERT INTO custom_pages (title, slug, body, show_in_nav, is_published, display_order) VALUES (?, ?, ?, FALSE, TRUE, ?)',
