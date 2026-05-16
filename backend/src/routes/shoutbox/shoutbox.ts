@@ -47,7 +47,7 @@ export function setupShoutbox(ns: Namespace): void {
 
     socket.on('message', async (content: unknown) => {
       if (typeof content !== 'string') return;
-      const trimmed = filterBadWords(content.trim().slice(0, MAX_CONTENT));
+      const trimmed = await filterBadWords(content.trim().slice(0, MAX_CONTENT));
       if (!trimmed) return;
 
       try {

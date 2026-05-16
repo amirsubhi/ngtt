@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { JSON_KEYS, type Setting } from './categories';
+import { JSON_KEYS, WORDLIST_KEYS, type Setting } from './categories';
 
 const TEXTAREA_ROWS: Record<string, number> = {
   welcome_pm_body: 6,
@@ -57,6 +57,29 @@ export function SettingField({ setting, value, onChange, onUpload, error }: Prop
         className={inputClass}
         style={{ color: 'var(--text-primary)', resize: 'vertical' }}
       />
+    );
+  } else if (WORDLIST_KEYS.has(key)) {
+    // Convert JSON array ↔ one word per line for easy editing
+    let lines = '';
+    try { lines = (JSON.parse(value) as string[]).join('\n'); } catch { lines = value; }
+    input = (
+      <div className="space-y-1">
+        <textarea
+          rows={12}
+          value={lines}
+          onChange={e => {
+            const words = e.target.value
+              .split('\n')
+              .map(w => w.trim().toLowerCase())
+              .filter(w => w.length > 0);
+            onChange(key, JSON.stringify(words));
+          }}
+          placeholder="One word per line"
+          className={`${inputClass} font-mono text-xs`}
+          style={{ color: 'var(--text-primary)', resize: 'vertical' }}
+        />
+        <p className="text-xs opacity-40">One word per line. Changes take effect within 5 minutes (Redis TTL).</p>
+      </div>
     );
   } else if (JSON_KEYS.has(key)) {
     input = (

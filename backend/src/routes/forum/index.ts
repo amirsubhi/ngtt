@@ -127,8 +127,8 @@ export const forumRoutes: FastifyPluginAsync = async app => {
       const cat = await queryOne<{ id: number }>('SELECT id FROM forum_categories WHERE slug = ?', [slug]);
       if (!cat) throw new NotFoundError('Category not found');
 
-      const cleanTitle = filterBadWords(body.data.title);
-      const cleanBody = filterBadWords(body.data.body);
+      const cleanTitle = await filterBadWords(body.data.title);
+      const cleanBody = await filterBadWords(body.data.body);
       const topicSlug = slugify(cleanTitle);
       const topicId = await executeInsert(
         'INSERT INTO forum_topics (category_id, user_id, title, slug) VALUES (?, ?, ?, ?)',
@@ -161,7 +161,7 @@ export const forumRoutes: FastifyPluginAsync = async app => {
 
       const postId = await executeInsert(
         'INSERT INTO forum_posts (topic_id, user_id, body) VALUES (?, ?, ?)',
-        [topicId, req.user.id, filterBadWords(parsed.data.body)],
+        [topicId, req.user.id, await filterBadWords(parsed.data.body)],
       );
       void execute(
         'UPDATE forum_topics SET reply_count = reply_count + 1, last_reply_at = NOW(), last_reply_by = ? WHERE id = ?',
@@ -199,7 +199,7 @@ export const forumRoutes: FastifyPluginAsync = async app => {
 
       await execute(
         'UPDATE forum_posts SET body = ?, edited_at = NOW(), edited_by = ? WHERE id = ?',
-        [filterBadWords(parsed.data.body), req.user.id, postId],
+        [await filterBadWords(parsed.data.body), req.user.id, postId],
       );
       return reply.send({ ok: true });
     },

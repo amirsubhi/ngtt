@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { TABS, JSON_KEYS, type Setting, type Tab } from './categories';
+import { TABS, JSON_KEYS, WORDLIST_KEYS, type Setting, type Tab } from './categories';
 import { SettingField } from './SettingField';
 
 export default function AdminSettingsPage() {
@@ -62,7 +62,7 @@ export default function AdminSettingsPage() {
   async function saveTab() {
     const newErrors: Record<string, string> = {};
     for (const k of dirtyKeys) {
-      if (JSON_KEYS.has(k)) {
+      if (JSON_KEYS.has(k) && !WORDLIST_KEYS.has(k)) {
         try { JSON.parse(drafts[k]); } catch { newErrors[k] = 'Invalid JSON'; }
       }
     }

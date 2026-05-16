@@ -7,6 +7,7 @@ import { query, queryOne, execute } from '../../lib/db';
 import { authenticate, requireAdmin, requireStaff } from '../../middleware/auth';
 import { NotFoundError, ValidationError } from '../../lib/errors';
 import { redis } from '../../lib/redis';
+import { invalidateBadWordsCache } from '../../lib/badwords';
 
 async function audit(userId: number, action: string, meta?: object): Promise<void> {
   await execute(
@@ -35,6 +36,7 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     await execute('UPDATE site_settings SET value=? WHERE `key`=?', [parsed.data.value, parsed.data.key]);
     await audit(req.user.id, 'setting_update', { key: parsed.data.key, value: parsed.data.value });
     void redis.del('public:settings').catch(() => {});
+    if (parsed.data.key === 'bad_words') void invalidateBadWordsCache().catch(() => {});
     return reply.send({ ok: true });
   });
 
