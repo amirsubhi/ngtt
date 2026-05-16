@@ -16,6 +16,13 @@ const NAV = [
     ],
   },
   {
+    group: 'community',
+    items: [
+      { key: 'news',  href: '/admin/news' },
+      { key: 'forum', href: '/admin/forum' },
+    ],
+  },
+  {
     group: 'security',
     items: [
       { key: 'ip_bans', href: '/admin/ip-bans' },

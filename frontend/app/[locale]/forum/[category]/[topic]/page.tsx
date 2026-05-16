@@ -20,6 +20,7 @@ interface Topic {
   id: number;
   title: string;
   is_locked: boolean;
+  is_pinned: boolean;
   reply_count: number;
   author: string;
 }
@@ -35,10 +36,15 @@ export default function ForumTopicPage({ params }: { params: { category: string;
   const [posting, setPosting] = useState(false);
   const [token, setToken] = useState('');
   const [topicId, setTopicId] = useState<number | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
 
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
+    try {
+      const payload = JSON.parse(atob(tok.split('.')[1]));
+      if (['staff', 'admin', 'moderator'].includes(payload?.group_slug ?? '')) setIsStaff(true);
+    } catch { /* no-op */ }
   }, []);
 
   useEffect(() => {
@@ -70,6 +76,18 @@ export default function ForumTopicPage({ params }: { params: { category: string;
     } catch { /* ignore */ } finally { setPosting(false); }
   }
 
+  async function modTopic(patch: { is_pinned?: boolean; is_locked?: boolean }) {
+    if (!topicId) return;
+    await api.patch(`/api/forum/topics/${topicId}`, patch, token);
+    setTopicData(prev => prev ? { ...prev, ...patch } : prev);
+  }
+
+  async function deleteTopic() {
+    if (!topicId || !confirm('Delete this topic permanently?')) return;
+    await api.delete(`/api/forum/topics/${topicId}`, token);
+    window.location.href = `/forum/${category}`;
+  }
+
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
 
   return (
@@ -79,7 +97,39 @@ export default function ForumTopicPage({ params }: { params: { category: string;
         { label: category, href: `/forum/${category}` },
         ...(topicData ? [{ label: topicData.title }] : []),
       ]} />
-      {topicData && <h1 className="text-xl font-bold">{topicData.title}</h1>}
+
+      {topicData && (
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-xl font-bold">{topicData.title}</h1>
+          {isStaff && (
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => modTopic({ is_pinned: !topicData.is_pinned })}
+                className="text-xs px-2 py-1 rounded border border-current/20 hover:border-current/40 transition-colors"
+                style={{ color: topicData.is_pinned ? 'var(--accent)' : 'var(--text-muted)' }}
+                title={topicData.is_pinned ? 'Unpin' : 'Pin'}
+              >
+                {topicData.is_pinned ? '📌 Pinned' : '📌 Pin'}
+              </button>
+              <button
+                onClick={() => modTopic({ is_locked: !topicData.is_locked })}
+                className="text-xs px-2 py-1 rounded border border-current/20 hover:border-current/40 transition-colors"
+                style={{ color: topicData.is_locked ? 'var(--accent)' : 'var(--text-muted)' }}
+                title={topicData.is_locked ? 'Unlock' : 'Lock'}
+              >
+                {topicData.is_locked ? '🔒 Locked' : '🔓 Lock'}
+              </button>
+              <button
+                onClick={deleteTopic}
+                className="text-xs px-2 py-1 rounded border border-current/20 hover:border-red-500/40 hover:text-red-400 transition-colors"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-4">
         {posts.map(post => (

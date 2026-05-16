@@ -89,6 +89,24 @@ export const newsRoutes: FastifyPluginAsync = async app => {
     },
   );
 
+  // DELETE /api/news/:id (staff only)
+  app.delete<{ Params: { id: string } }>(
+    '/api/news/:id',
+    { preHandler: [authenticate, requireStaff] },
+    async (req, reply) => {
+      const newsId = parseInt((req.params as { id: string }).id, 10);
+      const item = await queryOne<{ slug: string }>('SELECT slug FROM news WHERE id = ?', [newsId]);
+      if (!item) throw new NotFoundError('News article not found');
+      await execute('DELETE FROM news WHERE id = ?', [newsId]);
+      void Promise.all([
+        redis.del('news:list:1'),
+        redis.del(`news:article:${item.slug}`),
+        redis.del('home:data'),
+      ]).catch(() => {});
+      return reply.send({ ok: true });
+    },
+  );
+
   // GET /api/admin/pages (list all, staff only)
   app.get('/api/admin/pages', { preHandler: [authenticate, requireStaff] }, async (_req, reply) => {
     const pages = await query('SELECT id, title, slug, body, show_in_nav, is_published, display_order FROM custom_pages ORDER BY display_order ASC');

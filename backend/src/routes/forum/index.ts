@@ -227,4 +227,64 @@ export const forumRoutes: FastifyPluginAsync = async app => {
       return reply.send({ ok: true });
     },
   );
+
+  // --- Admin: forum category management (staff only) ---
+
+  app.get('/api/admin/forum/categories', { preHandler: [authenticate, requireStaff] }, async (_req, reply) => {
+    const cats = await query(
+      'SELECT id, name, slug, description, display_order, is_staff_only, topic_count, post_count FROM forum_categories ORDER BY display_order ASC',
+    );
+    return reply.send({ categories: cats });
+  });
+
+  app.post('/api/admin/forum/categories', { preHandler: [authenticate, requireStaff] }, async (req, reply) => {
+    const parsed = z.object({
+      name: z.string().min(1).max(100),
+      slug: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/),
+      description: z.string().max(500).optional(),
+      display_order: z.number().int().default(0),
+      is_staff_only: z.boolean().default(false),
+    }).safeParse(req.body);
+    if (!parsed.success) throw new ValidationError(parsed.error.issues[0]?.message ?? 'Invalid');
+    const { name, slug, description, display_order, is_staff_only } = parsed.data;
+    const id = await executeInsert(
+      'INSERT INTO forum_categories (name, slug, description, display_order, is_staff_only) VALUES (?, ?, ?, ?, ?)',
+      [name, slug, description ?? null, display_order, is_staff_only],
+    );
+    void redis.del('forum:categories').catch(() => {});
+    return reply.status(201).send({ id });
+  });
+
+  app.put<{ Params: { id: string } }>(
+    '/api/admin/forum/categories/:id',
+    { preHandler: [authenticate, requireStaff] },
+    async (req, reply) => {
+      const catId = parseInt((req.params as { id: string }).id, 10);
+      const parsed = z.object({
+        name: z.string().min(1).max(100).optional(),
+        description: z.string().max(500).optional(),
+        display_order: z.number().int().optional(),
+        is_staff_only: z.boolean().optional(),
+      }).safeParse(req.body);
+      if (!parsed.success) throw new ValidationError('Invalid');
+      const { name, description, display_order, is_staff_only } = parsed.data;
+      if (name !== undefined) await execute('UPDATE forum_categories SET name = ? WHERE id = ?', [name, catId]);
+      if (description !== undefined) await execute('UPDATE forum_categories SET description = ? WHERE id = ?', [description, catId]);
+      if (display_order !== undefined) await execute('UPDATE forum_categories SET display_order = ? WHERE id = ?', [display_order, catId]);
+      if (is_staff_only !== undefined) await execute('UPDATE forum_categories SET is_staff_only = ? WHERE id = ?', [is_staff_only, catId]);
+      void redis.del('forum:categories').catch(() => {});
+      return reply.send({ ok: true });
+    },
+  );
+
+  app.delete<{ Params: { id: string } }>(
+    '/api/admin/forum/categories/:id',
+    { preHandler: [authenticate, requireStaff] },
+    async (req, reply) => {
+      const catId = parseInt((req.params as { id: string }).id, 10);
+      await execute('DELETE FROM forum_categories WHERE id = ?', [catId]);
+      void redis.del('forum:categories').catch(() => {});
+      return reply.send({ ok: true });
+    },
+  );
 };
