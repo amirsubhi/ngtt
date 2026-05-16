@@ -18,6 +18,7 @@
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
+    "profile": "Profile",
     "theme_toggle": "Toggle theme",
     "language": "Language",
     "admin_panel": "Admin Panel",

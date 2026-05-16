@@ -26,8 +26,13 @@ interface PublicProfile {
 
 export async function profileRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/users/me', { preHandler: [authenticate] }, async (req, reply) => {
-    const user = await queryOne<{ id: number; username: string; group_id: number; flux: number; uploaded: number; downloaded: number; avatar_url: string | null }>(
-      'SELECT id, username, group_id, flux, uploaded, downloaded, avatar_url FROM users WHERE id = ? AND is_deleted = FALSE',
+    const user = await queryOne<{ id: number; username: string; group_id: number; flux: number; uploaded: number; downloaded: number; avatar_url: string | null; group_name: string; group_color: string }>(
+      `SELECT u.id, u.username, u.group_id, u.flux, u.uploaded, u.downloaded, u.avatar_url,
+              ug.name AS group_name, ug.color AS group_color
+       FROM users u
+       JOIN user_groups ug ON ug.id = u.group_id
+       WHERE u.id = ? AND u.is_deleted = FALSE
+       LIMIT 1`,
       [req.user.id],
     );
     if (!user) throw new NotFoundError('User not found');

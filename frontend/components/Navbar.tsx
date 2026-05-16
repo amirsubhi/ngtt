@@ -34,6 +34,30 @@ const SWATCHES: Record<Theme, { bg: string; accent: string }> = {
 };
 
 interface NavUser { username: string; group_slug: string }
+interface MenuStats {
+  flux: number;
+  uploaded: number;
+  downloaded: number;
+  avatar_url: string | null;
+  group_name: string;
+  group_color: string;
+}
+
+const MENU_CACHE_KEY = 'ngtt_me';
+const MENU_CACHE_TTL = 60_000;
+
+function formatBytes(n: number): string {
+  if (n >= 1e12) return (n / 1e12).toFixed(2) + ' TB';
+  if (n >= 1e9)  return (n / 1e9).toFixed(2)  + ' GB';
+  if (n >= 1e6)  return (n / 1e6).toFixed(2)  + ' MB';
+  return (n / 1e3).toFixed(1) + ' KB';
+}
+
+function ratioColor(ratio: number): string {
+  if (ratio === Infinity || ratio >= 1) return 'oklch(0.72 0.17 145)';
+  if (ratio >= 0.5) return 'oklch(0.75 0.16 65)';
+  return 'oklch(0.62 0.20 25)';
+}
 
 export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const t = useTranslations('nav');
@@ -42,22 +66,47 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [user, setUser] = useState<NavUser | null>(null);
+  const [menuStats, setMenuStats] = useState<MenuStats | null>(null);
+  const [showMenu, setShowMenu] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const [showTheme, setShowTheme] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
+
+  function fetchMenuStats(force = false) {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    if (!force) {
+      try {
+        const raw = sessionStorage.getItem(MENU_CACHE_KEY);
+        if (raw) {
+          const { ts, data } = JSON.parse(raw) as { ts: number; data: MenuStats };
+          if (Date.now() - ts < MENU_CACHE_TTL) { setMenuStats(data); return; }
+        }
+      } catch { /* ignore */ }
+    }
+    api.get<MenuStats>('/api/users/me', token).then(data => {
+      setMenuStats(data);
+      sessionStorage.setItem(MENU_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+    }).catch(() => {});
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (!token) return;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload?.sub) setUser({ username: payload.username, group_slug: payload.group_slug ?? '' });
+      if (payload?.sub) {
+        setUser({ username: payload.username, group_slug: payload.group_slug ?? '' });
+        fetchMenuStats();
+      }
     } catch { /* no-op */ }
   }, []);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
       if (langRef.current && !langRef.current.contains(e.target as Node)) setShowLang(false);
       if (themeRef.current && !themeRef.current.contains(e.target as Node)) setShowTheme(false);
     }
@@ -69,7 +118,10 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     const token = localStorage.getItem('access_token') ?? '';
     api.post('/api/auth/logout', {}, token).catch(() => {});
     localStorage.removeItem('access_token');
+    sessionStorage.removeItem(MENU_CACHE_KEY);
     setUser(null);
+    setMenuStats(null);
+    setShowMenu(false);
     router.push('/login');
   }
 
@@ -213,23 +265,121 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
           )}
         </div>
 
-        {/* Auth links */}
+        {/* User menu */}
         {user ? (
-          <>
-            <Link
-              href={`/user/${user.username}`}
-              className="hover:opacity-80"
-              style={{ color: 'var(--text-muted)' }}
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => {
+                const next = !showMenu;
+                setShowMenu(next);
+                if (next) {
+                  try {
+                    const raw = sessionStorage.getItem(MENU_CACHE_KEY);
+                    const stale = !raw || Date.now() - (JSON.parse(raw) as { ts: number }).ts >= MENU_CACHE_TTL;
+                    if (stale) fetchMenuStats(true);
+                  } catch { fetchMenuStats(true); }
+                }
+              }}
+              className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-xs font-bold shrink-0 border border-current/20 hover:border-current/40 transition-colors"
+              style={menuStats?.avatar_url ? undefined : { backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+              aria-label="User menu"
             >
-              {user.username}
-            </Link>
-            <Link href="/settings" className="hover:opacity-80" style={{ color: 'var(--text-muted)' }}>
-              {t('settings')}
-            </Link>
-            <button onClick={logout} className="hover:opacity-80" style={{ color: 'var(--text-muted)' }}>
-              {t('logout')}
+              {menuStats?.avatar_url
+                ? <img src={menuStats.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                : user.username.slice(0, 2).toUpperCase()}
             </button>
-          </>
+
+            {showMenu && (
+              <div
+                className="absolute end-0 top-full mt-1 rounded-lg border border-current/20 shadow-xl z-50 w-56"
+                style={{ backgroundColor: 'var(--bg-elevated)' }}
+              >
+                {/* Identity header */}
+                <div className="flex items-center gap-3 p-3 border-b border-current/10">
+                  <div
+                    className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-sm font-bold"
+                    style={menuStats?.avatar_url ? undefined : { backgroundColor: 'var(--accent)', color: 'var(--bg)' }}
+                  >
+                    {menuStats?.avatar_url
+                      ? <img src={menuStats.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                      : user.username.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                      {user.username}
+                    </p>
+                    {menuStats?.group_name && (
+                      <span
+                        className="inline-block text-[10px] px-1.5 py-0.5 rounded-sm font-medium mt-0.5"
+                        style={{
+                          backgroundColor: menuStats.group_color + '33',
+                          color: menuStats.group_color,
+                        }}
+                      >
+                        {menuStats.group_name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stats grid */}
+                {menuStats ? (
+                  <div className="p-3 grid grid-cols-2 gap-y-2 text-xs border-b border-current/10">
+                    <div>
+                      <p className="opacity-40 leading-none mb-1">Ratio</p>
+                      <p
+                        className="font-mono font-semibold"
+                        style={{ color: ratioColor(menuStats.downloaded === 0 ? Infinity : menuStats.uploaded / menuStats.downloaded) }}
+                      >
+                        {menuStats.downloaded === 0 ? '∞' : (menuStats.uploaded / menuStats.downloaded).toFixed(2)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="opacity-40 leading-none mb-1">Flux</p>
+                      <p className="font-mono font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {menuStats.flux.toLocaleString()} <span className="opacity-50 font-normal">FLX</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="opacity-40 leading-none mb-1">↑ Upload</p>
+                      <p className="font-mono" style={{ color: 'var(--text-secondary)' }}>{formatBytes(menuStats.uploaded)}</p>
+                    </div>
+                    <div>
+                      <p className="opacity-40 leading-none mb-1">↓ Download</p>
+                      <p className="font-mono" style={{ color: 'var(--text-secondary)' }}>{formatBytes(menuStats.downloaded)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 text-xs opacity-40 border-b border-current/10">Loading…</div>
+                )}
+
+                {/* Nav links */}
+                <div className="py-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  <Link
+                    href={`/user/${user.username}`}
+                    onClick={() => setShowMenu(false)}
+                    className="flex items-center px-3 py-2 hover:bg-current/10 transition-colors"
+                  >
+                    {t('profile')}
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowMenu(false)}
+                    className="flex items-center px-3 py-2 hover:bg-current/10 transition-colors"
+                  >
+                    {t('settings')}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="flex items-center w-full text-start px-3 py-2 hover:bg-current/10 transition-colors"
+                    style={{ color: 'oklch(0.62 0.20 25)' }}
+                  >
+                    {t('logout')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <Link href="/login" className="font-medium" style={{ color: 'var(--accent)' }}>
             {t('login')}

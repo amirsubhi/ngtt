@@ -15,6 +15,8 @@
 
 const fs   = require('fs');
 const path = require('path');
+const os   = require('os');
+const { spawnSync } = require('child_process');
 
 // ── ANSI helpers ──────────────────────────────────────────────────────────────
 
@@ -86,10 +88,10 @@ function promptPassword(question) {
         process.stdin.removeListener('data', handler);
         process.stdout.write('\n');
         resolve(chars.join(''));
-      } else if (ch === '') {
+      } else if (ch === '') {
         process.stdout.write('\n');
         process.exit(1);
-      } else if (ch === '') {
+      } else if (ch === '') {
         if (chars.length) { chars.pop(); process.stdout.write('\b \b'); }
       } else {
         chars.push(ch);
@@ -100,13 +102,380 @@ function promptPassword(question) {
   });
 }
 
+// Run a binary and capture both stdout+stderr (handles tools like nginx -v that write to stderr)
+function runCheck(bin, args, opts = {}) {
+  const r = spawnSync(bin, args, { stdio: 'pipe', timeout: 5000, ...opts });
+  if (r.error?.code === 'ENOENT') return null; // binary not found
+  const out = `${r.stdout?.toString() ?? ''}${r.stderr?.toString() ?? ''}`.trim();
+  return out || null;
+}
+
+// Run an install command expressed as a string of whitespace-separated tokens.
+// All command strings in DEPS are hardcoded — no user input reaches here.
+function runInstallCmd(cmdStr) {
+  const [bin, ...args] = cmdStr.trim().split(/\s+/);
+  const r = spawnSync(bin, args, { stdio: 'inherit', timeout: 300_000 });
+  if (r.error || r.status !== 0) {
+    throw new Error(r.error ? r.error.message : `exit code ${r.status}`);
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 (async () => {
 
-  // ── [ 1/7 ] System requirements ─────────────────────────────────────────
+  // ── [ 1/8 ] System Dependencies ─────────────────────────────────────────
 
-  console.log(`${bold('[ 1/7 ]  System Requirements')}\n`);
+  console.log(`${bold('[ 1/8 ]  System Dependencies')}\n`);
+
+  // Detect whether we are root so we can skip sudo prefix when not needed
+  const isRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+  const su = cmd => (isRoot ? cmd : `sudo ${cmd}`);
+
+  function detectPkgManager() {
+    if (os.platform() === 'darwin') {
+      const r = spawnSync('which', ['brew'], { stdio: 'pipe' });
+      return (!r.error && r.status === 0) ? 'brew' : null;
+    }
+    for (const [bin, name] of [['apt-get', 'apt'], ['dnf', 'dnf'], ['yum', 'yum']]) {
+      const r = spawnSync('which', [bin], { stdio: 'pipe' });
+      if (!r.error && r.status === 0) return name;
+    }
+    return null;
+  }
+
+  const pkgMgr = detectPkgManager();
+
+  if (pkgMgr) {
+    note(`Package manager: ${pkgMgr}`);
+  } else {
+    note('No supported package manager detected (apt/dnf/yum/brew) — manual installation required if anything is missing');
+  }
+  console.log();
+
+  // Each dep: name, how to check version, minimum major version, install command lists per PM
+  const DEPS = [
+    {
+      name:        'MySQL / MariaDB',
+      bin:         'mysql',
+      args:        ['--version'],
+      minMajor:    8,  // MySQL 8+ or MariaDB 10.4+ (major 10 > 8, passes same check)
+      versionHint: 'MySQL 8+ or MariaDB 10.4+ required',
+      installHint: 'mysql-server installs MySQL 8; mariadb-server installs MariaDB — both work',
+      // Parse the distrib version (e.g. 10.6.16 from "10.6.16-MariaDB", or 8.0.36 from MySQL)
+      parse: out => { const m = out.match(/\b(\d+)\.\d+\.\d+/); return m ? parseInt(m[1], 10) : null; },
+      // Show "MariaDB X.Y.Z" or "MySQL X.Y.Z" instead of the raw version string
+      label: out => {
+        const mdb = out.match(/\b(\d+\.\d+\.\d+)-?MariaDB\b/i);
+        if (mdb) return `MariaDB ${mdb[1]}`;
+        const mysql = out.match(/\b(\d+\.\d+\.\d+)\b/);
+        return mysql ? `MySQL ${mysql[1]}` : out.split('\n')[0].slice(0, 60);
+      },
+      install: {
+        apt:  [su('apt-get install -y mysql-server'), su('systemctl start mysql'), su('systemctl enable mysql')],
+        dnf:  [su('dnf install -y mysql-server'), su('systemctl start mysqld'), su('systemctl enable mysqld')],
+        yum:  [su('yum install -y mysql-server'), su('systemctl start mysqld'), su('systemctl enable mysqld')],
+        brew: ['brew install mysql', 'brew services start mysql'],
+      },
+    },
+    {
+      name:     'Redis 7',
+      bin:      'redis-cli',
+      args:     ['--version'],
+      minMajor: 7,
+      parse:    out => { const m = out.match(/\b(\d+)\.\d+/); return m ? parseInt(m[1], 10) : null; },
+      install: {
+        apt:  [su('apt-get install -y redis-server'), su('systemctl start redis-server'), su('systemctl enable redis-server')],
+        dnf:  [su('dnf install -y redis'), su('systemctl start redis'), su('systemctl enable redis')],
+        yum:  [su('yum install -y redis'), su('systemctl start redis'), su('systemctl enable redis')],
+        brew: ['brew install redis', 'brew services start redis'],
+      },
+    },
+    {
+      name:     'Nginx',
+      bin:      'nginx',
+      args:     ['-v'],
+      minMajor: 1,
+      parse:    out => (out && out.toLowerCase().includes('nginx') ? 1 : null),
+      install: {
+        apt:  [su('apt-get install -y nginx'), su('systemctl start nginx'), su('systemctl enable nginx')],
+        dnf:  [su('dnf install -y nginx'), su('systemctl start nginx'), su('systemctl enable nginx')],
+        yum:  [su('yum install -y nginx'), su('systemctl start nginx'), su('systemctl enable nginx')],
+        brew: ['brew install nginx', 'brew services start nginx'],
+      },
+    },
+    {
+      name:     'PM2',
+      bin:      'pm2',
+      args:     ['--version'],
+      minMajor: 1,
+      parse:    out => { const m = out.match(/^(\d+)\./); return m ? parseInt(m[1], 10) : null; },
+      install: {
+        npm:  ['npm install -g pm2'],
+      },
+    },
+  ];
+
+  for (const dep of DEPS) {
+    const output = runCheck(dep.bin, dep.args);
+
+    if (output === null) {
+      bad(`${dep.name} — not found`);
+
+      const installCmds = dep.name === 'PM2'
+        ? dep.install.npm
+        : (pkgMgr ? dep.install[pkgMgr] ?? [] : []);
+
+      if (!installCmds.length) {
+        note(`Install ${dep.name} manually, then re-run this installer`);
+        continue;
+      }
+
+      if (dep.installHint) note(dep.installHint);
+      const ans = await prompt(`     Install ${dep.name}? [y/N] `);
+      if (ans.toLowerCase() !== 'y') {
+        note(`Skipped — install ${dep.name} before starting the app`);
+        continue;
+      }
+
+      let succeeded = true;
+      for (const cmd of installCmds) {
+        note(`Running: ${cmd}`);
+        try {
+          runInstallCmd(cmd);
+        } catch (e) {
+          bad(`Command failed: ${cmd}`, e.message);
+          succeeded = false;
+          break;
+        }
+      }
+
+      if (succeeded) {
+        pass(`${dep.name} installed`);
+      } else {
+        note(isRoot
+          ? 'Review the error above and install manually'
+          : 'If this failed with permission errors, re-run with: sudo node install.js');
+      }
+
+    } else {
+      const major = dep.parse(output);
+      const preview = dep.label ? dep.label(output) : output.split('\n')[0].slice(0, 70);
+
+      if (major !== null && major < dep.minMajor) {
+        console.log(`  ${yellow('⚠')} ${preview}`);
+        console.log(`     ${dim(dep.versionHint ?? `Version ${dep.minMajor}+ recommended`)}`);
+      } else {
+        pass(preview);
+      }
+    }
+  }
+
+  // ── Firewall ─────────────────────────────────────────────────────────────
+
+  console.log(`\n  ${dim('Firewall')}\n`);
+
+  // Privileged check — ufw/firewalld status requires root
+  const suCheck = (bin, args) => isRoot ? runCheck(bin, args) : runCheck('sudo', [bin, ...args]);
+
+  const hasUfw       = runCheck('ufw',          ['version']) !== null;
+  const hasFirewalld = runCheck('firewall-cmd',  ['--version']) !== null;
+
+  if (!hasUfw && !hasFirewalld) {
+    note('No firewall tool detected (ufw / firewalld) — verify ports 80 and 443 are open manually');
+  } else if (hasUfw) {
+    const ufwOut = suCheck('ufw', ['status']) ?? '';
+    const isActive = /Status:\s*active/i.test(ufwOut);
+
+    if (!isActive) {
+      console.log(`  ${yellow('⚠')} ufw is inactive`);
+      const ans = await prompt('     Enable ufw and open ports 80 / 443? [y/N] ');
+      if (ans.toLowerCase() === 'y') {
+        try {
+          // Allow SSH first to prevent lockout, then web ports, then enable
+          for (const cmd of [
+            su('ufw allow 22/tcp'),
+            su('ufw allow 80/tcp'),
+            su('ufw allow 443/tcp'),
+            su('ufw --force enable'),
+          ]) {
+            runInstallCmd(cmd);
+          }
+          pass('ufw enabled — ports 22, 80, 443 open');
+        } catch (e) {
+          bad('ufw enable failed', e.message);
+          note('Configure firewall manually before going live');
+        }
+      } else {
+        note('Skipped — open ports 80 and 443 before going live');
+      }
+    } else {
+      pass('ufw active');
+      for (const { port, label } of [{ port: 80, label: 'port 80 (HTTP)' }, { port: 443, label: 'port 443 (HTTPS)' }]) {
+        const open = new RegExp(`^\\s*${port}(/tcp)?\\s`, 'm').test(ufwOut);
+        if (!open) {
+          bad(`${label} not allowed in ufw`);
+          const ans = await prompt(`     Allow ${label}? [y/N] `);
+          if (ans.toLowerCase() === 'y') {
+            try { runInstallCmd(su(`ufw allow ${port}/tcp`)); pass(`${label} allowed`); }
+            catch (e) { bad(`Failed`, e.message); }
+          }
+        } else {
+          pass(`${label} allowed`);
+        }
+      }
+    }
+  } else {
+    // firewalld
+    const fwState = suCheck('firewall-cmd', ['--state']) ?? '';
+    const isRunning = fwState.trim() === 'running';
+
+    if (!isRunning) {
+      console.log(`  ${yellow('⚠')} firewalld is not running`);
+      const ans = await prompt('     Start firewalld and open ports 80 / 443? [y/N] ');
+      if (ans.toLowerCase() === 'y') {
+        try {
+          for (const cmd of [
+            su('systemctl start firewalld'),
+            su('firewall-cmd --permanent --add-service=http'),
+            su('firewall-cmd --permanent --add-service=https'),
+            su('firewall-cmd --reload'),
+          ]) {
+            runInstallCmd(cmd);
+          }
+          pass('firewalld started — http and https open');
+        } catch (e) {
+          bad('firewalld setup failed', e.message);
+        }
+      } else {
+        note('Skipped — open ports 80 and 443 before going live');
+      }
+    } else {
+      pass('firewalld running');
+      for (const { service, label } of [
+        { service: 'http',  label: 'port 80 (HTTP)' },
+        { service: 'https', label: 'port 443 (HTTPS)' },
+      ]) {
+        const check = suCheck('firewall-cmd', [`--query-service=${service}`]) ?? '';
+        if (check.trim() !== 'yes') {
+          bad(`${label} not in firewalld`);
+          const ans = await prompt(`     Allow ${label}? [y/N] `);
+          if (ans.toLowerCase() === 'y') {
+            try {
+              runInstallCmd(su(`firewall-cmd --permanent --add-service=${service}`));
+              runInstallCmd(su('firewall-cmd --reload'));
+              pass(`${label} allowed`);
+            } catch (e) { bad('Failed', e.message); }
+          }
+        } else {
+          pass(`${label} allowed`);
+        }
+      }
+    }
+  }
+
+  // ── Services (autostart + running) ───────────────────────────────────────
+
+  console.log(`\n  ${dim('Services')}\n`);
+
+  const hasSystemd = runCheck('systemctl', ['--version']) !== null;
+
+  if (!hasSystemd) {
+    note('systemd not detected — ensure MySQL, Redis, and Nginx start automatically for your init system');
+    note('PM2: run pm2 startup && pm2 save after adding processes');
+  } else {
+    const SVC_GROUPS = [
+      { candidates: ['mysql', 'mysqld'],       label: 'MySQL' },
+      { candidates: ['redis-server', 'redis'], label: 'Redis' },
+      { candidates: ['nginx'],                 label: 'Nginx' },
+    ];
+
+    for (const grp of SVC_GROUPS) {
+      // Probe which unit name systemd knows about
+      let svcName = null;
+      for (const name of grp.candidates) {
+        const r = spawnSync('systemctl', ['cat', name], { stdio: 'pipe' });
+        if (r.status === 0) { svcName = name; break; }
+      }
+
+      if (!svcName) {
+        note(`${grp.label} service not found in systemd — verify installation`);
+        continue;
+      }
+
+      // Check running
+      const activeOut = (runCheck('systemctl', ['is-active', svcName]) ?? '').trim();
+      if (activeOut !== 'active') {
+        bad(`${grp.label} (${svcName}) is not running`);
+        const ans = await prompt(`     Start ${grp.label} now? [y/N] `);
+        if (ans.toLowerCase() === 'y') {
+          try { runInstallCmd(su(`systemctl start ${svcName}`)); pass(`${grp.label} started`); }
+          catch (e) { bad(`Failed to start ${grp.label}`, e.message); }
+        }
+      } else {
+        pass(`${grp.label} running`);
+      }
+
+      // Check autostart
+      const enabledOut = (runCheck('systemctl', ['is-enabled', svcName]) ?? '').trim();
+      if (enabledOut !== 'enabled') {
+        const ans = await prompt(`     Enable ${grp.label} autostart on boot? [y/N] `);
+        if (ans.toLowerCase() === 'y') {
+          try { runInstallCmd(su(`systemctl enable ${svcName}`)); pass(`${grp.label} autostart enabled`); }
+          catch (e) { bad(`Failed to enable ${grp.label}`, e.message); }
+        } else {
+          note(`${grp.label} will not start automatically on boot`);
+        }
+      } else {
+        pass(`${grp.label} autostart enabled`);
+      }
+    }
+
+    note('PM2: run pm2 startup && pm2 save after adding app processes');
+  }
+
+  // ── Timezone ─────────────────────────────────────────────────────────────
+
+  console.log(`\n  ${dim('Timezone')}\n`);
+
+  const hasTimedatectl = runCheck('timedatectl', ['--version']) !== null;
+
+  if (!hasTimedatectl) {
+    note('timedatectl not available — set your timezone via your OS settings');
+  } else {
+    const tzRaw = runCheck('timedatectl', ['show', '--property=Timezone', '--value']) ?? '';
+    const currentTz = tzRaw.trim() || 'unknown';
+    console.log(`  ${dim('Current timezone:')} ${bold(currentTz)}\n`);
+
+    const changeTz = await prompt('  Change timezone? [y/N] ');
+    if (changeTz.toLowerCase() === 'y') {
+      note('Examples: Asia/Kuala_Lumpur, America/New_York, Europe/London, UTC');
+      note('Full list: timedatectl list-timezones');
+      const tz = await prompt('  Timezone: ');
+      if (tz.trim()) {
+        // Use spawnSync directly so the tz arg is never shell-interpreted
+        const r = spawnSync(
+          isRoot ? 'timedatectl' : 'sudo',
+          isRoot ? ['set-timezone', tz.trim()] : ['timedatectl', 'set-timezone', tz.trim()],
+          { stdio: 'inherit', timeout: 10_000 },
+        );
+        if (r.error || r.status !== 0) {
+          bad('Failed to set timezone', r.error?.message ?? `exit code ${r.status}`);
+          note('Run manually: sudo timedatectl set-timezone <timezone>');
+        } else {
+          pass(`Timezone set to ${tz.trim()}`);
+        }
+      }
+    } else {
+      pass(`Timezone: ${currentTz}`);
+    }
+  }
+
+  console.log();
+
+  // ── [ 2/8 ] System requirements ─────────────────────────────────────────
+
+  console.log(`${bold('[ 2/8 ]  System Requirements')}\n`);
 
   let errors = 0;
 
@@ -128,9 +497,9 @@ function promptPassword(question) {
 
   if (errors) exitWithErrors();
 
-  // ── [ 2/7 ] Environment variables ───────────────────────────────────────
+  // ── [ 3/8 ] Environment variables ───────────────────────────────────────
 
-  console.log(`\n${bold('[ 2/7 ]  Environment Variables')}\n`);
+  console.log(`\n${bold('[ 3/8 ]  Environment Variables')}\n`);
 
   const envPath = path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) {
@@ -162,9 +531,9 @@ function promptPassword(question) {
 
   if (errors) exitWithErrors();
 
-  // ── [ 3/7 ] MySQL ────────────────────────────────────────────────────────
+  // ── [ 4/8 ] MySQL ────────────────────────────────────────────────────────
 
-  console.log(`\n${bold('[ 3/7 ]  MySQL Connection')}\n`);
+  console.log(`\n${bold('[ 4/8 ]  MySQL Connection')}\n`);
 
   const mysql = require('mysql2/promise');
   let conn;
@@ -177,9 +546,9 @@ function promptPassword(question) {
     exitWithErrors();
   }
 
-  // ── [ 4/7 ] Redis ────────────────────────────────────────────────────────
+  // ── [ 5/8 ] Redis ────────────────────────────────────────────────────────
 
-  console.log(`\n${bold('[ 4/7 ]  Redis Connection')}\n`);
+  console.log(`\n${bold('[ 5/8 ]  Redis Connection')}\n`);
 
   const Redis = require('ioredis');
   const redis = new Redis(process.env.REDIS_URL, {
@@ -198,9 +567,9 @@ function promptPassword(question) {
     redis.disconnect();
   }
 
-  // ── [ 5/7 ] Database setup ───────────────────────────────────────────────
+  // ── [ 6/8 ] Database setup ───────────────────────────────────────────────
 
-  console.log(`\n${bold('[ 5/7 ]  Database Setup')}\n`);
+  console.log(`\n${bold('[ 6/8 ]  Database Setup')}\n`);
 
   note('Applying migrations…');
   try {
@@ -244,9 +613,9 @@ function promptPassword(question) {
     pass('Upload directory present');
   }
 
-  // ── [ 6/7 ] Legal pages ─────────────────────────────────────────────────
+  // ── [ 7/8 ] Legal pages ─────────────────────────────────────────────────
 
-  console.log(`\n${bold('[ 6/7 ]  Legal Pages')}\n`);
+  console.log(`\n${bold('[ 7/8 ]  Legal Pages')}\n`);
   console.log(`  ${dim('These details appear in your Terms, DMCA, and Support pages.')}`);
   console.log(`  ${dim('Leave blank to keep [PLACEHOLDER] markers and fill in later.\n')}`);
 
@@ -325,7 +694,7 @@ Last updated: [DATE]
 
 1. Overview
 
-[SITE NAME] ("the Site") respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 ("DMCA"), 17 U.S.C. § 512, the Site will respond expeditiously to claims of copyright infringement. The Site functions as a BitTorrent tracker and meta-index and does not host copyrighted content files directly.
+[SITE NAME] ("the Site") respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 ("DMCA"), 17 U.S.C. 512, the Site will respond expeditiously to claims of copyright infringement. The Site functions as a BitTorrent tracker and meta-index and does not host copyrighted content files directly.
 
 2. Designated DMCA Agent
 
@@ -334,28 +703,28 @@ To submit a copyright infringement notice, contact our designated agent:
   DMCA Agent: [DMCA AGENT NAME]
   Email:      [DMCA EMAIL]
 
-3. How to Submit a Takedown Notice (17 U.S.C. § 512(c)(3))
+3. How to Submit a Takedown Notice (17 U.S.C. 512(c)(3))
 
 To be valid, your written notice must include ALL of the following:
 
   a. A physical or electronic signature of the copyright owner or a person authorized to act on their behalf.
   b. Identification of the copyrighted work claimed to have been infringed.
   c. Identification of the material on the Site that you claim is infringing, with enough detail for us to locate it (e.g., the full URL of the torrent page).
-  d. Your contact information — name, address, telephone number, and email address.
+  d. Your contact information: name, address, telephone number, and email address.
   e. A statement that you have a good faith belief that the use of the material in the manner complained of is not authorized by the copyright owner, its agent, or the law.
   f. A statement, made under penalty of perjury, that the information in your notice is accurate and that you are the copyright owner or authorized to act on behalf of the copyright owner.
 
-Notices that do not satisfy all requirements may be disregarded. False or misleading notices may expose the sender to liability under 17 U.S.C. § 512(f).
+Notices that do not satisfy all requirements may be disregarded. False or misleading notices may expose the sender to liability under 17 U.S.C. 512(f).
 
 4. Our Response
 
 Upon receipt of a valid takedown notice, we will remove or disable access to the identified torrent listing promptly, notify the uploader, and document the notice for our repeat infringer records.
 
-5. Counter-Notice (17 U.S.C. § 512(g))
+5. Counter-Notice (17 U.S.C. 512(g))
 
 If you believe your content was removed by mistake or misidentification, you may submit a counter-notice to our DMCA Agent containing your signature, identification of the removed material, a good faith statement under penalty of perjury, your contact details, and consent to federal court jurisdiction.
 
-Upon receipt of a valid counter-notice, we will forward it to the original complainant. If the complainant does not file a court action within 10–14 business days, we may reinstate the removed material.
+Upon receipt of a valid counter-notice, we will forward it to the original complainant. If the complainant does not file a court action within 10 to 14 business days, we may reinstate the removed material.
 
 6. Repeat Infringer Policy
 
@@ -372,11 +741,11 @@ Welcome to [SITE NAME]. This page covers the most common questions and how to ge
 
 Getting Started
 ---------------
-After logging in, use the Browse page to find torrents. Download the .torrent file or copy the magnet link into your torrent client (qBittorrent, Deluge, Transmission, etc.). Make sure your client is configured to use your personal announce URL — found in your Profile under Settings.
+After logging in, use the Browse page to find torrents. Download the .torrent file or copy the magnet link into your torrent client (qBittorrent, Deluge, Transmission, etc.). Make sure your client is configured to use your personal announce URL: found in your Profile under Settings.
 
 Maintaining Your Ratio
 ----------------------
-Your ratio is your total uploaded bytes divided by your total downloaded bytes. A healthy ratio is above 1.0. To build ratio, seed your downloads for as long as possible after they complete. Freeleech torrents do not count against your downloaded total — take advantage of them.
+Your ratio is your total uploaded bytes divided by your total downloaded bytes. A healthy ratio is above 1.0. To build ratio, seed your downloads for as long as possible after they complete. Freeleech torrents do not count against your downloaded total: take advantage of them.
 
 If your ratio drops below the minimum threshold, your download privileges may be limited until you seed enough to recover. Check the Site Rules page for the current minimum.
 
@@ -422,9 +791,9 @@ Please include your username and a clear description of the issue.`);
     }
   }
 
-  // ── [ 7/7 ] Administrator account ───────────────────────────────────────
+  // ── [ 8/8 ] Administrator account ───────────────────────────────────────
 
-  console.log(`\n${bold('[ 7/7 ]  Administrator Account')}\n`);
+  console.log(`\n${bold('[ 8/8 ]  Administrator Account')}\n`);
 
   const [[{ cnt }]] = await conn.query('SELECT COUNT(*) AS cnt FROM users');
 

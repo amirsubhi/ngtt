@@ -35,6 +35,7 @@ interface Keys { passkey: string; api_key: string | null; api_enabled: boolean; 
 interface Settings {
   theme: string;
   locale: string;
+  two_factor_enabled: boolean;
   browse_view: string;
   profile_private: boolean;
   show_online_status: boolean;
@@ -79,12 +80,71 @@ export default function SettingsPage() {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
 
+  // 2FA state
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [twoFaPhase, setTwoFaPhase] = useState<'idle' | 'password' | 'qr' | 'backup'>('idle');
+  const [twoFaPassword, setTwoFaPassword] = useState('');
+  const [twoFaQr, setTwoFaQr] = useState('');
+  const [twoFaSecret, setTwoFaSecret] = useState('');
+  const [twoFaCode, setTwoFaCode] = useState('');
+  const [twoFaBackupCodes, setTwoFaBackupCodes] = useState<string[]>([]);
+  const [twoFaError, setTwoFaError] = useState('');
+  const [disabling, setDisabling] = useState(false);
+  const [disablePassword, setDisablePassword] = useState('');
+  const [disableCode, setDisableCode] = useState('');
+  const [disableError, setDisableError] = useState('');
+
+  function resetTwoFa() {
+    setTwoFaPhase('idle');
+    setTwoFaPassword(''); setTwoFaQr(''); setTwoFaSecret('');
+    setTwoFaCode(''); setTwoFaBackupCodes([]); setTwoFaError('');
+  }
+
+  async function handleTwoFaSetupStart(e: FormEvent) {
+    e.preventDefault();
+    setTwoFaError('');
+    try {
+      const res = await api.post<{ secret: string; qr_code_url: string }>('/api/auth/2fa/setup', { password: twoFaPassword }, token);
+      setTwoFaQr(res.qr_code_url);
+      setTwoFaSecret(res.secret);
+      setTwoFaPassword('');
+      setTwoFaPhase('qr');
+    } catch (err) {
+      setTwoFaError(err instanceof ApiError ? err.message : 'Setup failed');
+    }
+  }
+
+  async function handleTwoFaVerify(e: FormEvent) {
+    e.preventDefault();
+    setTwoFaError('');
+    try {
+      const res = await api.post<{ backup_codes: string[] }>('/api/auth/2fa/verify', { code: twoFaCode }, token);
+      setTwoFaBackupCodes(res.backup_codes);
+      setTwoFaPhase('backup');
+    } catch (err) {
+      setTwoFaError(err instanceof ApiError ? err.message : 'Invalid code — try again');
+    }
+  }
+
+  async function handleTwoFaDisable(e: FormEvent) {
+    e.preventDefault();
+    setDisableError('');
+    try {
+      await api.post('/api/auth/2fa/disable', { password: disablePassword, code: disableCode }, token);
+      setTwoFaEnabled(false);
+      setDisabling(false);
+      setDisablePassword(''); setDisableCode('');
+    } catch (err) {
+      setDisableError(err instanceof ApiError ? err.message : 'Failed to disable 2FA');
+    }
+  }
+
   useEffect(() => {
     const t = localStorage.getItem('access_token') ?? '';
     setToken(t);
     if (!t) { router.push('/login'); return; }
     api.get<Settings>('/api/users/me/settings', t)
-      .then(s => setSettings(s))
+      .then(s => { setSettings(s); setTwoFaEnabled(!!s.two_factor_enabled); })
       .catch(() => {});
     api.get<Keys>('/api/users/me/keys', t)
       .then(setKeys)
@@ -391,6 +451,103 @@ export default function SettingsPage() {
                 </button>
               </div>
             ) : <p className="text-xs opacity-40">Loading…</p>}
+          </div>
+
+          {/* Two-Factor Authentication */}
+          <div className="space-y-3 p-4 rounded border border-current/10">
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium">Two-Factor Authentication</h2>
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${twoFaEnabled ? 'text-green-400 border-green-500/30' : 'opacity-40 border-current/20'}`}>
+                {twoFaEnabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+
+            {/* Idle — not enabled */}
+            {!twoFaEnabled && twoFaPhase === 'idle' && !disabling && (
+              <>
+                <p className="text-xs opacity-50">Add a second layer of security using an authenticator app (Google Authenticator, Authy, 1Password, etc.).</p>
+                <button onClick={() => setTwoFaPhase('password')} className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>Enable 2FA</button>
+              </>
+            )}
+
+            {/* Step 1 — confirm password */}
+            {!twoFaEnabled && twoFaPhase === 'password' && (
+              <form onSubmit={handleTwoFaSetupStart} className="space-y-3">
+                <p className="text-xs opacity-50">Confirm your password to begin setup.</p>
+                <input type="password" value={twoFaPassword} onChange={e => setTwoFaPassword(e.target.value)}
+                  placeholder="Your password" required autoFocus className={inputCls} />
+                {twoFaError && <p className="text-sm text-red-500">{twoFaError}</p>}
+                <div className="flex gap-3">
+                  <button type="submit" className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>Continue</button>
+                  <button type="button" onClick={resetTwoFa} className="text-xs opacity-50 hover:opacity-80">Cancel</button>
+                </div>
+              </form>
+            )}
+
+            {/* Step 2 — scan QR, enter code */}
+            {!twoFaEnabled && twoFaPhase === 'qr' && (
+              <div className="space-y-4">
+                <p className="text-xs opacity-50">Scan the QR code with your authenticator app, then enter the 6-digit code it shows.</p>
+                {twoFaQr && <img src={twoFaQr} alt="2FA QR code" className="w-36 h-36 rounded" />}
+                <div>
+                  <p className="text-xs opacity-40 mb-1">Manual entry key:</p>
+                  <code className="text-xs font-mono bg-current/10 px-2 py-1 rounded break-all select-all">{twoFaSecret}</code>
+                </div>
+                <form onSubmit={handleTwoFaVerify} className="space-y-3">
+                  <input type="text" inputMode="numeric" pattern="\d{6}" maxLength={6}
+                    value={twoFaCode} onChange={e => setTwoFaCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="000000" autoFocus autoComplete="one-time-code"
+                    className={inputCls + ' font-mono tracking-[0.4em] w-40'} />
+                  {twoFaError && <p className="text-sm text-red-500">{twoFaError}</p>}
+                  <div className="flex gap-3">
+                    <button type="submit" className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>Verify</button>
+                    <button type="button" onClick={resetTwoFa} className="text-xs opacity-50 hover:opacity-80">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Step 3 — show backup codes */}
+            {!twoFaEnabled && twoFaPhase === 'backup' && (
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-amber-400">2FA is now enabled. Save these backup codes — they will not be shown again.</p>
+                <p className="text-xs opacity-50">Each code can be used once in place of your authenticator code if you lose access to your device.</p>
+                <div className="grid grid-cols-2 gap-1 py-2">
+                  {twoFaBackupCodes.map(c => (
+                    <code key={c} className="font-mono text-xs bg-current/10 px-2 py-1 rounded">{c}</code>
+                  ))}
+                </div>
+                <button onClick={() => { setTwoFaEnabled(true); resetTwoFa(); }}
+                  className={btnCls} style={{ backgroundColor: 'var(--accent)' }}>
+                  Done — I have saved my backup codes
+                </button>
+              </div>
+            )}
+
+            {/* Idle — enabled */}
+            {twoFaEnabled && !disabling && (
+              <>
+                <p className="text-xs opacity-50">Your account is protected. You will need your authenticator app or a backup code each time you log in.</p>
+                <button onClick={() => setDisabling(true)} className="text-xs text-red-400 hover:text-red-300">Disable 2FA</button>
+              </>
+            )}
+
+            {/* Disable form */}
+            {twoFaEnabled && disabling && (
+              <form onSubmit={handleTwoFaDisable} className="space-y-3">
+                <p className="text-xs opacity-50">Enter your password and your current authenticator code (or a backup code) to disable 2FA.</p>
+                <input type="password" value={disablePassword} onChange={e => setDisablePassword(e.target.value)}
+                  placeholder="Password" required className={inputCls} />
+                <input type="text" inputMode="numeric" value={disableCode} onChange={e => setDisableCode(e.target.value)}
+                  placeholder="6-digit code or backup code" autoComplete="one-time-code" className={inputCls + ' font-mono'} />
+                {disableError && <p className="text-sm text-red-500">{disableError}</p>}
+                <div className="flex gap-3">
+                  <button type="submit" className="rounded border border-red-500/40 text-red-400 px-4 py-2 text-sm hover:bg-red-500/10">Disable</button>
+                  <button type="button" onClick={() => { setDisabling(false); setDisablePassword(''); setDisableCode(''); setDisableError(''); }}
+                    className="text-xs opacity-50 hover:opacity-80">Cancel</button>
+                </div>
+              </form>
+            )}
           </div>
 
           {/* Username change */}

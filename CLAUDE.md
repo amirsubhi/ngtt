@@ -143,6 +143,24 @@ All pages live under `/app/[locale]/` (next-intl locale segment). Themes are CSS
 | Refresh token cookie: `SameSite=Strict; HttpOnly; Secure` | CSRF protection |
 | CORS pinned to `FRONTEND_URL` env var | Never wildcard in production |
 | `change-group` endpoint must guard against self-demotion | Admin cannot demote themselves |
+| **VARCHAR sizes must fit the actual stored value** | MySQL in non-strict mode silently truncates — use the table below |
+| `db.ts` pool sets `STRICT_TRANS_TABLES` on every connection | This makes truncation throw instead of silently corrupt — never remove it |
+
+**Column size reference — always verify before writing a migration:**
+
+| Stored value | Minimum size |
+|---|---|
+| `crypto.randomBytes(16).toString('hex')` | VARCHAR(32) |
+| `crypto.randomBytes(32).toString('hex')` | VARCHAR(64) |
+| SHA-256 hex digest | VARCHAR(64) |
+| SHA-512 hex digest | VARCHAR(128) |
+| bcrypt hash (cost any) | VARCHAR(60) |
+| `encrypt(32-char plaintext)` — AES-256-GCM base64 | VARCHAR(80) |
+| `encrypt(64-char plaintext)` | VARCHAR(124) |
+| `encrypt(N-char plaintext)` | VARCHAR(ceil((28+N)/3)*4 + 4) |
+| otplib TOTP secret (generateSecret) | VARCHAR(32) plaintext; VARCHAR(128) encrypted |
+| JWT access token | TEXT or VARCHAR(512+) |
+| Any value from `encrypt()` | VARCHAR(512) to be safe |
 
 Full errata with longer explanations in `docs/guide.md` → **ERRATA & CONSTRAINTS** section (E1–E13).
 

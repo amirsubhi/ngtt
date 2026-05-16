@@ -7,6 +7,16 @@ export const pool = mysql.createPool({
   waitForConnections: true,
 });
 
+// Force strict mode on every connection regardless of server default.
+// Without this, MySQL silently truncates values that exceed a VARCHAR limit,
+// producing corrupt data with no error — e.g. an 80-char encrypted secret
+// silently stored in a VARCHAR(32) column will always fail to decrypt.
+pool.on('connection', conn => {
+  (conn as any).query(
+    "SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
+  );
+});
+
 export async function query<T>(sql: string, params?: any[]): Promise<T[]> {
   const [rows] = await pool.execute(sql, params);
   return rows as T[];

@@ -46,8 +46,8 @@ export async function userSettingsRoutes(app: FastifyInstance): Promise<void> {
   app.get('/api/users/me/settings', { preHandler: [authenticate] }, async (req, reply) => {
     const userId = req.user.id;
     const [user, prefs] = await Promise.all([
-      queryOne<{ theme: string; locale: string; about_me: string | null; avatar_url: string | null; passkey: string; api_key: string | null; api_enabled: boolean }>(
-        'SELECT theme, locale, about_me, avatar_url, passkey, api_key, api_enabled FROM users WHERE id = ? LIMIT 1',
+      queryOne<{ theme: string; locale: string; about_me: string | null; avatar_url: string | null; passkey: string; api_key: string | null; api_enabled: boolean; two_factor_enabled: boolean }>(
+        'SELECT theme, locale, about_me, avatar_url, passkey, api_key, api_enabled, two_factor_enabled FROM users WHERE id = ? LIMIT 1',
         [userId],
       ),
       queryOne<Record<string, unknown>>(
