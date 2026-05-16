@@ -20,17 +20,6 @@ interface NewsItem {
   author: string;
 }
 
-interface Torrent {
-  id: number;
-  name: string;
-  category_name: string | null;
-  size: number;
-  seeders: number;
-  leechers: number;
-  is_freeleech: boolean;
-  uploader: string;
-}
-
 interface Birthday {
   username: string;
 }
@@ -38,7 +27,6 @@ interface Birthday {
 interface HomeData {
   stats: Stats;
   news: NewsItem[];
-  newest_torrents: Torrent[];
   birthdays: Birthday[];
 }
 
@@ -196,90 +184,38 @@ export default function HomePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Latest uploads */}
-          <div className="lg:col-span-2 space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Latest Uploads</h2>
-            <div className="rounded border border-current/10 divide-y divide-current/5 overflow-hidden"
-              style={{ backgroundColor: 'var(--bg-surface)' }}>
-              {!data && Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex-1 min-w-0 space-y-1.5">
-                    <Skeleton height="h-4" width="w-3/4" />
-                    <Skeleton height="h-3" width="w-1/3" />
-                  </div>
-                  <div className="space-y-1 shrink-0">
-                    <Skeleton height="h-3" width="w-6" />
-                    <Skeleton height="h-3" width="w-6" />
-                  </div>
-                </div>
-              ))}
-              {data && data.newest_torrents.length === 0 && (
-                <p className="p-4 text-sm opacity-40">No torrents yet.</p>
-              )}
-              {data?.newest_torrents.map(t => (
-                <div key={t.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="flex-1 min-w-0">
-                    <Link href={`/torrent/${t.id}`}
-                      className="text-sm font-medium truncate block hover:underline"
-                      style={{ color: 'var(--text-primary)' }}>
-                      {t.name}
-                      {t.is_freeleech && (
-                        <span className="ms-2 text-xs px-1.5 py-0.5 rounded font-semibold"
-                          style={{ backgroundColor: 'var(--success)', color: '#fff', fontSize: '10px' }}>
-                          FL
-                        </span>
-                      )}
-                    </Link>
-                    <div className="text-xs mt-0.5 flex gap-2" style={{ color: 'var(--text-muted)' }}>
-                      {t.category_name && <span>{t.category_name}</span>}
-                      <span>{formatBytes(t.size)}</span>
-                      <span>by {t.uploader}</span>
-                    </div>
-                  </div>
-                  <div className="text-xs shrink-0 text-end" style={{ color: 'var(--text-muted)' }}>
-                    <div style={{ color: 'var(--success)' }}>↑{t.seeders}</div>
-                    <div style={{ color: 'var(--danger)' }}>↓{t.leechers}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {authed === true && (
-              <Link href="/browse" className="text-xs opacity-50 hover:opacity-80">
-                Browse all torrents &rarr;
-              </Link>
+        {/* News */}
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">News</h2>
+          <div className="rounded border border-current/10 divide-y divide-current/5 overflow-hidden"
+            style={{ backgroundColor: 'var(--bg-surface)' }}>
+            {!data && Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 space-y-2">
+                <Skeleton height="h-4" width="w-3/4" />
+                <Skeleton height="h-3" width="w-32" />
+              </div>
+            ))}
+            {data && data.news.length === 0 && (
+              <p className="p-4 text-sm opacity-40">No news yet.</p>
             )}
+            {data?.news.map(n => (
+              <div key={n.id} className="px-4 py-3">
+                <Link href={`/news/${n.slug}`}
+                  className="font-medium text-sm hover:underline block"
+                  style={{ color: 'var(--text-primary)' }}>
+                  {n.title}
+                </Link>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  {n.author} · {new Date(n.published_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
           </div>
-
-          {/* News */}
-          <div className="space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">News</h2>
-            <div className="space-y-3">
-              {!data && Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded border border-current/10 p-4 space-y-2"
-                  style={{ backgroundColor: 'var(--bg-surface)' }}>
-                  <Skeleton height="h-4" width="w-full" />
-                  <Skeleton height="h-3" width="w-24" />
-                </div>
-              ))}
-              {data && data.news.length === 0 && (
-                <p className="text-sm opacity-40">No news yet.</p>
-              )}
-              {data?.news.map(n => (
-                <div key={n.id} className="rounded border border-current/10 p-4"
-                  style={{ backgroundColor: 'var(--bg-surface)' }}>
-                  <Link href={`/news/${n.slug}`}
-                    className="font-medium text-sm hover:underline block"
-                    style={{ color: 'var(--text-primary)' }}>
-                    {n.title}
-                  </Link>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                    {n.author} · {new Date(n.published_at).toLocaleDateString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {authed === true && (
+            <Link href="/browse" className="text-xs opacity-50 hover:opacity-80">
+              Browse torrents &rarr;
+            </Link>
+          )}
         </div>
       </div>
     </div>

@@ -6,18 +6,6 @@ import { redis } from '../lib/redis';
 const HOME_CACHE_KEY = 'home:data';
 const HOME_TTL = 60;
 
-interface HomeTorrent {
-  id: number;
-  name: string;
-  category_name: string | null;
-  size: number;
-  seeders: number;
-  leechers: number;
-  is_freeleech: boolean;
-  created_at: string;
-  uploader: string;
-}
-
 interface HomeNews {
   id: number;
   title: string;
@@ -36,7 +24,7 @@ export const homeRoutes: FastifyPluginAsync = async app => {
     const cached = await redis.get(HOME_CACHE_KEY);
     if (cached) return reply.send(JSON.parse(cached) as object);
 
-    const [stats, newsRows, torrentRows, birthdayRows] = await Promise.all([
+    const [stats, newsRows, birthdayRows] = await Promise.all([
       queryOne<{
         torrent_count: number;
         user_count: number;
@@ -53,18 +41,7 @@ export const homeRoutes: FastifyPluginAsync = async app => {
       query<HomeNews>(
         `SELECT n.id, n.title, n.slug, n.published_at, u.username AS author
          FROM news n JOIN users u ON u.id = n.author_id
-         ORDER BY n.is_pinned DESC, n.published_at DESC LIMIT 3`,
-      ),
-
-      query<HomeTorrent>(
-        `SELECT t.id, t.name, c.label AS category_name, t.size,
-                0 AS seeders, 0 AS leechers, t.is_freeleech, t.created_at,
-                u.username AS uploader
-         FROM torrents t
-         LEFT JOIN categories c ON c.id = t.category_id
-         JOIN users u ON u.id = t.uploader_id
-         WHERE t.status = 'approved'
-         ORDER BY t.created_at DESC LIMIT 10`,
+         ORDER BY n.is_pinned DESC, n.published_at DESC LIMIT 5`,
       ),
 
       query<HomeBirthday>(
@@ -78,7 +55,6 @@ export const homeRoutes: FastifyPluginAsync = async app => {
     const result = {
       stats: stats ?? { torrent_count: 0, user_count: 0, total_uploaded: 0, total_downloaded: 0 },
       news: newsRows,
-      newest_torrents: torrentRows,
       birthdays: birthdayRows,
     };
     await redis.set(HOME_CACHE_KEY, JSON.stringify(result), 'EX', HOME_TTL);
