@@ -145,15 +145,43 @@ export const newsRoutes: FastifyPluginAsync = async app => {
     { preHandler: [authenticate, requireStaff] },
     async (req, reply) => {
       const pageId = parseInt((req.params as { id: string }).id, 10);
-      const parsed = z.object({ title: z.string().optional(), body: z.string().optional(), is_published: z.boolean().optional() }).safeParse(req.body);
+      const parsed = z.object({
+        title: z.string().min(1).max(255).optional(),
+        slug: z.string().min(1).max(300).optional(),
+        body: z.string().optional(),
+        show_in_nav: z.boolean().optional(),
+        display_order: z.number().optional(),
+        is_published: z.boolean().optional(),
+      }).safeParse(req.body);
       if (!parsed.success) throw new ValidationError('Invalid');
-      const { title, body, is_published } = parsed.data;
-      if (title) await execute('UPDATE custom_pages SET title = ? WHERE id = ?', [title, pageId]);
-      if (body) await execute('UPDATE custom_pages SET body = ? WHERE id = ?', [body, pageId]);
+      const { title, slug, body, show_in_nav, display_order, is_published } = parsed.data;
+
+      const before = await queryOne<{ slug: string }>('SELECT slug FROM custom_pages WHERE id = ?', [pageId]);
+      if (!before) throw new NotFoundError('Page not found');
+
+      if (title !== undefined) await execute('UPDATE custom_pages SET title = ? WHERE id = ?', [title, pageId]);
+      if (slug !== undefined) await execute('UPDATE custom_pages SET slug = ? WHERE id = ?', [slug, pageId]);
+      if (body !== undefined) await execute('UPDATE custom_pages SET body = ? WHERE id = ?', [body, pageId]);
+      if (show_in_nav !== undefined) await execute('UPDATE custom_pages SET show_in_nav = ? WHERE id = ?', [show_in_nav, pageId]);
+      if (display_order !== undefined) await execute('UPDATE custom_pages SET display_order = ? WHERE id = ?', [display_order, pageId]);
       if (is_published !== undefined) await execute('UPDATE custom_pages SET is_published = ? WHERE id = ?', [is_published, pageId]);
-      // Slug needed to target the specific cache key — fetch it
-      const updated = await queryOne<{ slug: string }>('SELECT slug FROM custom_pages WHERE id = ?', [pageId]);
-      if (updated) void redis.del(`page:public:${updated.slug}`).catch(() => {});
+
+      void redis.del(`page:public:${before.slug}`).catch(() => {});
+      if (slug && slug !== before.slug) void redis.del(`page:public:${slug}`).catch(() => {});
+      return reply.send({ ok: true });
+    },
+  );
+
+  // DELETE /api/admin/pages/:id
+  app.delete<{ Params: { id: string } }>(
+    '/api/admin/pages/:id',
+    { preHandler: [authenticate, requireStaff] },
+    async (req, reply) => {
+      const pageId = parseInt((req.params as { id: string }).id, 10);
+      const page = await queryOne<{ slug: string }>('SELECT slug FROM custom_pages WHERE id = ?', [pageId]);
+      if (!page) throw new NotFoundError('Page not found');
+      await execute('DELETE FROM custom_pages WHERE id = ?', [pageId]);
+      void redis.del(`page:public:${page.slug}`).catch(() => {});
       return reply.send({ ok: true });
     },
   );
