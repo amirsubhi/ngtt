@@ -4,6 +4,7 @@ import { execute, queryOne } from '../../lib/db';
 import { logger } from '../../lib/logger';
 import { verifySocketToken } from '../../lib/socket';
 import { jobsQueue } from '../../lib/queues';
+import { filterBadWords } from '../../lib/badwords';
 
 const SHOUTBOX_KEY = 'shoutbox';
 const MAX_MSGS = 200;
@@ -46,7 +47,7 @@ export function setupShoutbox(ns: Namespace): void {
 
     socket.on('message', async (content: unknown) => {
       if (typeof content !== 'string') return;
-      const trimmed = content.trim().slice(0, MAX_CONTENT);
+      const trimmed = filterBadWords(content.trim().slice(0, MAX_CONTENT));
       if (!trimmed) return;
 
       try {
