@@ -57,7 +57,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             />
             <Navbar logoUrl={settings.site_logo_url} />
             <main className="flex-1">{children}</main>
-            <Footer text={settings.footer_text ?? ''} />
+            <Footer text={settings.footer_text ?? ''} locale={locale} />
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
