@@ -97,6 +97,13 @@ export default function SettingsPage() {
     try {
       await api.put('/api/users/me/settings', partial, token);
       setSettings(prev => ({ ...prev, ...partial }));
+      if (partial.locale) {
+        // Locale is in the URL path — navigate to same page with new prefix
+        const segments = window.location.pathname.split('/');
+        segments[1] = partial.locale;
+        router.push(segments.join('/'));
+        return;
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch { /* ignore */ }
