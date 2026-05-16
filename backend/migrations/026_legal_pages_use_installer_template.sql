@@ -1,7 +1,6 @@
--- Reset legal page bodies to use installer template markers.
--- Migration 025 hardcoded "NGTT" content; this restores the proper
--- [SITE NAME] / [CONTACT EMAIL] / [DMCA EMAIL] markers so the installer
--- can fill them in on a fresh run, and admins know what to replace.
+-- Reset legal page bodies to installer template markers.
+-- Migration 025 hardcoded content. This version uses [SITE NAME],
+-- [CONTACT EMAIL] and [DMCA EMAIL] so the installer fills them in.
 
 UPDATE custom_pages SET body = 'Terms and Conditions
 
@@ -35,7 +34,7 @@ Members are expected to maintain a minimum upload/download ratio as specified in
 
 6. Account Termination
 
-The Site reserves the right to suspend or terminate any account, at any time, with or without notice, for conduct that violates these Terms or for any other reason at our sole discretion.
+The Site reserves the right to suspend or terminate any account at any time, with or without notice, for conduct that violates these Terms or for any other reason at our sole discretion.
 
 7. Disclaimer of Warranties
 
@@ -55,7 +54,7 @@ Last updated: [DATE]
 
 1. Overview
 
-[SITE NAME] respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 ("DMCA"), 17 U.S.C. § 512, the Site will respond expeditiously to claims of copyright infringement.
+[SITE NAME] respects the intellectual property rights of others and expects users to do the same. In accordance with the Digital Millennium Copyright Act of 1998 ("DMCA"), 17 U.S.C. 512, the Site will respond expeditiously to claims of copyright infringement.
 
 2. Designated DMCA Agent
 
@@ -71,11 +70,11 @@ Your written notice must include ALL of the following:
   a. A physical or electronic signature of the copyright owner or authorized representative.
   b. Identification of the copyrighted work claimed to have been infringed.
   c. Identification of the material on the Site that you claim is infringing (e.g. the full URL of the torrent page).
-  d. Your contact information — name, address, telephone number, and email address.
+  d. Your contact information including name, address, telephone number, and email address.
   e. A good faith statement that the use of the material is not authorized by the copyright owner, its agent, or the law.
   f. A statement under penalty of perjury that the information is accurate and that you are authorized to act on behalf of the copyright owner.
 
-Notices that do not satisfy all requirements may be disregarded. False notices may expose the sender to liability under 17 U.S.C. § 512(f).
+Notices that do not satisfy all requirements may be disregarded. False notices may expose the sender to liability under 17 U.S.C. 512(f).
 
 4. Our Response
 
@@ -83,7 +82,7 @@ Upon receipt of a valid takedown notice, we will remove or disable access to the
 
 5. Counter-Notice
 
-If you believe your content was removed by mistake, you may submit a counter-notice to our DMCA Agent containing your signature, identification of the removed material, a good faith statement under penalty of perjury, your contact details, and consent to federal court jurisdiction. If the complainant does not file a court action within 10-14 business days, we may reinstate the removed material.
+If you believe your content was removed by mistake, you may submit a counter-notice to our DMCA Agent containing your signature, identification of the removed material, a good faith statement under penalty of perjury, your contact details, and consent to federal court jurisdiction. If the complainant does not file a court action within 10 to 14 business days, we may reinstate the removed material.
 
 6. Repeat Infringer Policy
 
@@ -100,7 +99,7 @@ Welcome to [SITE NAME]. This page covers the most common questions and how to ge
 
 Getting Started
 ---------------
-After logging in, use the Browse page to find torrents. Download the .torrent file or copy the magnet link into your torrent client. Make sure your client is configured to use your personal announce URL — found in Settings under your profile.
+After logging in, use the Browse page to find torrents. Download the .torrent file or copy the magnet link into your torrent client. Make sure your client is configured to use your personal announce URL, found in Settings under your profile.
 
 Maintaining Your Ratio
 ----------------------
@@ -118,7 +117,7 @@ Account Issues
 Reporting Problems
 ------------------
   - Broken torrent or bad content: use the Report button on the torrent page.
-  - DMCA / copyright concern: see our DMCA Policy at /p/dmca.
+  - DMCA or copyright concern: see our DMCA Policy at /p/dmca.
   - Staff or site issue: open a ticket via the Helpdesk.
 
 Contact
