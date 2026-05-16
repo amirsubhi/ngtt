@@ -5,11 +5,18 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
+import { Turnstile } from '@/components/Turnstile';
 
 interface LoginResponse {
   token?: string;
   requires_2fa?: boolean;
   user?: { id: number; username: string; group_id: number };
+}
+
+interface PublicSettings {
+  captcha_on_login?: string;
+  turnstile_site_key?: string;
+  login_message?: string;
 }
 
 export default function LoginPage() {
@@ -23,22 +30,34 @@ export default function LoginPage() {
   const [formLoadedAt] = useState(() => Date.now());
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loginMessage, setLoginMessage] = useState('');
+  const [settings, setSettings] = useState<PublicSettings>({});
+  const [turnstileToken, setTurnstileToken] = useState('');
+
+  const captchaEnabled = settings.captcha_on_login === 'true' && !!settings.turnstile_site_key;
 
   useEffect(() => {
+    fetch('/api/settings/public')
+      .then(r => r.json())
+      .then((d: Record<string, string>) => setSettings(d))
+      .catch(() => {});
+
     fetch('/api/public/settings')
       .then(r => r.json())
-      .then((d: { settings: Record<string, string> }) => setLoginMessage(d.settings.login_message ?? ''))
+      .then((d: { settings: Record<string, string> }) => {
+        if (d.settings?.login_message) setSettings(prev => ({ ...prev, login_message: d.settings.login_message }));
+      })
       .catch(() => {});
   }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (captchaEnabled && !turnstileToken) { setError('Please complete the security check'); return; }
     setError('');
     setLoading(true);
     try {
       const body: Record<string, unknown> = { email, password, form_loaded_at: formLoadedAt };
       if (requires2fa) body.totp_code = totpCode;
+      if (turnstileToken) body.turnstile_response = turnstileToken;
 
       const res = await api.post<LoginResponse>('/api/auth/login', body);
 
@@ -48,9 +67,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (res.token) {
-        localStorage.setItem('access_token', res.token);
-      }
+      if (res.token) localStorage.setItem('access_token', res.token);
       router.push('/');
     } catch (err) {
       if (err instanceof ApiError) {
@@ -60,6 +77,7 @@ export default function LoginPage() {
       } else {
         setError(t('error_invalid'));
       }
+      setTurnstileToken('');
     } finally {
       setLoading(false);
     }
@@ -70,8 +88,8 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <h1 className="text-3xl font-bold tracking-tight text-center">{t('title')}</h1>
 
-        {loginMessage && (
-          <p className="text-center text-sm opacity-70">{loginMessage}</p>
+        {settings.login_message && (
+          <p className="text-center text-sm opacity-70">{settings.login_message}</p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,11 +130,19 @@ export default function LoginPage() {
             </div>
           )}
 
+          {captchaEnabled && !requires2fa && (
+            <Turnstile
+              siteKey={settings.turnstile_site_key!}
+              onToken={setTurnstileToken}
+              onExpire={() => setTurnstileToken('')}
+            />
+          )}
+
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (captchaEnabled && !turnstileToken && !requires2fa)}
             className="w-full rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: 'var(--accent)' }}
           >

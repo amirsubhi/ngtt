@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
+import { Turnstile } from '@/components/Turnstile';
+
+interface PublicSettings {
+  captcha_on_register?: string;
+  turnstile_site_key?: string;
+}
 
 export default function RegisterPage() {
   const t = useTranslations('auth.register');
@@ -17,13 +23,27 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [settings, setSettings] = useState<PublicSettings>({});
+  const [turnstileToken, setTurnstileToken] = useState('');
+
+  const captchaEnabled = settings.captcha_on_register === 'true' && !!settings.turnstile_site_key;
+
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(r => r.json())
+      .then((d: Record<string, string>) => setSettings(d))
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (captchaEnabled && !turnstileToken) { setError('Please complete the security check'); return; }
     setError('');
     setLoading(true);
     try {
-      await api.post('/api/auth/register', { username, email, password, form_loaded_at: formLoadedAt });
+      const body: Record<string, unknown> = { username, email, password, form_loaded_at: formLoadedAt };
+      if (turnstileToken) body.turnstile_response = turnstileToken;
+      await api.post('/api/auth/register', body);
       setDone(true);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -32,6 +52,7 @@ export default function RegisterPage() {
       } else {
         setError(t('error_taken'));
       }
+      setTurnstileToken('');
     } finally {
       setLoading(false);
     }
@@ -85,14 +106,23 @@ export default function RegisterPage() {
               className="w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30"
             />
           </div>
-          {/* Honeypot — hidden from real users */}
+
+          {/* Honeypot */}
           <input type="text" name="_hp" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
+          {captchaEnabled && (
+            <Turnstile
+              siteKey={settings.turnstile_site_key!}
+              onToken={setTurnstileToken}
+              onExpire={() => setTurnstileToken('')}
+            />
+          )}
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (captchaEnabled && !turnstileToken)}
             className="w-full rounded px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: 'var(--accent)' }}
           >
