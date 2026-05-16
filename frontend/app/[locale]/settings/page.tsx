@@ -98,10 +98,14 @@ export default function SettingsPage() {
       await api.put('/api/users/me/settings', partial, token);
       setSettings(prev => ({ ...prev, ...partial }));
       if (partial.locale) {
-        // Locale is in the URL path — navigate to same page with new prefix
-        const segments = window.location.pathname.split('/');
-        segments[1] = partial.locale;
-        router.push(segments.join('/'));
+        const newLocale = partial.locale;
+        const current = window.location.pathname;
+        const hasPrefix = ['ms-MY', 'zh-CN', 'es', 'pt-BR', 'ar'].some(
+          l => current.startsWith(`/${l}/`) || current === `/${l}`,
+        );
+        const stripped = hasPrefix ? current.replace(/^\/[^/]+/, '') || '/' : current;
+        const newPath = newLocale === 'en' ? stripped : `/${newLocale}${stripped === '/' ? '' : stripped}`;
+        window.location.href = newPath;
         return;
       }
       setSaved(true);

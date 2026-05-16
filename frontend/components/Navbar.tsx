@@ -77,10 +77,11 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     setShowLang(false);
     const token = localStorage.getItem('access_token') ?? '';
     if (token) api.put('/api/users/me/settings', { locale: newLocale }, token).catch(() => {});
-    const hasPrefix = NON_DEFAULT_LOCALES.some(l => pathname.startsWith(`/${l}/`) || pathname === `/${l}`);
-    const stripped = hasPrefix ? pathname.replace(/^\/[^/]+/, '') || '/' : pathname;
+    const current = window.location.pathname;
+    const hasPrefix = NON_DEFAULT_LOCALES.some(l => current.startsWith(`/${l}/`) || current === `/${l}`);
+    const stripped = hasPrefix ? current.replace(/^\/[^/]+/, '') || '/' : current;
     const newPath = newLocale === 'en' ? stripped : `/${newLocale}${stripped === '/' ? '' : stripped}`;
-    router.push(newPath);
+    window.location.href = newPath;
   }
 
   function applyTheme(next: Theme) {
