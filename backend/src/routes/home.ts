@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
 import { query, queryOne } from '../lib/db';
-import { authenticate } from '../middleware/auth';
 import { redis } from '../lib/redis';
 
 const HOME_CACHE_KEY = 'home:data';
@@ -20,7 +19,7 @@ interface HomeBirthday {
 }
 
 export const homeRoutes: FastifyPluginAsync = async app => {
-  app.get('/api/home', { preHandler: [authenticate] }, async (_req, reply) => {
+  app.get('/api/home', async (_req, reply) => {
     const cached = await redis.get(HOME_CACHE_KEY);
     if (cached) return reply.send(JSON.parse(cached) as object);
 
