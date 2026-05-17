@@ -40,6 +40,28 @@ export const adminRoutes: FastifyPluginAsync = async app => {
     return reply.send({ ok: true });
   });
 
+  // Apply site defaults to all users
+  const VALID_THEMES = ['void', 'pulse', 'cipher', 'nebula', 'ember', 'lumen', 'sand', 'cobalt'];
+  const VALID_LOCALES = ['en', 'zh-CN', 'es', 'pt-BR', 'ar', 'ms-MY'];
+
+  app.post('/api/admin/settings/apply-defaults', { preHandler: preAdmin }, async (req, reply) => {
+    const [themeRow, localeRow] = await Promise.all([
+      queryOne<{ value: string }>('SELECT value FROM site_settings WHERE `key`=?', ['default_theme']),
+      queryOne<{ value: string }>('SELECT value FROM site_settings WHERE `key`=?', ['default_locale']),
+    ]);
+    const theme = themeRow?.value ?? '';
+    const locale = localeRow?.value ?? '';
+    if (VALID_THEMES.includes(theme)) {
+      await execute('UPDATE users SET theme = ? WHERE is_deleted = FALSE', [theme]);
+    }
+    if (VALID_LOCALES.includes(locale)) {
+      await execute('UPDATE users SET locale = ? WHERE is_deleted = FALSE', [locale]);
+    }
+    await audit(req.user.id, 'apply_defaults', { theme, locale });
+    void redis.del('public:settings').catch(() => {});
+    return reply.send({ ok: true });
+  });
+
   // 10j — Flux store management
   app.get('/api/admin/flux-store', { preHandler: preAdmin }, async (_req, reply) => {
     const rows = await query('SELECT * FROM flux_store_items ORDER BY display_order');

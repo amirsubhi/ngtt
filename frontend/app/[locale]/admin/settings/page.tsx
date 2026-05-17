@@ -12,6 +12,7 @@ export default function AdminSettingsPage() {
   const [jsonErrors, setJsonErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<Tab>('general');
   const [saving, setSaving] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [toast, setToast] = useState('');
 
   useEffect(() => {
@@ -56,6 +57,20 @@ export default function AdminSettingsPage() {
     const data = await res.json() as { url: string };
     setServer(prev => ({ ...prev, [key]: data.url }));
     setToast('Image saved');
+    setTimeout(() => setToast(''), 3000);
+  }
+
+  async function applyDefaults() {
+    if (!confirm("This will override every user's theme and language preference with the current site defaults. Continue?")) return;
+    setApplying(true);
+    const token = localStorage.getItem('access_token') ?? '';
+    try {
+      await api.post('/api/admin/settings/apply-defaults', {}, token);
+      setToast('Applied to all users');
+    } catch {
+      setToast('Failed to apply');
+    }
+    setApplying(false);
     setTimeout(() => setToast(''), 3000);
   }
 
@@ -123,6 +138,28 @@ export default function AdminSettingsPage() {
           />
         ))}
       </div>
+
+      {activeTab === 'general' && (
+        <div
+          className="rounded border border-current/10 p-4 space-y-2 mt-6"
+          style={{ backgroundColor: 'var(--bg-elevated)' }}
+        >
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            Apply defaults to all users
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Overrides every user&apos;s theme and language preference with the current Default Theme and Default Language settings above.
+          </p>
+          <button
+            onClick={applyDefaults}
+            disabled={applying}
+            className="text-sm px-3 py-1.5 rounded border disabled:opacity-50"
+            style={{ color: 'var(--accent)', borderColor: 'var(--accent)' }}
+          >
+            {applying ? 'Applying…' : 'Apply to all users'}
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-6 border-t border-current/10 mt-8">
         <span

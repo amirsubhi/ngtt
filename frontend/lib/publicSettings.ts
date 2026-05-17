@@ -11,6 +11,8 @@ export interface PublicSettings {
   announcement_level?: string;
   footer_text?: string;
   registration_open?: string;
+  default_theme?: string;
+  default_locale?: string;
   custom_theme?: string;
 }
 

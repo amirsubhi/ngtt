@@ -273,6 +273,21 @@ export function Navbar({ logoUrl, customTheme }: { logoUrl?: string; customTheme
           )}
         </div>
 
+        {/* Ratio / stats strip */}
+        {user && menuStats && (
+          <div className="hidden sm:flex items-center gap-3 text-xs px-1" style={{ color: 'var(--text-muted)' }}>
+            <span title="Uploaded">↑ {formatBytes(menuStats.uploaded)}</span>
+            <span title="Downloaded">↓ {formatBytes(menuStats.downloaded)}</span>
+            <span
+              title="Ratio"
+              className="font-mono font-semibold"
+              style={{ color: ratioColor(menuStats.downloaded === 0 ? Infinity : menuStats.uploaded / menuStats.downloaded) }}
+            >
+              {menuStats.downloaded === 0 ? '∞' : (menuStats.uploaded / menuStats.downloaded).toFixed(2)}
+            </span>
+          </div>
+        )}
+
         {/* User menu */}
         {user ? (
           <div ref={menuRef} className="relative">

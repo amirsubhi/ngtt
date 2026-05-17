@@ -73,6 +73,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   const { css: customThemeCSS, swatch: customThemeSwatch } = parseCustomTheme(settings.custom_theme);
   const themeList = customThemeSwatch ? [...BUILT_IN_THEMES, 'custom'] : BUILT_IN_THEMES;
+  const siteDefaultTheme = BUILT_IN_THEMES.includes(settings.default_theme ?? '') ? settings.default_theme! : 'void';
 
   return (
     <html
@@ -83,7 +84,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     >
       <body className="flex min-h-screen flex-col">
         <style>{customThemeCSS}</style>
-        <ThemeProvider attribute="data-theme" defaultTheme="void" enableSystem={false} themes={themeList}>
+        <ThemeProvider attribute="data-theme" defaultTheme={siteDefaultTheme} enableSystem={false} themes={themeList}>
           <NextIntlClientProvider messages={messages}>
             <AnnouncementBar
               enabled={announcementEnabled}

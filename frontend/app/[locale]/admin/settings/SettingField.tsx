@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { JSON_KEYS, WORDLIST_KEYS, type Setting } from './categories';
+import { JSON_KEYS, WORDLIST_KEYS, SELECT_FIELD_OPTIONS, type Setting } from './categories';
 
 const TEXTAREA_ROWS: Record<string, number> = {
   welcome_pm_body: 6,
@@ -30,7 +30,20 @@ export function SettingField({ setting, value, onChange, onUpload, error }: Prop
 
   let input: ReactNode;
 
-  if (IMAGE_KEYS.has(key)) {
+  if (key in SELECT_FIELD_OPTIONS) {
+    input = (
+      <select
+        value={value}
+        onChange={e => onChange(key, e.target.value)}
+        className={inputClass}
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {SELECT_FIELD_OPTIONS[key].map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    );
+  } else if (IMAGE_KEYS.has(key)) {
     input = (
       <label className="inline-flex items-center gap-3 cursor-pointer">
         {value && <img src={value} alt="" className="h-8 w-auto rounded" />}
