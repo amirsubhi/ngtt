@@ -10,6 +10,7 @@ const NAV = [
     group: 'site',
     items: [
       { key: 'settings',   href: '/admin/settings' },
+      { key: 'theme',      href: '/admin/theme' },
       { key: 'categories', href: '/admin/categories' },
       { key: 'pages',      href: '/admin/pages' },
       { key: 'flux_store', href: '/admin/flux-store' },

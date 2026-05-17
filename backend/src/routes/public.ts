@@ -5,7 +5,7 @@ import { redis } from '../lib/redis';
 const PUBLIC_KEYS = [
   'site_name', 'site_description', 'site_logo_url', 'site_favicon_url',
   'login_message', 'announcement_enabled', 'announcement_text', 'announcement_level',
-  'footer_text', 'registration_open', 'default_theme', 'default_locale',
+  'footer_text', 'registration_open', 'default_theme', 'default_locale', 'custom_theme',
 ];
 
 export const publicRoutes: FastifyPluginAsync = async app => {

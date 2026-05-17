@@ -363,7 +363,8 @@
       "clients": "Banned Clients",
       "backup": "Backup",
       "update": "Update",
-      "events": "Events"
+      "events": "Events",
+      "theme": "Theme"
     }
   }
 }

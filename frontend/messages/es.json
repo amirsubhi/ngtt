@@ -360,7 +360,8 @@
       "clients": "Clientes Baneados",
       "backup": "Copia de Seguridad",
       "update": "Actualizar",
-      "events": "Eventos"
+      "events": "Eventos",
+      "theme": "Tema"
     }
   }
 }

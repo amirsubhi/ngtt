@@ -73,6 +73,7 @@ export default function SettingsPage() {
   const [osPassword, setOsPassword] = useState('');
   const [osError, setOsError] = useState('');
 
+  const [customTheme, setCustomTheme] = useState<{ name: string; bg: string; accent: string } | null>(null);
   const [keys, setKeys] = useState<Keys | null>(null);
   const [keyLoading, setKeyLoading] = useState('');
 
@@ -148,6 +149,18 @@ export default function SettingsPage() {
       .catch(() => {});
     api.get<Keys>('/api/users/me/keys', t)
       .then(setKeys)
+      .catch(() => {});
+    api.get<{ settings: Record<string, string> }>('/api/public/settings')
+      .then(d => {
+        const raw = d.settings.custom_theme;
+        if (!raw || raw === 'null') return;
+        try {
+          const ct = JSON.parse(raw) as Record<string, string>;
+          if (ct && ct['--accent'] && ct['--bg-surface']) {
+            setCustomTheme({ name: ct.name ?? 'Custom', bg: ct['--bg-surface'], accent: ct['--accent'] });
+          }
+        } catch { /* ignore */ }
+      })
       .catch(() => {});
   }, [router]);
 
@@ -262,8 +275,10 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <label className="block text-sm font-medium">{t('theme')}</label>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-              {THEMES.map(th => {
-                const s = SWATCHES[th];
+              {([...THEMES, ...(customTheme ? ['custom' as const] : [])] as string[]).map(th => {
+                const isCustom = th === 'custom';
+                const s = isCustom && customTheme ? customTheme : (SWATCHES as Record<string, { bg: string; accent: string }>)[th] ?? SWATCHES.void;
+                const label = isCustom && customTheme ? customTheme.name : th;
                 const active = (theme ?? settings.theme) === th;
                 return (
                   <button
@@ -279,7 +294,7 @@ export default function SettingsPage() {
                       <span className="w-1/2 h-full" style={{ background: s.bg }} />
                       <span className="w-1/2 h-full" style={{ background: s.accent }} />
                     </span>
-                    <span className="text-xs capitalize opacity-70 leading-none">{th}</span>
+                    <span className="text-xs capitalize opacity-70 leading-none truncate max-w-full">{label}</span>
                   </button>
                 );
               })}

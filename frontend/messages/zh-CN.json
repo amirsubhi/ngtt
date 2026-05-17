@@ -360,7 +360,8 @@
       "clients": "封禁客户端",
       "backup": "备份",
       "update": "更新",
-      "events": "活动"
+      "events": "活动",
+      "theme": "主题"
     }
   }
 }

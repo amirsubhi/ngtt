@@ -11,6 +11,7 @@ export interface PublicSettings {
   announcement_level?: string;
   footer_text?: string;
   registration_open?: string;
+  custom_theme?: string;
 }
 
 export async function fetchPublicSettings(): Promise<PublicSettings> {

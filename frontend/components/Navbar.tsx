@@ -59,7 +59,9 @@ function ratioColor(ratio: number): string {
   return 'oklch(0.62 0.20 25)';
 }
 
-export function Navbar({ logoUrl }: { logoUrl?: string }) {
+interface CustomThemeSwatch { name: string; bg: string; accent: string }
+
+export function Navbar({ logoUrl, customTheme }: { logoUrl?: string; customTheme?: CustomThemeSwatch | null }) {
   const t = useTranslations('nav');
   const locale = useLocale();
   const pathname = usePathname();
@@ -136,7 +138,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
     window.location.href = newPath;
   }
 
-  function applyTheme(next: Theme) {
+  function applyTheme(next: string) {
     setTheme(next);
     setShowTheme(false);
     const token = localStorage.getItem('access_token') ?? '';
@@ -146,8 +148,13 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
   const isStaff = user && ['staff', 'admin', 'moderator'].includes(user.group_slug);
   const isAdmin = user?.group_slug === 'admin';
   const currentLang = LOCALES.find(l => l.value === locale) ?? LOCALES[0];
-  const activeTheme = ((theme ?? 'void') as Theme);
-  const activeSwatch = SWATCHES[activeTheme] ?? SWATCHES.void;
+  const activeTheme = (theme ?? 'void') as string;
+
+  const allThemes: string[] = customTheme ? [...THEMES, 'custom'] : [...THEMES];
+  const allSwatches: Record<string, { bg: string; accent: string }> = customTheme
+    ? { ...SWATCHES, custom: { bg: customTheme.bg, accent: customTheme.accent } }
+    : { ...SWATCHES };
+  const activeSwatch = allSwatches[activeTheme] ?? SWATCHES.void;
 
   const AUTH_SEGMENTS = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email'];
   const isAuthPage = AUTH_SEGMENTS.some(seg =>
@@ -209,14 +216,15 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
             >
               <p className="text-xs opacity-40 px-1 pb-1.5 font-medium">Theme</p>
               <div className="grid grid-cols-4 gap-1.5">
-                {THEMES.map(th => {
-                  const s = SWATCHES[th];
+                {allThemes.map(th => {
+                  const s = allSwatches[th] ?? SWATCHES.void;
                   const active = th === activeTheme;
+                  const label = (th === 'custom' && customTheme) ? customTheme.name : th;
                   return (
                     <button
                       key={th}
                       onClick={() => applyTheme(th)}
-                      title={th}
+                      title={label}
                       className="flex flex-col items-center gap-1 p-1 rounded-md hover:bg-current/10 transition-colors"
                     >
                       <span
@@ -226,7 +234,7 @@ export function Navbar({ logoUrl }: { logoUrl?: string }) {
                         <span className="w-1/2 h-full" style={{ background: s.bg }} />
                         <span className="w-1/2 h-full" style={{ background: s.accent }} />
                       </span>
-                      <span className="text-[9px] opacity-60 capitalize leading-none">{th}</span>
+                      <span className="text-[9px] opacity-60 capitalize leading-none truncate max-w-[2.5rem]">{label}</span>
                     </button>
                   );
                 })}
