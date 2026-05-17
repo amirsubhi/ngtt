@@ -94,16 +94,22 @@ export function Navbar({ logoUrl, customTheme }: { logoUrl?: string; customTheme
     }).catch(() => {});
   }
 
-  useEffect(() => {
+  function applyToken() {
     const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!token) { setUser(null); setMenuStats(null); return; }
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       if (payload?.sub) {
         setUser({ username: payload.username, group_slug: payload.group_slug ?? '' });
-        fetchMenuStats();
+        fetchMenuStats(true);
       }
     } catch { /* no-op */ }
+  }
+
+  useEffect(() => {
+    applyToken();
+    window.addEventListener('authchange', applyToken);
+    return () => window.removeEventListener('authchange', applyToken);
   }, []);
 
   useEffect(() => {

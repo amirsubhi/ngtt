@@ -67,7 +67,10 @@ export default function LoginPage() {
         return;
       }
 
-      if (res.token) localStorage.setItem('access_token', res.token);
+      if (res.token) {
+        localStorage.setItem('access_token', res.token);
+        window.dispatchEvent(new Event('authchange'));
+      }
       router.push('/');
     } catch (err) {
       if (err instanceof ApiError) {
