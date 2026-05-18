@@ -25,7 +25,7 @@ interface Transaction {
   created_at: string;
 }
 
-export default function BonusPage() {
+export default function FluxPage() {
   const t = useTranslations('flux');
   const router = useRouter();
   const [token, setToken] = useState('');

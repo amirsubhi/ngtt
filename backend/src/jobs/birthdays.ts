@@ -35,7 +35,7 @@ export async function awardBirthdayFlux(): Promise<void> {
       user_id: user.id,
       title: 'Happy Birthday!',
       body: `You've received ${reward} FLX as a birthday gift!`,
-      url: '/bonus',
+      url: '/flux',
     });
   }
 

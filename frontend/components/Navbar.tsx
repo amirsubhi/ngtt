@@ -188,7 +188,7 @@ export function Navbar({ logoUrl, customTheme }: { logoUrl?: string; customTheme
         <Link href="/forum" className="hover:opacity-80">{t('forum')}</Link>
         {user && <Link href="/upload" className="hover:opacity-80">{t('upload')}</Link>}
         {user && <Link href="/requests" className="hover:opacity-80">{t('requests')}</Link>}
-        {user && <Link href="/bonus" className="hover:opacity-80">{t('bonus')}</Link>}
+        {user && <Link href="/flux" className="hover:opacity-80">{t('flux')}</Link>}
         {user && <Link href="/stats" className="hover:opacity-80">{t('stats')}</Link>}
         {isStaff && <Link href="/staff" className="hover:opacity-80">{t('staff_panel')}</Link>}
         {isAdmin && <Link href="/admin" className="hover:opacity-80">{t('admin_panel')}</Link>}
