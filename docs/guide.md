@@ -216,7 +216,7 @@ SECTION 4 — MONOREPO STRUCTURE
       /forum
       /requests
       /messages
-      /bonus
+      /flux
       /invites
       /settings
       /user/[username]
@@ -1978,7 +1978,7 @@ BATCH 6 — FLUX ECONOMY
     Send birthday notification to user
 
 6f. Frontend:
-    /[locale]/bonus — Flux store page
+    /[locale]/flux — Flux store page
     Shows FLX balance prominently
     Store items as cards with cost + description
     Purchase button with confirmation dialog
