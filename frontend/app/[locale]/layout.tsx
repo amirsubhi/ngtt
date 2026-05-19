@@ -8,6 +8,7 @@ import { routing } from '@/i18n/routing';
 import { Navbar } from '@/components/Navbar';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { Footer } from '@/components/Footer';
+import { Shoutbox } from '@/components/Shoutbox';
 import { fetchPublicSettings } from '@/lib/publicSettings';
 import '@/styles/globals.css';
 
@@ -94,6 +95,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <Navbar logoUrl={settings.site_logo_url} customTheme={customThemeSwatch} />
             <main className="flex-1">{children}</main>
             <Footer text={settings.footer_text ?? ''} locale={locale} />
+            {settings.shoutbox_enabled !== 'false' && <Shoutbox />}
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
