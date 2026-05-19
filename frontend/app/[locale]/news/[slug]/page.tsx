@@ -16,24 +16,23 @@ interface NewsArticle {
   author: string;
 }
 
-export default function NewsArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+export default function NewsArticlePage({ params }: { params: { slug: string } }) {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [notFound, setNotFound] = useState(false);
   const router = useRouter();
+  const { slug } = params;
 
   useEffect(() => {
-    params.then(({ slug }) => {
-      const token = localStorage.getItem('access_token') ?? '';
-      api.get<NewsArticle>(`/api/news/${encodeURIComponent(slug)}`, token)
-        .then(setArticle)
-        .catch((err: unknown) => {
-          if (err instanceof ApiError && err.status === 401) {
-            router.push('/login');
-          } else {
-            setNotFound(true);
-          }
-        });
-    });
+    const token = localStorage.getItem('access_token') ?? '';
+    api.get<NewsArticle>(`/api/news/${encodeURIComponent(slug)}`, token)
+      .then(setArticle)
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 401) {
+          router.push('/login');
+        } else {
+          setNotFound(true);
+        }
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
