@@ -350,12 +350,15 @@
   "admin": {
     "nav": {
       "group_site": "Laman",
+      "group_community": "Komuniti",
       "group_security": "Keselamatan",
       "group_system": "Sistem",
       "settings": "Tetapan",
       "categories": "Kategori",
       "pages": "Halaman",
       "flux_store": "Kedai Flux",
+      "news": "Berita",
+      "forum": "Forum",
       "ip_bans": "Sekatan IP",
       "clients": "Klien Disekat",
       "backup": "Sandaran",

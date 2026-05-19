@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
+import { api, ApiError } from '@/lib/api';
 import { TABS, JSON_KEYS, WORDLIST_KEYS, type Setting, type Tab } from './categories';
 import { SettingField } from './SettingField';
 
 export default function AdminSettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<Setting[]>([]);
   const [server, setServer] = useState<Record<string, string>>({});
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -23,7 +25,9 @@ export default function AdminSettingsPage() {
         for (const s of d.settings) map[s.key] = s.value;
         setSettings(d.settings);
         setServer(map);
-      }).catch(() => {});
+      }).catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 401) router.push('/login');
+      });
   }, []);
 
   const grouped: Record<string, Setting[]> = {};

@@ -350,12 +350,15 @@
   "admin": {
     "nav": {
       "group_site": "Sitio",
+      "group_community": "Comunidad",
       "group_security": "Seguridad",
       "group_system": "Sistema",
       "settings": "Ajustes",
       "categories": "Categorías",
       "pages": "Páginas",
       "flux_store": "Tienda Flux",
+      "news": "Noticias",
+      "forum": "Foro",
       "ip_bans": "IPs Baneadas",
       "clients": "Clientes Baneados",
       "backup": "Copia de Seguridad",

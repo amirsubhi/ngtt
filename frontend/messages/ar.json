@@ -350,12 +350,15 @@
   "admin": {
     "nav": {
       "group_site": "الموقع",
+      "group_community": "المجتمع",
       "group_security": "الأمان",
       "group_system": "النظام",
       "settings": "الإعدادات",
       "categories": "الفئات",
       "pages": "الصفحات",
       "flux_store": "متجر فلوكس",
+      "news": "الأخبار",
+      "forum": "المنتدى",
       "ip_bans": "حظر IP",
       "clients": "العملاء المحظورون",
       "backup": "نسخ احتياطي",

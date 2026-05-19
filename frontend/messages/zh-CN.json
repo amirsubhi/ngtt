@@ -350,12 +350,15 @@
   "admin": {
     "nav": {
       "group_site": "站点",
+      "group_community": "社区",
       "group_security": "安全",
       "group_system": "系统",
       "settings": "设置",
       "categories": "分类",
       "pages": "页面",
       "flux_store": "Flux 商店",
+      "news": "新闻",
+      "forum": "论坛",
       "ip_bans": "IP 封禁",
       "clients": "封禁客户端",
       "backup": "备份",
