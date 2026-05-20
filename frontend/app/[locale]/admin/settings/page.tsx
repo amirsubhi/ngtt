@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { TABS, JSON_KEYS, WORDLIST_KEYS, type Setting, type Tab } from './categories';
 import { SettingField } from './SettingField';
 
 export default function AdminSettingsPage() {
+  const locale = useLocale();
   const router = useRouter();
   const [settings, setSettings] = useState<Setting[]>([]);
   const [server, setServer] = useState<Record<string, string>>({});
@@ -26,7 +28,7 @@ export default function AdminSettingsPage() {
         setSettings(d.settings);
         setServer(map);
       }).catch((err: unknown) => {
-        if (err instanceof ApiError && err.status === 401) router.push('/login');
+        if (err instanceof ApiError && err.status === 401) router.push(`/${locale}/login`);
       });
   }, []);
 

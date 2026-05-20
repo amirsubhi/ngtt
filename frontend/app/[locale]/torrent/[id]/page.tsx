@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -252,6 +253,8 @@ function SubtitlesTab({ torrentId, token }: { torrentId: number; token: string }
 
 export default function TorrentDetailPage({ params }: { params: { id: string } }) {
   const t = useTranslations('torrent.detail');
+  const locale = useLocale();
+  const router = useRouter();
   const [torrent, setTorrent] = useState<TorrentDetail | null>(null);
   const [tab, setTab] = useState<Tab>('files');
   const [error, setError] = useState('');
@@ -264,14 +267,17 @@ export default function TorrentDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
-    if (!tok) return;
+    if (!tok) { router.push(`/${locale}/login`); return; }
     api.get<TorrentDetail>(`/api/torrents/${params.id}`, tok)
       .then(data => {
         setTorrent(data);
         setBookmarked(data.bookmarked);
         setThanked(data.thanked);
       })
-      .catch(() => setError('Torrent not found'));
+      .catch((err: unknown) => {
+        if (err instanceof ApiError && err.status === 401) router.push(`/${locale}/login`);
+        else setError('Torrent not found');
+      });
   }, [params.id]);
 
   // 9g — auto-sync if user has os_auto_sync enabled

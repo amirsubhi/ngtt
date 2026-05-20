@@ -28,7 +28,7 @@ export default function MessageDetailPage({ params }: { params: { id: string } }
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
-    if (!tok) { router.push('/login'); return; }
+    if (!tok) { router.push(`/${locale}/login`); return; }
     api.get<MessageDetail>(`/api/messages/${params.id}`, tok)
       .then(setMsg)
       .catch(() => router.push('/messages'));

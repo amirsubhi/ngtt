@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const NAV = [
   {
@@ -34,6 +34,7 @@ const NAV = [
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('staff.nav');
+  const locale = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -46,11 +47,12 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
           </p>
           <ul className="space-y-0.5">
             {items.map(({ key, href }) => {
-              const active = pathname === href || pathname.endsWith(href);
+              const fullHref = `/${locale}${href}`;
+              const active = pathname === fullHref || pathname.endsWith(href);
               return (
                 <li key={key}>
                   <Link
-                    href={href}
+                    href={fullHref}
                     onClick={() => setOpen(false)}
                     className="block rounded px-3 py-1.5 text-sm transition-colors"
                     style={{

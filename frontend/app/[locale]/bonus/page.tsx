@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { Skeleton } from '@/components/Skeleton';
@@ -27,6 +27,7 @@ interface Transaction {
 
 export default function BonusPage() {
   const t = useTranslations('flux');
+  const locale = useLocale();
   const router = useRouter();
   const [token, setToken] = useState('');
   const [balance, setBalance] = useState<number | null>(null);
@@ -49,7 +50,7 @@ export default function BonusPage() {
   useEffect(() => {
     const t = localStorage.getItem('access_token') ?? '';
     setToken(t);
-    if (!t) { router.push('/login'); return; }
+    if (!t) { router.push(`/${locale}/login`); return; }
 
     Promise.all([
       api.get<{ balance: number; transactions: Transaction[] }>('/api/users/me/flux', t)

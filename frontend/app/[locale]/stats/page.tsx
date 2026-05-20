@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -22,13 +23,14 @@ interface RatioHolder { username: string; uploaded: number; downloaded: number }
 interface Stats { totals: Totals; topUploaders: Uploader[]; topSnatched: TopTorrent[]; topRatio: RatioHolder[] }
 
 export default function StatsPage() {
+  const locale = useLocale();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token') ?? '';
-    if (!token) { router.push('/login'); return; }
+    if (!token) { router.push(`/${locale}/login`); return; }
     api.get<Stats>('/api/stats', token)
       .then(setStats)
       .catch(() => {})

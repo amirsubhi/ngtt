@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
@@ -19,6 +20,7 @@ interface NewsArticle {
 export default function NewsArticlePage({ params }: { params: { slug: string } }) {
   const [article, setArticle] = useState<NewsArticle | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const locale = useLocale();
   const router = useRouter();
   const { slug } = params;
 
@@ -28,7 +30,7 @@ export default function NewsArticlePage({ params }: { params: { slug: string } }
       .then(setArticle)
       .catch((err: unknown) => {
         if (err instanceof ApiError && err.status === 401) {
-          router.push('/login');
+          router.push(`/${locale}/login`);
         } else {
           setNotFound(true);
         }

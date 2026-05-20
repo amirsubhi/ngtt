@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { Skeleton } from '@/components/Skeleton';
@@ -18,6 +18,7 @@ interface Message {
 
 export default function MessagesPage() {
   const t = useTranslations('messages');
+  const locale = useLocale();
   const router = useRouter();
   const [folder, setFolder] = useState<'inbox' | 'sent'>('inbox');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -34,7 +35,7 @@ export default function MessagesPage() {
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
-    if (!tok) { router.push('/login'); return; }
+    if (!tok) { router.push(`/${locale}/login`); return; }
   }, [router]);
 
   useEffect(() => {

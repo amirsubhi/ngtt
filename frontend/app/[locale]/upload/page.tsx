@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api';
 
@@ -9,6 +9,7 @@ interface Category { id: number; label: string; slug: string }
 
 export default function UploadPage() {
   const t = useTranslations('torrent.upload');
+  const locale = useLocale();
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
@@ -51,7 +52,7 @@ export default function UploadPage() {
     if (!categoryId) { setError('Please select a category'); return; }
 
     const token = localStorage.getItem('access_token');
-    if (!token) { router.push('/login'); return; }
+    if (!token) { router.push(`/${locale}/login`); return; }
 
     setError('');
     setLoading(true);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Skeleton } from '@/components/Skeleton';
@@ -18,6 +18,7 @@ interface Notification {
 
 export default function NotificationsPage() {
   const t = useTranslations('notifications');
+  const locale = useLocale();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
@@ -27,7 +28,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
-    if (!tok) { router.push('/login'); return; }
+    if (!tok) { router.push(`/${locale}/login`); return; }
     api.get<{ notifications: Notification[]; unread_count: number }>('/api/notifications', tok)
       .then(d => { setNotifications(d.notifications); setUnread(d.unread_count); })
       .catch(() => {})

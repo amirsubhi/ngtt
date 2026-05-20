@@ -62,7 +62,8 @@ async function fetchHomeData(): Promise<HomeData> {
   }
 }
 
-export default async function HomePage() {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const cookieStore = await cookies();
   const authed = cookieStore.has('refresh_token');
   const data = await fetchHomeData();
@@ -76,7 +77,7 @@ export default async function HomePage() {
           <div className="rounded border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-sm flex flex-wrap gap-2 items-center">
             <span className="font-medium">Happy birthday to:</span>
             {birthdays.map(b => (
-              <Link key={b.username} href={`/user/${b.username}`}
+              <Link key={b.username} href={`/${locale}/user/${b.username}`}
                 className="font-semibold hover:underline" style={{ color: 'var(--accent)' }}>
                 {b.username}
               </Link>
@@ -108,12 +109,12 @@ export default async function HomePage() {
                   ))}
                 </div>
                 <div className="mt-10 flex items-center gap-5">
-                  <Link href="/login"
+                  <Link href={`/${locale}/login`}
                     className="rounded px-5 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     style={{ backgroundColor: 'var(--accent)' }}>
                     Sign in
                   </Link>
-                  <Link href="/register" className="text-sm transition-opacity hover:opacity-80"
+                  <Link href={`/${locale}/register`} className="text-sm transition-opacity hover:opacity-80"
                     style={{ color: 'var(--text-muted)' }}>
                     Request access &rarr;
                   </Link>
@@ -171,7 +172,7 @@ export default async function HomePage() {
             )}
             {news.map(n => (
               <div key={n.id} className="px-4 py-3">
-                <Link href={`/news/${n.slug}`}
+                <Link href={`/${locale}/news/${n.slug}`}
                   className="font-medium text-sm hover:underline block"
                   style={{ color: 'var(--text-primary)' }}>
                   {n.title}
@@ -183,7 +184,7 @@ export default async function HomePage() {
             ))}
           </div>
           {authed && (
-            <Link href="/browse" className="text-xs opacity-50 hover:opacity-80">
+            <Link href={`/${locale}/browse`} className="text-xs opacity-50 hover:opacity-80">
               Browse torrents &rarr;
             </Link>
           )}
@@ -199,7 +200,7 @@ export default async function HomePage() {
                 <div key={t.id} className="px-4 py-3 flex items-center gap-3">
                   <span className="text-xs tabular-nums w-5 shrink-0 text-right opacity-30">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <Link href={`/torrents/${t.slug}`}
+                    <Link href={`/${locale}/torrents/${t.slug}`}
                       className="font-medium text-sm hover:underline block truncate"
                       style={{ color: 'var(--text-primary)' }}>
                       {t.name}

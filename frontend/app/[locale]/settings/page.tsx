@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { api, ApiError } from '@/lib/api';
@@ -55,6 +55,7 @@ interface Settings {
 
 export default function SettingsPage() {
   const t = useTranslations('user.settings');
+  const locale = useLocale();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [tab, setTab] = useState<Tab>('appearance');
@@ -143,7 +144,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const t = localStorage.getItem('access_token') ?? '';
     setToken(t);
-    if (!t) { router.push('/login'); return; }
+    if (!t) { router.push(`/${locale}/login`); return; }
     api.get<Settings>('/api/users/me/settings', t)
       .then(s => { setSettings(s); setTwoFaEnabled(!!s.two_factor_enabled); })
       .catch(() => {});

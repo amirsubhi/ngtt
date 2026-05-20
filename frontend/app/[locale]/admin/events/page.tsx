@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
 import { EmptyState } from '@/components/EmptyState';
@@ -20,6 +21,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function AdminEventsPage() {
+  const locale = useLocale();
   const router = useRouter();
   const [events, setEvents] = useState<UploadEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,7 @@ export default function AdminEventsPage() {
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
     setToken(tok);
-    if (!tok) { router.push('/login'); return; }
+    if (!tok) { router.push(`/${locale}/login`); return; }
     load(tok);
   }, [router]);
 

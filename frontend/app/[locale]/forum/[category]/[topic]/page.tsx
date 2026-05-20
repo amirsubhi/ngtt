@@ -85,7 +85,7 @@ export default function ForumTopicPage({ params }: { params: { category: string;
   async function deleteTopic() {
     if (!topicId || !confirm('Delete this topic permanently?')) return;
     await api.delete(`/api/forum/topics/${topicId}`, token);
-    window.location.href = `/forum/${category}`;
+    window.location.href = `/${locale}/forum/${category}`;
   }
 
   const inputCls = 'w-full rounded border border-current/20 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current/30';
