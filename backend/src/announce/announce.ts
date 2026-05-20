@@ -40,17 +40,23 @@ function parseIntParam(val: string | undefined, def: number): number {
   return Number.isFinite(n) && n >= 0 ? n : def;
 }
 
-// Parse raw binary info_hash from the request URL (percent-encoded Latin-1 bytes)
+// Parse raw binary info_hash from the request URL (percent-encoded bytes).
+// decodeURIComponent rejects non-UTF-8 bytes (e.g. 0x90), so we decode manually.
 function parseInfoHash(rawUrl: string): string | null {
   const match = rawUrl.match(/[?&]info_hash=([^&]*)/);
   if (!match) return null;
   const encoded = match[1];
-  try {
-    const decoded = decodeURIComponent(encoded.replace(/\+/g, '%20'));
-    return Buffer.from(decoded, 'latin1').toString('hex');
-  } catch {
-    return null;
+  let hex = '';
+  for (let i = 0; i < encoded.length; ) {
+    if (encoded[i] === '%' && i + 2 < encoded.length) {
+      hex += encoded.slice(i + 1, i + 3).toLowerCase();
+      i += 3;
+    } else {
+      hex += encoded.charCodeAt(i).toString(16).padStart(2, '0');
+      i++;
+    }
   }
+  return hex.length === 40 ? hex : null;
 }
 
 async function getUserByPasskey(passkey: string): Promise<AnnounceUser | null> {
