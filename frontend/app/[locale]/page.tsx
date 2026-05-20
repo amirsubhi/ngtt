@@ -22,10 +22,20 @@ interface Birthday {
   username: string;
 }
 
+interface TopTorrent {
+  id: number;
+  name: string;
+  slug: string;
+  size: number;
+  download_count: number;
+  category: string;
+}
+
 interface HomeData {
   stats: Stats;
   news: NewsItem[];
   birthdays: Birthday[];
+  topTorrents: TopTorrent[];
 }
 
 function formatBytes(bytes: number): string {
@@ -48,7 +58,7 @@ async function fetchHomeData(): Promise<HomeData> {
     if (!res.ok) throw new Error('not ok');
     return await res.json() as HomeData;
   } catch {
-    return { stats: { torrent_count: 0, user_count: 0, total_uploaded: 0, total_downloaded: 0 }, news: [], birthdays: [] };
+    return { stats: { torrent_count: 0, user_count: 0, total_uploaded: 0, total_downloaded: 0 }, news: [], birthdays: [], topTorrents: [] };
   }
 }
 
@@ -56,7 +66,7 @@ export default async function HomePage() {
   const cookieStore = await cookies();
   const authed = cookieStore.has('refresh_token');
   const data = await fetchHomeData();
-  const { stats, news, birthdays } = data;
+  const { stats, news, birthdays, topTorrents } = data;
 
   return (
     <div>
@@ -178,6 +188,32 @@ export default async function HomePage() {
             </Link>
           )}
         </div>
+
+        {/* Top Torrents — authenticated only */}
+        {authed && topTorrents.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-widest opacity-60">Top Torrents</h2>
+            <div className="rounded border border-current/10 divide-y divide-current/5 overflow-hidden"
+              style={{ backgroundColor: 'var(--bg-surface)' }}>
+              {topTorrents.map((t, i) => (
+                <div key={t.id} className="px-4 py-3 flex items-center gap-3">
+                  <span className="text-xs tabular-nums w-5 shrink-0 text-right opacity-30">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <Link href={`/torrents/${t.slug}`}
+                      className="font-medium text-sm hover:underline block truncate"
+                      style={{ color: 'var(--text-primary)' }}>
+                      {t.name}
+                    </Link>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {t.category} · {formatBytes(t.size)} · {formatNum(t.download_count)} downloads
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

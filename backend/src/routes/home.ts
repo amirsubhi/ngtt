@@ -18,12 +18,21 @@ interface HomeBirthday {
   avatar_url: string | null;
 }
 
+interface HomeTopTorrent {
+  id: number;
+  name: string;
+  slug: string;
+  size: number;
+  download_count: number;
+  category: string;
+}
+
 export const homeRoutes: FastifyPluginAsync = async app => {
   app.get('/api/home', async (_req, reply) => {
     const cached = await redis.get(HOME_CACHE_KEY);
     if (cached) return reply.send(JSON.parse(cached) as object);
 
-    const [stats, newsRows, birthdayRows] = await Promise.all([
+    const [stats, newsRows, birthdayRows, topTorrentRows] = await Promise.all([
       queryOne<{
         torrent_count: number;
         user_count: number;
@@ -49,12 +58,22 @@ export const homeRoutes: FastifyPluginAsync = async app => {
            AND show_birthday = TRUE
            AND is_deleted = FALSE AND is_banned = FALSE`,
       ),
+
+      query<HomeTopTorrent>(
+        `SELECT t.id, t.name, t.slug, t.size, t.download_count, c.name AS category
+         FROM torrents t
+         JOIN categories c ON c.id = t.category_id
+         WHERE t.status = 'approved'
+         ORDER BY t.download_count DESC
+         LIMIT 10`,
+      ),
     ]);
 
     const result = {
       stats: stats ?? { torrent_count: 0, user_count: 0, total_uploaded: 0, total_downloaded: 0 },
       news: newsRows,
       birthdays: birthdayRows,
+      topTorrents: topTorrentRows,
     };
     await redis.set(HOME_CACHE_KEY, JSON.stringify(result), 'EX', HOME_TTL);
     return reply.send(result);
