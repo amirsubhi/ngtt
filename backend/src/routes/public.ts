@@ -15,9 +15,10 @@ export const publicRoutes: FastifyPluginAsync = async app => {
     const cached = await redis.get(cacheKey);
     if (cached) return reply.send(JSON.parse(cached) as object);
 
+    const placeholders = PUBLIC_KEYS.map(() => '?').join(',');
     const rows = await query<{ key: string; value: string }>(
-      'SELECT `key`, value FROM site_settings WHERE `key` IN (?)',
-      [PUBLIC_KEYS],
+      `SELECT \`key\`, value FROM site_settings WHERE \`key\` IN (${placeholders})`,
+      PUBLIC_KEYS,
     );
     const settings: Record<string, string> = {};
     for (const r of rows) settings[r.key] = r.value;
