@@ -49,13 +49,10 @@ export default function ForumTopicPage({ params }: { params: { category: string;
 
   useEffect(() => {
     const tok = localStorage.getItem('access_token') ?? '';
-    api.get<{ topics: Array<{ id: number; slug: string }> }>(`/api/forum/categories/${category}/topics?page=1`, tok)
-      .then(d => {
-        const found = d.topics.find(tp => tp.slug === topicSlug);
-        if (found) setTopicId(found.id);
-      })
+    api.get<{ id: number }>(`/api/forum/topics/by-slug/${encodeURIComponent(topicSlug)}`, tok)
+      .then(d => setTopicId(d.id))
       .catch(() => {});
-  }, [category, topicSlug]);
+  }, [topicSlug]);
 
   useEffect(() => {
     if (!topicId) return;

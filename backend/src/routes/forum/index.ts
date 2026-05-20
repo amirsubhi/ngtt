@@ -81,6 +81,18 @@ export const forumRoutes: FastifyPluginAsync = async app => {
     },
   );
 
+  // GET /api/forum/topics/by-slug/:slug — resolve slug to id
+  app.get<{ Params: { slug: string } }>(
+    '/api/forum/topics/by-slug/:slug',
+    { preHandler: [ff, authenticate] },
+    async (req, reply) => {
+      const { slug } = req.params as { slug: string };
+      const row = await queryOne<{ id: number }>('SELECT id FROM forum_topics WHERE slug = ?', [slug]);
+      if (!row) throw new NotFoundError('Topic not found');
+      return reply.send({ id: row.id });
+    },
+  );
+
   // GET /api/forum/topics/:id
   app.get<{ Params: { id: string }; Querystring: { page?: string } }>(
     '/api/forum/topics/:id',
