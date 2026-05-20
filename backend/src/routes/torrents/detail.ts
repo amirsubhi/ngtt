@@ -51,16 +51,15 @@ export async function detailRoutes(app: FastifyInstance): Promise<void> {
     { preHandler: [authenticate] },
     async (req, reply) => {
       const { id: rawId } = req.params as { id: string };
-      const id = parseInt(rawId, 10);
-      if (isNaN(id)) throw new NotFoundError('Torrent not found');
-
+      const numId = parseInt(rawId, 10);
       const torrent = await queryOne<TorrentDetail>(
         `SELECT t.*, u.username AS uploader_username
          FROM torrents t JOIN users u ON u.id = t.uploader_id
-         WHERE t.id = ?`,
-        [id],
+         WHERE ${Number.isNaN(numId) ? 't.slug = ?' : 't.id = ?'}`,
+        [Number.isNaN(numId) ? rawId : numId],
       );
       if (!torrent || torrent.status !== 'approved') throw new NotFoundError('Torrent not found');
+      const id = torrent.id;
 
       // Increment view count (non-blocking)
       void execute('UPDATE torrents SET view_count = view_count + 1 WHERE id = ?', [id]);
