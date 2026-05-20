@@ -45,7 +45,12 @@ export async function uploadRoutes(app: FastifyInstance): Promise<void> {
         throw new ValidationError('Invalid or corrupt torrent file');
       }
 
-      const fields = UploadFields.safeParse(data.fields);
+      const rawFields = data.fields as Record<string, { value: string } | Array<{ value: string }>>;
+      const extracted: Record<string, string | string[]> = {};
+      for (const [k, v] of Object.entries(rawFields)) {
+        extracted[k] = Array.isArray(v) ? v.map(f => f.value) : v.value;
+      }
+      const fields = UploadFields.safeParse(extracted);
       if (!fields.success) {
         throw new ValidationError(fields.error.issues[0]?.message ?? 'Invalid fields');
       }
