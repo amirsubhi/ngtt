@@ -35,7 +35,7 @@ interface HomeData {
   stats: Stats;
   news: NewsItem[];
   birthdays: Birthday[];
-  topTorrents: TopTorrent[];
+  topTorrents?: TopTorrent[];
 }
 
 function formatBytes(bytes: number): string {
@@ -66,7 +66,7 @@ export default async function HomePage() {
   const cookieStore = await cookies();
   const authed = cookieStore.has('refresh_token');
   const data = await fetchHomeData();
-  const { stats, news, birthdays, topTorrents } = data;
+  const { stats, news, birthdays, topTorrents = [] } = data;
 
   return (
     <div>
